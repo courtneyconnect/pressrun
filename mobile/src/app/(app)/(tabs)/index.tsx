@@ -495,10 +495,17 @@ export default function DiscoverScreen() {
       <SafeAreaView className="flex-1" edges={["top"]}>
         {/* Header */}
         <View className="flex-row items-center px-4 pb-3 pt-2" style={{ gap: 8 }}>
-          <Text className="text-2xl font-bold flex-1">
-            <Text className="text-white">Press</Text>
-            <Text className="text-[#E53935]">Run</Text>
-          </Text>
+          <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
+            <Image
+              source={require("../../../../assets/images/icon.png")}
+              style={{ width: 32, height: 32, borderRadius: 8 }}
+              resizeMode="contain"
+            />
+            <Text className="text-2xl font-bold">
+              <Text className="text-white">Press</Text>
+              <Text className="text-[#E53935]">Run</Text>
+            </Text>
+          </View>
           <Pressable
             testID="notifications-button"
             className="p-2"

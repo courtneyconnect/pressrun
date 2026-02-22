@@ -1,17 +1,20 @@
 {
   "expo": {
-    "name": "vibecode",
+    "name": "PressRun",
     "slug": "vibecode",
     "scheme": "vibecode",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/images/icon.png",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/icon.png"
     },
     "android": {
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "icon": "./assets/images/icon.png"
     },
     "plugins": ["expo-router"],
     "experiments": {

@@ -122,6 +122,18 @@ export default function ProfileScreen() {
   if (user?.twitterHandle) {
     socialLinks.push({ label: "X / Twitter", color: "#1DA1F2", url: user.twitterHandle, testID: "social-twitter" });
   }
+  if (user?.twitchUrl) {
+    socialLinks.push({ label: "Twitch", color: "#9146FF", url: user.twitchUrl, testID: "social-twitch" });
+  }
+  if (user?.kickUrl) {
+    socialLinks.push({ label: "Kick", color: "#53FC18", url: user.kickUrl, testID: "social-kick" });
+  }
+  if (user?.whatnotUrl) {
+    socialLinks.push({ label: "Whatnot", color: "#FF6B35", url: user.whatnotUrl, testID: "social-whatnot" });
+  }
+  if (user?.linkedinUrl) {
+    socialLinks.push({ label: "LinkedIn", color: "#0A66C2", url: user.linkedinUrl, testID: "social-linkedin" });
+  }
   if (user?.websiteUrl) {
     socialLinks.push({ label: "Website", color: "#8E8E93", url: user.websiteUrl, testID: "social-website" });
   }

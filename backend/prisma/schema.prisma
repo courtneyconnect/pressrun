@@ -32,6 +32,10 @@ model User {
   tiktokHandle     String?
   youtubeHandle    String?
   twitterHandle    String?
+  twitchUrl        String?
+  kickUrl          String?
+  whatnotUrl       String?
+  linkedinUrl      String?
   websiteUrl       String?
 
   // Location
@@ -308,6 +312,8 @@ model ContentSeries {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title           String
   description     String?
+  coverImage      String?
+  examples        String?  // JSON array of { type: "video"|"link", url: string, label?: string }
   durationMinutes Int      @default(60)
   price           Int      @default(0)
   active          Boolean  @default(true)

@@ -74,6 +74,10 @@ export interface User {
   tiktokHandle: string | null;
   youtubeHandle: string | null;
   twitterHandle: string | null;
+  twitchUrl: string | null;
+  kickUrl: string | null;
+  whatnotUrl: string | null;
+  linkedinUrl: string | null;
   websiteUrl: string | null;
   city: string | null;
   state: string | null;
@@ -87,11 +91,19 @@ export interface User {
   contentSeries?: ContentSeries[];
 }
 
+export interface SeriesExample {
+  type: "video" | "link";
+  url: string;
+  label?: string;
+}
+
 export interface ContentSeries {
   id: string;
   userId: string;
   title: string;
   description: string | null;
+  coverImage: string | null;
+  examples: string | null; // JSON string of SeriesExample[]
   durationMinutes: number;
   price: number;
   active: boolean;

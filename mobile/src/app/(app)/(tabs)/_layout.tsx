@@ -7,6 +7,7 @@ import {
   MessageSquare,
   User,
 } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 
 export default function TabLayout() {
   return (
@@ -35,6 +36,7 @@ export default function TabLayout() {
             <Search size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="tours"
@@ -45,6 +47,7 @@ export default function TabLayout() {
             <MapPin size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="bookings"
@@ -55,6 +58,7 @@ export default function TabLayout() {
             <Calendar size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="messages"
@@ -65,6 +69,7 @@ export default function TabLayout() {
             <MessageSquare size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
       <Tabs.Screen
         name="profile"
@@ -75,6 +80,7 @@ export default function TabLayout() {
             <User size={size} color={color} />
           ),
         }}
+        listeners={{ tabPress: () => Haptics.selectionAsync() }}
       />
     </Tabs>
   );

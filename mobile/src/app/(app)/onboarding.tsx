@@ -18,6 +18,7 @@ import type {
   TalentCategory,
   PressStopCategory,
 } from "@/types";
+import * as Haptics from "expo-haptics";
 
 const TALENT_CATEGORIES: { label: string; value: TalentCategory }[] = [
   { label: "Creator", value: "CREATOR" },
@@ -107,7 +108,7 @@ export default function OnboardingScreen() {
                 className={`bg-[#1C1C1E] rounded-2xl p-6 mb-4 border-2 ${
                   role === "TALENT" ? "border-[#E53935]" : "border-transparent"
                 }`}
-                onPress={() => setRole("TALENT")}
+                onPress={() => { Haptics.selectionAsync(); setRole("TALENT"); }}
               >
                 <View className="flex-row items-center">
                   <View className="w-14 h-14 rounded-full bg-[#E53935]/20 items-center justify-center mr-4">
@@ -132,7 +133,7 @@ export default function OnboardingScreen() {
                     ? "border-[#E53935]"
                     : "border-transparent"
                 }`}
-                onPress={() => setRole("PRESS_STOP")}
+                onPress={() => { Haptics.selectionAsync(); setRole("PRESS_STOP"); }}
               >
                 <View className="flex-row items-center">
                   <View className="w-14 h-14 rounded-full bg-[#E53935]/20 items-center justify-center mr-4">
@@ -155,7 +156,7 @@ export default function OnboardingScreen() {
                 className={`rounded-xl py-4 items-center ${
                   role ? "bg-[#E53935]" : "bg-[#E53935]/30"
                 }`}
-                onPress={() => role && setStep(2)}
+                onPress={() => { if (role) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setStep(2); } }}
                 disabled={!role}
               >
                 <Text className="text-white font-semibold text-base">
@@ -185,7 +186,7 @@ export default function OnboardingScreen() {
                         ? "bg-[#E53935] border-[#E53935]"
                         : "bg-[#1C1C1E] border-[#2C2C2E]"
                     }`}
-                    onPress={() => setCategory(cat.value)}
+                    onPress={() => { Haptics.selectionAsync(); setCategory(cat.value); }}
                   >
                     <Text
                       className={`font-medium text-sm ${
@@ -205,7 +206,7 @@ export default function OnboardingScreen() {
                 className={`rounded-xl py-4 items-center ${
                   category ? "bg-[#E53935]" : "bg-[#E53935]/30"
                 }`}
-                onPress={() => category && setStep(3)}
+                onPress={() => { if (category) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setStep(3); } }}
                 disabled={!category}
               >
                 <Text className="text-white font-semibold text-base">
@@ -292,6 +293,7 @@ export default function OnboardingScreen() {
 
   function handleSave() {
     if (!name.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setupProfile.mutate();
   }
 }

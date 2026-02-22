@@ -20,6 +20,7 @@ import { api } from "@/lib/api/api";
 import { uploadFile } from "@/lib/upload";
 import { pickImage, pickVideo, takePhoto } from "@/lib/file-picker";
 import type { User as UserType, ContentSeries, SeriesExample } from "@/types";
+import * as Haptics from "expo-haptics";
 
 // ─── Duration options ─────────────────────────────────────────────────────────
 const DURATION_OPTIONS = [
@@ -123,7 +124,7 @@ function DurationPicker({ value, onChange }: { value: number; onChange: (v: numb
               key={opt.value}
               testID={`duration-option-${opt.value}`}
               className={`px-4 py-3 border-b border-[#2C2C2E] ${opt.value === value ? "bg-[#E53935]/10" : ""}`}
-              onPress={() => { onChange(opt.value); setOpen(false); }}
+              onPress={() => { Haptics.selectionAsync(); onChange(opt.value); setOpen(false); }}
             >
               <Text className={`text-base ${opt.value === value ? "text-[#E53935] font-semibold" : "text-white"}`}>
                 {opt.label}
@@ -157,7 +158,7 @@ function CategoryPicker({ value, onChange }: { value: string; onChange: (v: stri
               key={opt}
               testID={`category-option-${opt.toLowerCase().replace(/\s/g, "-")}`}
               className={`px-4 py-3 border-b border-[#2C2C2E] ${opt === selected ? "bg-[#E53935]/10" : ""}`}
-              onPress={() => { onChange(opt); setOpen(false); }}
+              onPress={() => { Haptics.selectionAsync(); onChange(opt); setOpen(false); }}
             >
               <Text className={`text-base ${opt === selected ? "text-[#E53935] font-semibold" : "text-white"}`}>
                 {opt}
@@ -207,7 +208,7 @@ function ExampleRow({
               Switch to {example.type === "video" ? "Link" : "Video"}
             </Text>
           </Pressable>
-          <Pressable testID={`delete-example-${index}`} onPress={onDelete}>
+          <Pressable testID={`delete-example-${index}`} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onDelete(); }}>
             <Trash2 size={14} color="#555558" />
           </Pressable>
         </View>
@@ -342,6 +343,7 @@ function SeriesForm({
   };
 
   const addExample = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onChange({ ...item, examples: [...item.examples, { type: "link", url: "", label: "" }] });
   };
 
@@ -352,7 +354,7 @@ function SeriesForm({
         <Text className="text-white font-semibold text-sm flex-1 mr-2" numberOfLines={1}>
           {item.title || "New Series"}
         </Text>
-        <Pressable testID={`delete-series-${index}`} onPress={onDelete} className="p-1">
+        <Pressable testID={`delete-series-${index}`} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onDelete(); }} className="p-1">
           <Trash2 size={16} color="#E53935" />
         </Pressable>
       </View>
@@ -562,6 +564,7 @@ export default function EditProfileScreen() {
   }, [user]);
 
   const handleChangePhoto = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert("Profile Photo", "Choose a photo", [
       {
         text: "Choose from Library",
@@ -620,6 +623,7 @@ export default function EditProfileScreen() {
       Alert.alert("Please wait", "Uploads are still in progress.");
       return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await updateProfile.mutateAsync({
         name: name.trim() || undefined,
@@ -790,10 +794,13 @@ export default function EditProfileScreen() {
             <Pressable
               testID="add-series-button"
               className="border border-dashed border-[#2C2C2E] rounded-2xl py-4 items-center mb-4 flex-row justify-center"
-              onPress={() => setSeriesList((prev) => [
-                ...prev,
-                { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", category: "Other", uploadingCover: false, uploadingExampleIndex: null },
-              ])}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSeriesList((prev) => [
+                  ...prev,
+                  { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", category: "Other", uploadingCover: false, uploadingExampleIndex: null },
+                ]);
+              }}
             >
               <Plus size={16} color="#8E8E93" />
               <Text className="text-gray-400 text-sm font-medium ml-2">Add Content Series</Text>

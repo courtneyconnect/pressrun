@@ -24,6 +24,7 @@ import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Booking, Offer } from "@/types";
 import { BookingCelebration } from "@/components/BookingCelebration";
+import * as Haptics from "expo-haptics";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-600",
@@ -90,6 +91,7 @@ export default function BookingDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["booking", id] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       if (status === "ACCEPTED") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setShowCelebration(true);
       }
     },
@@ -245,7 +247,7 @@ export default function BookingDetailScreen() {
                   <Pressable
                     testID="reject-booking-button"
                     className="bg-[#1C1C1E] rounded-xl py-4 items-center flex-row justify-center"
-                    onPress={() => updateStatus.mutate("CANCELLED")}
+                    onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                     disabled={updateStatus.isPending}
                   >
                     <XCircle size={18} color="#8E8E93" />
@@ -260,7 +262,7 @@ export default function BookingDetailScreen() {
                 <Pressable
                   testID="cancel-booking-button"
                   className="bg-[#1C1C1E] rounded-xl py-4 items-center"
-                  onPress={() => updateStatus.mutate("CANCELLED")}
+                  onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                   disabled={updateStatus.isPending}
                 >
                   <Text className="text-gray-400 font-semibold">
@@ -284,7 +286,7 @@ export default function BookingDetailScreen() {
                   <Pressable
                     testID="cancel-confirmed-button"
                     className="bg-[#1C1C1E] rounded-xl py-4 items-center"
-                    onPress={() => updateStatus.mutate("CANCELLED")}
+                    onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                     disabled={updateStatus.isPending}
                   >
                     <Text className="text-gray-400 font-semibold">Cancel</Text>
@@ -296,7 +298,7 @@ export default function BookingDetailScreen() {
                 <Pressable
                   testID="complete-session-button"
                   className="bg-[#E53935] rounded-xl py-4 items-center"
-                  onPress={() => updateStatus.mutate("COMPLETED")}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); updateStatus.mutate("COMPLETED"); }}
                   disabled={updateStatus.isPending}
                 >
                   <Text className="text-white font-semibold">

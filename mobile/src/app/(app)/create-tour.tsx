@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, X, MapPin } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import type { Tour } from "@/types";
+import * as Haptics from "expo-haptics";
 
 interface StopInput {
   city: string;
@@ -52,6 +53,7 @@ export default function CreateTourScreen() {
 
   const addStop = () => {
     if (!newStop.city.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStops((prev) => [...prev, { ...newStop }]);
     setNewStop({
       city: "",
@@ -63,11 +65,13 @@ export default function CreateTourScreen() {
   };
 
   const removeStop = (index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStops((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleCreate = () => {
     if (!name.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     createTour.mutate({
       name: name.trim(),
       startDate,

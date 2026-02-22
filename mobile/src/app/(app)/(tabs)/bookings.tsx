@@ -14,6 +14,7 @@ import { Calendar as CalendarIcon, Clock, DollarSign } from "lucide-react-native
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import type { Booking, BookingStatus } from "@/types";
+import * as Haptics from "expo-haptics";
 
 const STATUS_FILTERS: { label: string; value: BookingStatus | "ALL" }[] = [
   { label: "All", value: "ALL" },
@@ -53,7 +54,7 @@ function BookingCard({
     <Pressable
       testID={`booking-card-${booking.id}`}
       className="bg-[#1C1C1E] rounded-2xl p-4 mb-3"
-      onPress={onPress}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
     >
       <View className="flex-row items-start">
         {/* Avatar */}
@@ -149,7 +150,7 @@ export default function BookingsScreen() {
               className={`rounded-full px-4 py-2 ${
                 filter === f.value ? "bg-[#E53935]" : "bg-[#1C1C1E]"
               }`}
-              onPress={() => setFilter(f.value)}
+              onPress={() => { Haptics.selectionAsync(); setFilter(f.value); }}
             >
               <Text
                 className={`text-sm font-medium ${

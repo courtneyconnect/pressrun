@@ -24,6 +24,7 @@ import {
 import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
+import * as Haptics from "expo-haptics";
 
 export default function SeriesDetailScreen() {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function SeriesDetailScreen() {
 
   const handleMessage = () => {
     if (creator?.id) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.push(`/chat/${creator.id}` as any);
     }
   };

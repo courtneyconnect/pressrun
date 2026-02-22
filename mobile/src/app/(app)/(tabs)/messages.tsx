@@ -14,6 +14,7 @@ import { MessageSquare } from "lucide-react-native";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "@/lib/api/api";
 import type { Conversation } from "@/types";
+import * as Haptics from "expo-haptics";
 
 function ConversationRow({
   conversation,
@@ -35,7 +36,7 @@ function ConversationRow({
     <Pressable
       testID={`conversation-row-${user.id}`}
       className="flex-row items-center bg-[#1C1C1E] rounded-2xl p-4 mb-2"
-      onPress={onPress}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
     >
       {/* Avatar */}
       <View className="w-12 h-12 rounded-full bg-[#2C2C2E] items-center justify-center mr-3">

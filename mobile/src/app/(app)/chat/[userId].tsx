@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Message } from "@/types";
+import * as Haptics from "expo-haptics";
 
 function MessageBubble({
   message,
@@ -81,6 +82,7 @@ export default function ChatScreen() {
   const handleSend = useCallback(() => {
     const trimmed = messageText.trim();
     if (!trimmed || isSending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     sendMessageMutate(trimmed);
   }, [messageText, isSending, sendMessageMutate]);
 

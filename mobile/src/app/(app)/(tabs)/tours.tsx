@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Tour, Availability } from "@/types";
+import * as Haptics from "expo-haptics";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -31,7 +32,7 @@ function TourCard({ tour, onPress }: { tour: Tour; onPress: () => void }) {
     <Pressable
       testID={`tour-card-${tour.id}`}
       className="bg-[#1C1C1E] rounded-2xl p-4 mb-3"
-      onPress={onPress}
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
     >
       <View className="flex-row items-center justify-between mb-2">
         <Text className="text-white font-semibold text-base flex-1 mr-2" numberOfLines={1}>
@@ -218,7 +219,7 @@ export default function ToursScreen() {
           <Pressable
             testID="create-tour-fab"
             className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-[#E53935] items-center justify-center shadow-lg"
-            onPress={() => router.push("/create-tour" as any)}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/create-tour" as any); }}
           >
             <Plus size={28} color="#FFFFFF" />
           </Pressable>

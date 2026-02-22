@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, MapPin, Calendar as CalendarIcon } from "lucide-react-native";
+import { Plus, MapPin, Calendar as CalendarIcon, Navigation } from "lucide-react-native";
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
@@ -124,6 +124,24 @@ export default function ToursScreen() {
             {isTalent ? "My Tours" : "My Availability"}
           </Text>
         </View>
+
+        {!isTalent ? (
+          /* PressStop: Active Tours Discovery Banner */
+          <Pressable
+            testID="active-tours-banner"
+            className="mx-4 mb-3 bg-[#E53935]/10 border border-[#E53935]/30 rounded-2xl px-4 py-3 flex-row items-center"
+            onPress={() => router.push("/tour-discovery" as any)}
+          >
+            <View className="w-9 h-9 rounded-xl bg-[#E53935] items-center justify-center mr-3">
+              <Navigation size={18} color="#FFFFFF" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-white font-semibold text-sm">Active Tours Near You</Text>
+              <Text className="text-gray-500 text-xs mt-0.5">Browse talent looking for press stops</Text>
+            </View>
+            <Text className="text-[#E53935] text-sm font-bold ml-2">View</Text>
+          </Pressable>
+        ) : null}
 
         {isTalent ? (
           /* Talent: Tours List */

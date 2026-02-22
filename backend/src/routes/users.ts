@@ -278,6 +278,7 @@ usersRouter.post(
       examples: z.string().nullable().optional(),
       durationMinutes: z.number().min(5).max(480).default(60),
       price: z.number().min(0).default(0),
+      category: z.string().optional().default("OTHER"),
       order: z.number().optional().default(0),
     })
   ),
@@ -293,6 +294,7 @@ usersRouter.post(
         examples: body.examples ?? null,
         durationMinutes: body.durationMinutes,
         price: body.price,
+        category: body.category,
         order: body.order,
       },
     });
@@ -314,6 +316,7 @@ usersRouter.put(
       durationMinutes: z.number().min(5).max(480).optional(),
       price: z.number().min(0).optional(),
       active: z.boolean().optional(),
+      category: z.string().optional(),
       order: z.number().optional(),
     })
   ),

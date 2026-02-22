@@ -35,6 +35,20 @@ const DURATION_OPTIONS = [
   { label: "Full day (8 hr)", value: 480 },
 ];
 
+// ─── Series category options ───────────────────────────────────────────────────
+const SERIES_CATEGORY_OPTIONS = [
+  "Interview",
+  "Vlog",
+  "Review",
+  "Tutorial",
+  "Podcast",
+  "Livestream",
+  "Short Form",
+  "Long Form",
+  "Sponsored",
+  "Other",
+];
+
 // ─── Shared components ────────────────────────────────────────────────────────
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -113,6 +127,40 @@ function DurationPicker({ value, onChange }: { value: number; onChange: (v: numb
             >
               <Text className={`text-base ${opt.value === value ? "text-[#E53935] font-semibold" : "text-white"}`}>
                 {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function CategoryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = value || "Other";
+  return (
+    <View className="mb-4">
+      <FieldLabel label="Series Category" />
+      <Pressable
+        testID="category-picker"
+        className="bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex-row items-center justify-between"
+        onPress={() => setOpen((p) => !p)}
+      >
+        <Text className="text-white text-base">{selected}</Text>
+        {open ? <ChevronUp size={16} color="#8E8E93" /> : <ChevronDown size={16} color="#8E8E93" />}
+      </Pressable>
+      {open ? (
+        <View className="bg-[#1C1C1E] rounded-xl mt-1 overflow-hidden border border-[#2C2C2E]">
+          {SERIES_CATEGORY_OPTIONS.map((opt) => (
+            <Pressable
+              key={opt}
+              testID={`category-option-${opt.toLowerCase().replace(/\s/g, "-")}`}
+              className={`px-4 py-3 border-b border-[#2C2C2E] ${opt === selected ? "bg-[#E53935]/10" : ""}`}
+              onPress={() => { onChange(opt); setOpen(false); }}
+            >
+              <Text className={`text-base ${opt === selected ? "text-[#E53935] font-semibold" : "text-white"}`}>
+                {opt}
               </Text>
             </Pressable>
           ))}
@@ -227,6 +275,7 @@ interface SeriesFormData {
   examples: SeriesExample[];
   durationMinutes: number;
   price: string;
+  category: string;
   uploadingCover: boolean;
   uploadingExampleIndex: number | null;
 }
@@ -508,6 +557,7 @@ export default function EditProfileScreen() {
             examples: s.examples ? (JSON.parse(s.examples) as SeriesExample[]) : [],
             durationMinutes: s.durationMinutes,
             price: s.price > 0 ? String(s.price / 100) : "",
+            category: s.category ?? "Other",
             uploadingCover: false,
             uploadingExampleIndex: null,
           }))
@@ -744,7 +794,7 @@ export default function EditProfileScreen() {
               className="border border-dashed border-[#2C2C2E] rounded-2xl py-4 items-center mb-4 flex-row justify-center"
               onPress={() => setSeriesList((prev) => [
                 ...prev,
-                { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", uploadingCover: false, uploadingExampleIndex: null },
+                { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", category: "Other", uploadingCover: false, uploadingExampleIndex: null },
               ])}
             >
               <Plus size={16} color="#8E8E93" />

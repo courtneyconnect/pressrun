@@ -107,9 +107,58 @@ export interface ContentSeries {
   durationMinutes: number;
   price: number;
   active: boolean;
+  category: string;
   order: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SeriesDiscoverResult {
+  series: ContentSeries;
+  creator: {
+    id: string;
+    name: string;
+    image: string | null;
+    city: string | null;
+    state: string | null;
+    verified: boolean;
+    avgRating: number;
+    totalReviews: number;
+    headline: string | null;
+    role: string;
+  };
+}
+
+export interface PublicTour {
+  id: string;
+  talentId: string;
+  name: string;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  talent: {
+    id: string;
+    name: string;
+    image: string | null;
+    city: string | null;
+    state: string | null;
+    verified: boolean;
+    avgRating: number;
+    totalReviews: number;
+    headline: string | null;
+    role: string;
+    talentProfile: { category: string; audienceSize: number; tourActive: boolean } | null;
+  };
+  stops: Array<{
+    id: string;
+    city: string;
+    state: string | null;
+    country: string;
+    arrivalDate: string;
+    departureDate: string;
+    order: number;
+  }>;
 }
 
 export interface TalentProfile {

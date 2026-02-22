@@ -17,9 +17,12 @@ Press-tour booking marketplace for talent and press stops.
 | **PressStop** | Podcasts, brands, media outlets, retail stores, event spaces, livestream studios |
 | **Admin** | Platform moderators |
 
-## Database Schema (17 tables)
+## Database Schema (18 tables)
 
-User, Session, Account, Verification, TalentProfile, PressStopProfile, PortfolioItem, Tour, TourStop, Booking, Offer, Message, Availability, AvailabilityException, Review, Report, Notification
+User, Session, Account, Verification, TalentProfile, PressStopProfile, PortfolioItem, Tour, TourStop, Booking, Offer, Message, Availability, AvailabilityException, Review, Report, Notification, ContentSeries
+
+### ContentSeries fields
+- title, description, coverImage, examples (JSON), durationMinutes, price, category, active, order
 
 ## API Endpoints
 

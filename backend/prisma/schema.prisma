@@ -317,9 +317,11 @@ model ContentSeries {
   durationMinutes Int      @default(60)
   price           Int      @default(0)
   active          Boolean  @default(true)
+  category        String   @default("OTHER")
   order           Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([userId])
+  @@index([category])
 }

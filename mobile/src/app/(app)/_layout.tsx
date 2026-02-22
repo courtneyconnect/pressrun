@@ -9,6 +9,9 @@ export default function AppLayout() {
       <Stack.Screen name="chat/[userId]" />
       <Stack.Screen name="create-tour" />
       <Stack.Screen name="edit-profile" />
+      <Stack.Screen name="series/[id]" />
+      <Stack.Screen name="user/[id]" />
+      <Stack.Screen name="tour-discovery" />
       <Stack.Screen
         name="onboarding"
         options={{ gestureEnabled: false }}

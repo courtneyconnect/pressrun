@@ -10,6 +10,7 @@ import {
   Image,
   Linking,
   Dimensions,
+  type ImageStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -21,6 +22,7 @@ import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample } from "@/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width - 32; // mx-4 on each side
+const CARD_WIDTH = SCREEN_WIDTH;
 // 9:16 aspect ratio height for the card width
 const VIDEO_HEIGHT = Math.round(SCREEN_WIDTH * (16 / 9));
 // Cap at a reasonable max so very tall phones don't get huge cards
@@ -260,12 +262,17 @@ function SeriesDiscoverCard({
   onPress: () => void;
 }) {
   const { series, creator } = item;
+  const [imgSize, setImgSize] = useState<{ width: number; height: number } | null>(null);
   const initials = (creator.name ?? "?")
     .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const durationLabel = series.durationMinutes < 60
     ? `${series.durationMinutes}m`
     : `${series.durationMinutes / 60}h`;
   const priceLabel = series.price === 0 ? "Free" : `$${(series.price / 100).toLocaleString()}`;
+
+  const imgHeight = imgSize
+    ? Math.round(CARD_WIDTH * (imgSize.height / imgSize.width))
+    : 180;
 
   return (
     <Pressable
@@ -274,7 +281,15 @@ function SeriesDiscoverCard({
       onPress={onPress}
     >
       {series.coverImage ? (
-        <Image source={{ uri: series.coverImage }} style={{ width: "100%", height: 180 }} resizeMode="cover" />
+        <Image
+          source={{ uri: series.coverImage }}
+          style={{ width: "100%", height: imgHeight } as ImageStyle}
+          resizeMode="cover"
+          onLoad={(e) => {
+            const { width, height } = e.nativeEvent.source;
+            setImgSize({ width, height });
+          }}
+        />
       ) : (
         <View style={{ width: "100%", height: 120, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center" }}>
           <Video size={36} color="#444" />

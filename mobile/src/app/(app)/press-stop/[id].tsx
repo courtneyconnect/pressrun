@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { BookingCelebration } from "@/components/BookingCelebration";
 import {
   ArrowLeft,
   Star,
@@ -24,6 +25,7 @@ import type { User } from "@/types";
 export default function PressStopDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const {
     data: user,
@@ -184,9 +186,9 @@ export default function PressStopDetailScreen() {
             <Pressable
               testID="request-booking-button"
               className="bg-[#E53935] rounded-xl py-4 items-center"
-              onPress={() =>
-                router.push(`/chat/${user.id}` as any)
-              }
+              onPress={() => {
+                setShowCelebration(true);
+              }}
             >
               <View className="flex-row items-center">
                 <Calendar size={18} color="#FFFFFF" />
@@ -197,6 +199,15 @@ export default function PressStopDetailScreen() {
             </Pressable>
           </View>
         ) : null}
+        <BookingCelebration
+          visible={showCelebration}
+          onDismiss={() => {
+            setShowCelebration(false);
+            if (user) {
+              router.push(`/chat/${user.id}` as any);
+            }
+          }}
+        />
       </SafeAreaView>
     </View>
   );

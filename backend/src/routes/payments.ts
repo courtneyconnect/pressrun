@@ -76,7 +76,7 @@ paymentsRouter.post(
       return c.json({ data: existing });
     }
 
-    const platformFee = Math.round(booking.agreedFee * 0.05);
+    const platformFee = Math.round(booking.agreedFee * 0.08);
     const talentPayout = booking.agreedFee - platformFee;
 
     const payment = await prisma.payment.create({

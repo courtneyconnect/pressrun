@@ -124,6 +124,6 @@ export default {
   fetch: app.fetch,
   // Allow up to 500 MB so large video uploads don't get rejected with 413
   maxRequestBodySize: 500 * 1024 * 1024,
-  // 10 min idle timeout — default 10s causes large video uploads to abort mid-stream
-  idleTimeout: 600,
+  // Max allowed by Bun (255s) — prevents large video uploads from timing out mid-stream
+  idleTimeout: 255,
 };

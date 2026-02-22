@@ -128,7 +128,7 @@ bookingsRouter.post(
         endTime: body.endTime ?? null,
         location: body.location ?? null,
         agreedFee: body.agreedFee,
-        platformFee: Math.round(body.agreedFee * 0.05), // 5% platform fee
+        platformFee: Math.round(body.agreedFee * 0.08), // 8% platform fee
       },
       include: {
         talent: {
@@ -298,7 +298,7 @@ bookingsRouter.put(
     if (body.status === "CONFIRMED" && updated.agreedFee > 0) {
       const alreadyExists = await prisma.payment.findUnique({ where: { bookingId: id } });
       if (!alreadyExists) {
-        const platformFee = Math.round(updated.agreedFee * 0.05);
+        const platformFee = Math.round(updated.agreedFee * 0.08);
         await prisma.payment.create({
           data: {
             bookingId: id,
@@ -476,7 +476,7 @@ bookingsRouter.put(
         where: { id: bookingId },
         data: {
           agreedFee: offer.amount,
-          platformFee: Math.round(offer.amount * 0.05),
+          platformFee: Math.round(offer.amount * 0.08),
           status: "CONFIRMED",
         },
       });
@@ -484,7 +484,7 @@ bookingsRouter.put(
       // Auto-create payment record when offer accepted
       const alreadyExists = await prisma.payment.findUnique({ where: { bookingId } });
       if (!alreadyExists && offer.amount > 0) {
-        const platformFee = Math.round(offer.amount * 0.05);
+        const platformFee = Math.round(offer.amount * 0.08);
         await prisma.payment.create({
           data: {
             bookingId,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Booking, Offer } from "@/types";
+import { BookingCelebration } from "@/components/BookingCelebration";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-600",
@@ -74,6 +75,7 @@ export default function BookingDetailScreen() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking", id],
@@ -84,9 +86,12 @@ export default function BookingDetailScreen() {
   const updateStatus = useMutation({
     mutationFn: (status: string) =>
       api.patch<Booking>(`/api/bookings/${id}`, { status }),
-    onSuccess: () => {
+    onSuccess: (_data, status) => {
       queryClient.invalidateQueries({ queryKey: ["booking", id] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      if (status === "ACCEPTED") {
+        setShowCelebration(true);
+      }
     },
   });
 
@@ -308,6 +313,10 @@ export default function BookingDetailScreen() {
             <Text className="text-gray-500">Booking not found</Text>
           </View>
         )}
+        <BookingCelebration
+          visible={showCelebration}
+          onDismiss={() => setShowCelebration(false)}
+        />
       </SafeAreaView>
     </View>
   );

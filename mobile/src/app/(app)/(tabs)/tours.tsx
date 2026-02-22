@@ -21,7 +21,14 @@ import * as Haptics from "expo-haptics";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+function parsePressStopTypes(value: string[] | string | null | undefined): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try { return JSON.parse(value) as string[]; } catch { return []; }
+}
+
 function TourCard({ tour, onPress }: { tour: Tour; onPress: () => void }) {
+  const pressStopTypes = parsePressStopTypes(tour.pressStopTypes);
   const statusColor =
     tour.status === "ACTIVE"
       ? "bg-green-600"
@@ -63,14 +70,14 @@ function TourCard({ tour, onPress }: { tour: Tour; onPress: () => void }) {
         </Text>
       </View>
 
-      {tour.pressStopTypes && tour.pressStopTypes.length > 0 ? (
+      {pressStopTypes.length > 0 ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ flexGrow: 0, marginTop: 8 }}
           contentContainerStyle={{ gap: 6 }}
         >
-          {tour.pressStopTypes.slice(0, 4).map((type) => (
+          {pressStopTypes.slice(0, 4).map((type) => (
             <View key={type} style={{ backgroundColor: "#E5393520", borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 }}>
               <Text style={{ color: "#E53935", fontSize: 11, fontWeight: "600" }}>{type}</Text>
             </View>

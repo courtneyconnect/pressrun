@@ -185,7 +185,12 @@ export default function TourDetailScreen() {
   });
 
   const firstCity = tour?.stops?.[0]?.city ?? "";
-  const pressStopTypes: string[] = tour?.pressStopTypes ?? [];
+  const rawTypes = tour?.pressStopTypes;
+  const pressStopTypes: string[] = Array.isArray(rawTypes)
+    ? rawTypes
+    : rawTypes
+      ? (() => { try { return JSON.parse(rawTypes) as string[]; } catch { return []; } })()
+      : [];
   const firstType = pressStopTypes[0] ?? "";
 
   const { data: feedItems, isLoading: feedLoading } = useQuery({

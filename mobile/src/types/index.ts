@@ -231,7 +231,7 @@ export interface Tour {
   endDate: string | null;
   createdAt: string;
   stops?: TourStop[];
-  pressStopTypes: string[] | null;
+  pressStopTypes: string[] | string | null;
   savedStops?: SavedTourStop[];
 }
 

@@ -201,10 +201,29 @@ model Booking {
   offers             Offer[]
   messages           Message[]
   reviews            Review[]
+  payment            Payment?
 
   @@index([status])
   @@index([talentId])
   @@index([pressStopId])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  bookingId       String   @unique
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  agreedFee       Int      // total fee in cents
+  platformFee     Int      // 5% platform fee in cents
+  talentPayout    Int      // agreedFee - platformFee (what talent receives)
+  status          String   @default("PENDING") // PENDING, HELD, RELEASED, REFUNDED
+  payerId         String   // who pays (press stop)
+  payeeId         String   // who gets paid (talent)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([payerId])
+  @@index([payeeId])
 }
 
 model Offer {

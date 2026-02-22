@@ -16,6 +16,7 @@ import { notificationsRouter } from "./routes/notifications";
 import { adminRouter } from "./routes/admin";
 import { seriesDiscoverRouter } from "./routes/series-discover";
 import { publicToursRouter } from "./routes/public-tours";
+import { paymentsRouter } from "./routes/payments";
 
 const app = new Hono<{
   Variables: {
@@ -93,6 +94,7 @@ app.route("/api/notifications", notificationsRouter);
 app.route("/api/admin", adminRouter);
 app.route("/api/series-discover", seriesDiscoverRouter);
 app.route("/api/public-tours", publicToursRouter);
+app.route("/api/payments", paymentsRouter);
 
 const port = Number(process.env.PORT) || 3000;
 

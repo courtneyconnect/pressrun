@@ -33,7 +33,6 @@ seriesDiscoverRouter.get("/", async (c) => {
           totalReviews: true,
           headline: true,
           role: true,
-          profileComplete: true,
         },
       },
     },
@@ -46,10 +45,7 @@ seriesDiscoverRouter.get("/", async (c) => {
       )
     : series;
 
-  // Only show series from profile-complete creators
-  const result = filtered
-    .filter((s) => s.user.profileComplete)
-    .map(({ user, ...s }) => ({ series: s, creator: user }));
+  const result = filtered.map(({ user, ...s }) => ({ series: s, creator: user }));
 
   return c.json({ data: result });
 });

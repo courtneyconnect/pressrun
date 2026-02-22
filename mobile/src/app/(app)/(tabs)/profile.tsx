@@ -129,7 +129,7 @@ export default function ProfileScreen() {
     socialLinks.push({ label: "Kick", color: "#53FC18", url: user.kickUrl, testID: "social-kick" });
   }
   if (user?.whatnotUrl) {
-    socialLinks.push({ label: "Whatnot", color: "#FF6B35", url: user.whatnotUrl, testID: "social-whatnot" });
+    socialLinks.push({ label: "Whatnot", color: "#FF6726", url: user.whatnotUrl, testID: "social-whatnot" });
   }
   if (user?.linkedinUrl) {
     socialLinks.push({ label: "LinkedIn", color: "#0A66C2", url: user.linkedinUrl, testID: "social-linkedin" });

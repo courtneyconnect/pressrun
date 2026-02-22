@@ -128,7 +128,7 @@ bookingsRouter.post(
         endTime: body.endTime ?? null,
         location: body.location ?? null,
         agreedFee: body.agreedFee,
-        platformFee: Math.round(body.agreedFee * 0.1), // 10% platform fee
+        platformFee: Math.round(body.agreedFee * 0.05), // 5% platform fee
       },
       include: {
         talent: {
@@ -294,6 +294,29 @@ bookingsRouter.put(
       },
     });
 
+    // Auto-create payment record when confirmed with a fee
+    if (body.status === "CONFIRMED" && updated.agreedFee > 0) {
+      const alreadyExists = await prisma.payment.findUnique({ where: { bookingId: id } });
+      if (!alreadyExists) {
+        const platformFee = Math.round(updated.agreedFee * 0.05);
+        await prisma.payment.create({
+          data: {
+            bookingId: id,
+            agreedFee: updated.agreedFee,
+            platformFee,
+            talentPayout: updated.agreedFee - platformFee,
+            status: "HELD",
+            payerId: booking.pressStopId,
+            payeeId: booking.talentId,
+          },
+        });
+        await prisma.booking.update({
+          where: { id },
+          data: { escrowStatus: "HELD", platformFee },
+        });
+      }
+    }
+
     // Notify the other party
     const notifyUserId =
       user.id === booking.talentId
@@ -453,10 +476,31 @@ bookingsRouter.put(
         where: { id: bookingId },
         data: {
           agreedFee: offer.amount,
-          platformFee: Math.round(offer.amount * 0.1),
+          platformFee: Math.round(offer.amount * 0.05),
           status: "CONFIRMED",
         },
       });
+
+      // Auto-create payment record when offer accepted
+      const alreadyExists = await prisma.payment.findUnique({ where: { bookingId } });
+      if (!alreadyExists && offer.amount > 0) {
+        const platformFee = Math.round(offer.amount * 0.05);
+        await prisma.payment.create({
+          data: {
+            bookingId,
+            agreedFee: offer.amount,
+            platformFee,
+            talentPayout: offer.amount - platformFee,
+            status: "HELD",
+            payerId: booking.pressStopId,
+            payeeId: booking.talentId,
+          },
+        });
+        await prisma.booking.update({
+          where: { id: bookingId },
+          data: { escrowStatus: "HELD" },
+        });
+      }
     }
 
     return c.json({ data: updatedOffer });

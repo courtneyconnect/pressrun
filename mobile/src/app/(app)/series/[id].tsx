@@ -33,7 +33,7 @@ export default function SeriesDetailScreen() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["series", id],
-    queryFn: () => api.get<SeriesDiscoverResult>(`/api/series/${id}`),
+    queryFn: () => api.get<SeriesDiscoverResult>(`/api/series-discover/${id}`),
     enabled: !!id,
   });
 

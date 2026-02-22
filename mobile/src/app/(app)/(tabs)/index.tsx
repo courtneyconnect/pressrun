@@ -9,14 +9,22 @@ import {
   RefreshControl,
   Image,
   Linking,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, Bell, Star, BadgeCheck, Clock, Video, Play, Link as LinkIcon } from "lucide-react-native";
+import { MapPin, Bell, Star, BadgeCheck, Clock, Video, Play, ExternalLink } from "lucide-react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample } from "@/types";
+
+const SCREEN_WIDTH = Dimensions.get("window").width - 32; // mx-4 on each side
+// 9:16 aspect ratio height for the card width
+const VIDEO_HEIGHT = Math.round(SCREEN_WIDTH * (16 / 9));
+// Cap at a reasonable max so very tall phones don't get huge cards
+const CAPPED_VIDEO_HEIGHT = Math.min(VIDEO_HEIGHT, 480);
 
 const SERIES_CATEGORIES: { label: string; value: string }[] = [
   { label: "All", value: "ALL" },
@@ -30,7 +38,6 @@ const SERIES_CATEGORIES: { label: string; value: string }[] = [
   { label: "Long Form", value: "Long Form" },
 ];
 
-// Detect platform from URL for icon/color
 function getPlatformInfo(url: string): { name: string; color: string } {
   const u = url.toLowerCase();
   if (u.includes("instagram.com")) return { name: "Instagram", color: "#E1306C" };
@@ -55,55 +62,55 @@ type ExampleCard = {
   creator: SeriesDiscoverResult["creator"];
 };
 
-function ExampleDiscoverCard({ item, onPress }: { item: ExampleCard; onPress: () => void }) {
+// Inline video player for uploaded video files
+function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSeries: () => void }) {
+  const [playing, setPlaying] = useState(false);
+  const player = useVideoPlayer(item.example.url, (p) => {
+    p.loop = false;
+  });
+
   const initials = (item.creator.name ?? "?")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+    .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
-  const durationLabel =
-    item.seriesDurationMinutes < 60
-      ? `${item.seriesDurationMinutes}m`
-      : `${item.seriesDurationMinutes / 60}h`;
+  const durationLabel = item.seriesDurationMinutes < 60
+    ? `${item.seriesDurationMinutes}m`
+    : `${item.seriesDurationMinutes / 60}h`;
+  const priceLabel = item.seriesPrice === 0 ? "Free" : `$${(item.seriesPrice / 100).toLocaleString()}`;
 
-  const priceLabel =
-    item.seriesPrice === 0 ? "Free" : `$${(item.seriesPrice / 100).toLocaleString()}`;
-
-  const isLink = item.example.type === "link";
-  const platform = isLink && item.example.url ? getPlatformInfo(item.example.url) : null;
+  const handlePlay = () => {
+    setPlaying(true);
+    player.play();
+  };
 
   return (
-    <Pressable
+    <View
       testID={`video-card-${item.seriesId}`}
       className="bg-[#1C1C1E] rounded-2xl mb-3 mx-4 overflow-hidden"
-      onPress={onPress}
     >
-      {/* Media preview area */}
-      <View style={{ width: "100%", height: 180, backgroundColor: "#111", position: "relative", alignItems: "center", justifyContent: "center" }}>
-        {isLink && platform ? (
-          // Link example — show platform badge prominently
-          <View style={{ alignItems: "center" }}>
-            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: platform.color, alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-              <LinkIcon size={24} color="#fff" />
-            </View>
-            <View style={{ backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 }}>
-              <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>{platform.name}</Text>
-            </View>
-          </View>
+      {/* 9:16 video area */}
+      <View style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT, backgroundColor: "#000", position: "relative" }}>
+        {playing ? (
+          <VideoView
+            player={player}
+            style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT }}
+            contentFit="contain"
+            nativeControls
+          />
         ) : (
-          // Uploaded video
-          <View style={{ alignItems: "center" }}>
-            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#E53935", alignItems: "center", justifyContent: "center" }}>
-              <Play size={24} color="#fff" fill="#fff" />
+          // Thumbnail / play button overlay
+          <Pressable
+            style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT, alignItems: "center", justifyContent: "center" }}
+            onPress={handlePlay}
+          >
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(229,57,53,0.9)", alignItems: "center", justifyContent: "center" }}>
+              <Play size={28} color="#fff" fill="#fff" />
             </View>
-            <Text style={{ color: "#555", fontSize: 11, marginTop: 8 }}>Video Example</Text>
-          </View>
+            <Text style={{ color: "#888", fontSize: 11, marginTop: 10 }}>Tap to play</Text>
+          </Pressable>
         )}
 
-        {/* Creator avatar + name overlay — top left */}
-        <View style={{ position: "absolute", top: 10, left: 12, flexDirection: "row", alignItems: "center" }}>
+        {/* Creator avatar + name — top left */}
+        <View style={{ position: "absolute", top: 10, left: 12, flexDirection: "row", alignItems: "center", pointerEvents: "none" }}>
           <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.5, borderColor: "#E53935" }}>
             {item.creator.image ? (
               <Image source={{ uri: item.creator.image }} style={{ width: 28, height: 28, borderRadius: 14 }} />
@@ -115,15 +122,6 @@ function ExampleDiscoverCard({ item, onPress }: { item: ExampleCard; onPress: ()
             {item.creator.name}
           </Text>
         </View>
-
-        {/* Platform pill — top right for links */}
-        {isLink && platform ? (
-          <View style={{ position: "absolute", top: 10, right: 12 }}>
-            <View style={{ backgroundColor: platform.color, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
-              <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{platform.name}</Text>
-            </View>
-          </View>
-        ) : null}
       </View>
 
       {/* Info row */}
@@ -150,17 +148,108 @@ function ExampleDiscoverCard({ item, onPress }: { item: ExampleCard; onPress: ()
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
               className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
-              onPress={isLink && item.example.url ? () => Linking.openURL(item.example.url) : onPress}
+              onPress={onViewSeries}
             >
-              <Text className="text-white text-xs font-semibold">
-                {isLink ? "Watch" : "View Series"}
-              </Text>
+              <Text className="text-white text-xs font-semibold">Book Series</Text>
             </Pressable>
           </View>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
+}
+
+// Social link card — can't play inline, opens external app/browser
+function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeries: () => void }) {
+  const platform = getPlatformInfo(item.example.url);
+  const initials = (item.creator.name ?? "?")
+    .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const durationLabel = item.seriesDurationMinutes < 60
+    ? `${item.seriesDurationMinutes}m`
+    : `${item.seriesDurationMinutes / 60}h`;
+  const priceLabel = item.seriesPrice === 0 ? "Free" : `$${(item.seriesPrice / 100).toLocaleString()}`;
+
+  return (
+    <View
+      testID={`link-card-${item.seriesId}`}
+      className="bg-[#1C1C1E] rounded-2xl mb-3 mx-4 overflow-hidden"
+    >
+      {/* Platform preview area — 16:9 tap-through */}
+      <Pressable
+        style={{ width: "100%", height: 200, backgroundColor: "#111", alignItems: "center", justifyContent: "center", position: "relative" }}
+        onPress={() => Linking.openURL(item.example.url)}
+      >
+        {/* Gradient-style platform background */}
+        <View style={{ alignItems: "center" }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: platform.color, alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+            <ExternalLink size={30} color="#fff" />
+          </View>
+          <View style={{ backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 16, paddingVertical: 5, borderRadius: 20 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>Watch on {platform.name}</Text>
+          </View>
+          <Text style={{ color: "#666", fontSize: 11, marginTop: 6 }}>Opens in {platform.name}</Text>
+        </View>
+
+        {/* Creator avatar + name — top left */}
+        <View style={{ position: "absolute", top: 10, left: 12, flexDirection: "row", alignItems: "center" }}>
+          <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.5, borderColor: platform.color }}>
+            {item.creator.image ? (
+              <Image source={{ uri: item.creator.image }} style={{ width: 28, height: 28, borderRadius: 14 }} />
+            ) : (
+              <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{initials}</Text>
+            )}
+          </View>
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600", marginLeft: 6, textShadowColor: "#000", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }}>
+            {item.creator.name}
+          </Text>
+        </View>
+
+        {/* Platform badge — top right */}
+        <View style={{ position: "absolute", top: 10, right: 12, backgroundColor: platform.color, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>{platform.name}</Text>
+        </View>
+      </Pressable>
+
+      {/* Info row */}
+      <View className="px-4 py-3">
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1 mr-3">
+            <Text className="text-white font-semibold text-sm" numberOfLines={1}>
+              {item.example.label?.trim() || item.seriesTitle}
+            </Text>
+            <View className="flex-row items-center mt-1 gap-3">
+              <View className="flex-row items-center">
+                <Clock size={11} color="#8E8E93" />
+                <Text className="text-gray-500 text-xs ml-1">{durationLabel}</Text>
+              </View>
+              {item.creator.city ? (
+                <View className="flex-row items-center">
+                  <MapPin size={11} color="#8E8E93" />
+                  <Text className="text-gray-500 text-xs ml-0.5">{item.creator.city}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+          <View className="items-end">
+            <Text className="text-white font-bold text-sm">{priceLabel}</Text>
+            <Pressable
+              className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
+              onPress={onViewSeries}
+            >
+              <Text className="text-white text-xs font-semibold">Book Series</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ExampleDiscoverCard({ item, onPress }: { item: ExampleCard; onPress: () => void }) {
+  if (item.example.type === "video") {
+    return <UploadedVideoCard item={item} onViewSeries={onPress} />;
+  }
+  return <LinkExampleCard item={item} onViewSeries={onPress} />;
 }
 
 function SeriesDiscoverCard({
@@ -172,19 +261,11 @@ function SeriesDiscoverCard({
 }) {
   const { series, creator } = item;
   const initials = (creator.name ?? "?")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  const durationLabel =
-    series.durationMinutes < 60
-      ? `${series.durationMinutes}m`
-      : `${series.durationMinutes / 60}h`;
-
-  const priceLabel =
-    series.price === 0 ? "Free" : `$${(series.price / 100).toLocaleString()}`;
+    .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const durationLabel = series.durationMinutes < 60
+    ? `${series.durationMinutes}m`
+    : `${series.durationMinutes / 60}h`;
+  const priceLabel = series.price === 0 ? "Free" : `$${(series.price / 100).toLocaleString()}`;
 
   return (
     <Pressable
@@ -192,20 +273,14 @@ function SeriesDiscoverCard({
       className="bg-[#1C1C1E] rounded-2xl mb-3 mx-4 overflow-hidden"
       onPress={onPress}
     >
-      {/* Cover image */}
       {series.coverImage ? (
-        <Image
-          source={{ uri: series.coverImage }}
-          style={{ width: "100%", height: 180 }}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: series.coverImage }} style={{ width: "100%", height: 180 }} resizeMode="cover" />
       ) : (
         <View style={{ width: "100%", height: 120, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center" }}>
           <Video size={36} color="#444" />
         </View>
       )}
       <View className="p-4">
-        {/* Creator row */}
         <View className="flex-row items-center mb-2">
           <View className="w-7 h-7 rounded-full bg-[#2C2C2E] items-center justify-center mr-2 overflow-hidden">
             {creator.image ? (
@@ -223,12 +298,10 @@ function SeriesDiscoverCard({
             <Text className="text-gray-400 text-xs ml-0.5">{creator.avgRating?.toFixed(1) ?? "0.0"}</Text>
           </View>
         </View>
-
         <Text className="text-white font-bold text-base mb-1" numberOfLines={2}>{series.title}</Text>
         {series.description ? (
           <Text className="text-gray-400 text-sm mb-2 leading-5" numberOfLines={2}>{series.description}</Text>
         ) : null}
-
         <View className="flex-row items-center justify-between mt-1">
           <View className="flex-row items-center gap-2">
             {series.category && series.category !== "OTHER" && series.category !== "Other" ? (
@@ -243,10 +316,7 @@ function SeriesDiscoverCard({
           </View>
           <View className="flex-row items-center gap-2">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
-            <Pressable
-              className="bg-[#E53935] rounded-lg px-3 py-1.5"
-              onPress={onPress}
-            >
+            <Pressable className="bg-[#E53935] rounded-lg px-3 py-1.5" onPress={onPress}>
               <Text className="text-white text-xs font-semibold">View</Text>
             </Pressable>
           </View>
@@ -262,12 +332,7 @@ export default function DiscoverScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [citySearch, setCitySearch] = useState<string>("");
 
-  const {
-    data: seriesResults,
-    isLoading,
-    refetch,
-    isRefetching,
-  } = useQuery({
+  const { data: seriesResults, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["series-discover", citySearch],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -277,7 +342,6 @@ export default function DiscoverScreen() {
     },
   });
 
-  // Build example cards from ALL examples (videos + links) — these are the "Press Stops" tab
   const exampleCards = useMemo((): ExampleCard[] => {
     if (!seriesResults) return [];
     const cards: ExampleCard[] = [];
@@ -286,7 +350,6 @@ export default function DiscoverScreen() {
       if (item.series.examples) {
         try { examples = JSON.parse(item.series.examples) as SeriesExample[]; } catch { /* ignore */ }
       }
-      // Only include examples that have a non-empty URL
       const validExamples = examples.filter((e) => e.url && e.url.trim().length > 0);
       for (const ex of validExamples) {
         cards.push({
@@ -302,7 +365,6 @@ export default function DiscoverScreen() {
     return cards;
   }, [seriesResults]);
 
-  // Filter series by category for series tab
   const filteredSeries = useMemo(() => {
     if (!seriesResults) return [];
     if (selectedCategory === "ALL") return seriesResults;
@@ -345,7 +407,7 @@ export default function DiscoverScreen() {
           </View>
         </View>
 
-        {/* View Mode Tabs */}
+        {/* Tabs */}
         <View className="flex-row px-4 mb-3 gap-2">
           <Pressable
             testID="tab-press-stops"
@@ -367,7 +429,7 @@ export default function DiscoverScreen() {
           </Pressable>
         </View>
 
-        {/* Category Chips (Series tab only) */}
+        {/* Category Chips — Series tab only */}
         {activeTab === "series" ? (
           <ScrollView
             horizontal
@@ -400,11 +462,11 @@ export default function DiscoverScreen() {
           <FlashList
             testID="discover-list"
             data={exampleCards}
-            estimatedItemSize={240}
+            estimatedItemSize={380}
             renderItem={({ item }) => (
               <ExampleDiscoverCard item={item} onPress={() => handleSeriesPress(item.seriesId)} />
             )}
-            keyExtractor={(item, idx) => `${item.seriesId}-${item.example.url}-${idx}`}
+            keyExtractor={(item, idx) => `${item.seriesId}-${idx}`}
             refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#E53935" />}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-20">

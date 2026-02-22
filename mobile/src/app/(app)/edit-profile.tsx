@@ -342,10 +342,6 @@ function SeriesForm({
   };
 
   const addExample = () => {
-    if (item.examples.length >= 5) {
-      Alert.alert("Limit reached", "You can add up to 5 examples per series.");
-      return;
-    }
     onChange({ ...item, examples: [...item.examples, { type: "link", url: "", label: "" }] });
   };
 
@@ -450,7 +446,7 @@ function SeriesForm({
       {/* Examples */}
       <View>
         <View className="flex-row items-center justify-between mb-1.5">
-          <FieldLabel label={`Examples (${item.examples.length}/5)`} />
+          <FieldLabel label={`Examples (${item.examples.length})`} />
         </View>
         <Text className="text-gray-600 text-xs mb-2">
           Upload a video from your camera roll, or paste a Google Drive / published URL.
@@ -479,8 +475,7 @@ function SeriesForm({
           )
         ))}
 
-        {item.examples.length < 5 && (
-          <Pressable
+        <Pressable
             testID={`add-example-${index}`}
             className="border border-dashed border-[#3C3C3E] rounded-xl py-2.5 items-center flex-row justify-center"
             onPress={addExample}
@@ -488,7 +483,6 @@ function SeriesForm({
             <Plus size={14} color="#555558" />
             <Text className="text-gray-500 text-xs ml-1.5">Add example</Text>
           </Pressable>
-        )}
       </View>
     </View>
   );

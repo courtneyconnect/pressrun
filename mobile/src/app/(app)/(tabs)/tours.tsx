@@ -112,7 +112,7 @@ export default function ToursScreen() {
     isRefetching: availRefetching,
   } = useQuery({
     queryKey: ["availability"],
-    queryFn: () => api.get<Availability[]>("/api/availability"),
+    queryFn: () => api.get<{ slots: Availability[]; exceptions: unknown[] }>("/api/availability"),
     enabled: !isTalent,
   });
 
@@ -176,7 +176,7 @@ export default function ToursScreen() {
               <View testID="availability-loading" className="items-center py-20">
                 <ActivityIndicator size="large" color="#E53935" />
               </View>
-            ) : (availability ?? []).length === 0 ? (
+            ) : (availability?.slots ?? []).length === 0 ? (
               <View className="items-center py-20">
                 <CalendarIcon size={48} color="#2C2C2E" />
                 <Text className="text-gray-500 text-base mt-4">
@@ -187,7 +187,7 @@ export default function ToursScreen() {
                 </Text>
               </View>
             ) : (
-              (availability ?? []).map((item) => (
+              (availability?.slots ?? []).map((item: Availability) => (
                 <AvailabilityRow key={item.id} item={item} />
               ))
             )}

@@ -66,7 +66,7 @@ function InputField({
   testID: string;
   placeholder?: string;
   multiline?: boolean;
-  keyboardType?: "default" | "numeric" | "url" | "email-address";
+  keyboardType?: "default" | "numeric" | "email-address";
   autoCapitalize?: "none" | "sentences" | "words";
 }) {
   return (
@@ -86,6 +86,8 @@ function InputField({
         keyboardType={keyboardType ?? "default"}
         autoCapitalize={autoCapitalize ?? "sentences"}
         autoCorrect={false}
+        spellCheck={false}
+        contextMenuHidden={false}
       />
     </View>
   );
@@ -505,11 +507,11 @@ export default function EditProfileScreen() {
             <Text className="text-gray-500 text-xs mb-3 -mt-1">
               Paste your full profile URL (e.g. https://instagram.com/yourname)
             </Text>
-            <InputField label="Instagram" value={instagramUrl} onChangeText={setInstagramUrl} testID="instagram-input" placeholder="https://instagram.com/yourname" keyboardType="url" autoCapitalize="none" />
-            <InputField label="TikTok" value={tiktokUrl} onChangeText={setTiktokUrl} testID="tiktok-input" placeholder="https://tiktok.com/@yourname" keyboardType="url" autoCapitalize="none" />
-            <InputField label="YouTube" value={youtubeUrl} onChangeText={setYoutubeUrl} testID="youtube-input" placeholder="https://youtube.com/@yourchannel" keyboardType="url" autoCapitalize="none" />
-            <InputField label="X / Twitter" value={twitterUrl} onChangeText={setTwitterUrl} testID="twitter-input" placeholder="https://x.com/yourname" keyboardType="url" autoCapitalize="none" />
-            <InputField label="Website" value={websiteUrl} onChangeText={setWebsiteUrl} testID="website-input" placeholder="https://yourwebsite.com" keyboardType="url" autoCapitalize="none" />
+            <InputField label="Instagram" value={instagramUrl} onChangeText={setInstagramUrl} testID="instagram-input" placeholder="https://instagram.com/yourname" autoCapitalize="none" />
+            <InputField label="TikTok" value={tiktokUrl} onChangeText={setTiktokUrl} testID="tiktok-input" placeholder="https://tiktok.com/@yourname" autoCapitalize="none" />
+            <InputField label="YouTube" value={youtubeUrl} onChangeText={setYoutubeUrl} testID="youtube-input" placeholder="https://youtube.com/@yourchannel" autoCapitalize="none" />
+            <InputField label="X / Twitter" value={twitterUrl} onChangeText={setTwitterUrl} testID="twitter-input" placeholder="https://x.com/yourname" autoCapitalize="none" />
+            <InputField label="Website" value={websiteUrl} onChangeText={setWebsiteUrl} testID="website-input" placeholder="https://yourwebsite.com" autoCapitalize="none" />
 
             {/* Content Series */}
             <SectionHeader title="Content Series" />

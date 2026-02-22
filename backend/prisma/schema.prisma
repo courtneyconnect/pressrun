@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Better Auth Models ──────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // PressRun-specific fields
+  role             String  @default("TALENT") // TALENT, PRESS_STOP, ADMIN
+  bio              String?
+  headline         String?
+  verified         Boolean @default(false)
+  profileComplete  Boolean @default(false)
+  responseRate     Float   @default(0)
+  avgRating        Float   @default(0)
+  totalReviews     Int     @default(0)
+  socialFollowers  Int     @default(0)
+  instagramHandle  String?
+  tiktokHandle     String?
+  youtubeHandle    String?
+  twitterHandle    String?
+  websiteUrl       String?
+
+  // Location
+  city      String?
+  state     String?
+  country   String?
+  latitude  Float?
+  longitude Float?
+
+  // Relations
+  sessions               Session[]
+  accounts               Account[]
+  talentProfile          TalentProfile?
+  pressStopProfile       PressStopProfile?
+  portfolioItems         PortfolioItem[]
+  tours                  Tour[]
+  bookingsAsTalent       Booking[]               @relation("BookingTalent")
+  bookingsAsPressStop    Booking[]               @relation("BookingPressStop")
+  sentMessages           Message[]               @relation("MessageSender")
+  receivedMessages       Message[]               @relation("MessageReceiver")
+  sentOffers             Offer[]
+  reviewsGiven           Review[]                @relation("ReviewReviewer")
+  reviewsReceived        Review[]                @relation("ReviewReviewee")
+  notifications          Notification[]
+  reportsMade            Report[]                @relation("ReportReporter")
+  reportsReceived        Report[]                @relation("ReportReported")
+  availability           Availability[]
+  availabilityExceptions AvailabilityException[]
+
+  @@index([email])
+  @@index([role])
+  @@index([city])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ─── PressRun Domain Models ──────────────────────────────────────────────────
+
+model TalentProfile {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     String  @default("CREATOR")
+  audienceSize Int     @default(0)
+  tourActive   Boolean @default(false)
+}
+
+model PressStopProfile {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         String  @default("PODCAST")
+  capacity         Int     @default(1)
+  baseFee          Int     @default(0) // cents
+  acceptingBookings Boolean @default(true)
+  physicalAddress  String?
+  operatingHours   String?
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   @default("IMAGE")
+  url         String
+  title       String?
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model Tour {
+  id        String    @id @default(cuid())
+  talentId  String
+  talent    User      @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  name      String
+  status    String    @default("DRAFT")
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  stops     TourStop[]
+}
+
+model TourStop {
+  id            String    @id @default(cuid())
+  tourId        String
+  tour          Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  city          String
+  state         String?
+  country       String    @default("US")
+  latitude      Float?
+  longitude     Float?
+  arrivalDate   DateTime
+  departureDate DateTime
+  order         Int       @default(0)
+  bookings      Booking[]
+
+  @@index([tourId])
+}
+
+model Booking {
+  id                 String    @id @default(cuid())
+  talentId           String
+  talent             User      @relation("BookingTalent", fields: [talentId], references: [id], onDelete: Cascade)
+  pressStopId        String
+  pressStop          User      @relation("BookingPressStop", fields: [pressStopId], references: [id], onDelete: Cascade)
+  tourStopId         String?
+  tourStop           TourStop? @relation(fields: [tourStopId], references: [id])
+  status             String    @default("PENDING")
+  type               String    @default("INTERVIEW")
+  title              String
+  description        String?
+  proposedDate       DateTime?
+  confirmedDate      DateTime?
+  startTime          String?
+  endTime            String?
+  location           String?
+  agreedFee          Int       @default(0)
+  platformFee        Int       @default(0)
+  escrowStatus       String    @default("NONE")
+  cancelledBy        String?
+  cancellationReason String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  offers             Offer[]
+  messages           Message[]
+  reviews            Review[]
+
+  @@index([status])
+  @@index([talentId])
+  @@index([pressStopId])
+}
+
+model Offer {
+  id        String    @id @default(cuid())
+  bookingId String
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  amount    Int       // cents
+  message   String?
+  status    String    @default("PENDING")
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  bookingId  String?
+  booking    Booking? @relation(fields: [bookingId], references: [id])
+  content    String
+  type       String   @default("TEXT")
+  read       Boolean  @default(false)
+  fileUrl    String?
+  createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([bookingId])
+}
+
+model Availability {
+  id          String  @id @default(cuid())
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  isAvailable Boolean @default(true)
+}
+
+model AvailabilityException {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  isAvailable Boolean  @default(false)
+  startTime   String?
+  endTime     String?
+  reason      String?
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  bookingId       String
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewerId      String
+  reviewer        User     @relation("ReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId      String
+  reviewee        User     @relation("ReviewReviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  rating          Int
+  content         String?
+  professionalism Int      @default(5)
+  communication   Int      @default(5)
+  punctuality     Int      @default(5)
+  createdAt       DateTime @default(now())
+
+  @@index([revieweeId])
+}
+
+model Report {
+  id          String    @id @default(cuid())
+  reporterId  String
+  reporter    User      @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedId  String
+  reported    User      @relation("ReportReported", fields: [reportedId], references: [id], onDelete: Cascade)
+  bookingId   String?
+  reason      String
+  description String?
+  status      String    @default("PENDING")
+  adminNotes  String?
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  data      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}

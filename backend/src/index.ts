@@ -122,4 +122,6 @@ const port = Number(process.env.PORT) || 3000;
 export default {
   port,
   fetch: app.fetch,
+  // Allow up to 500 MB so large video uploads don't get rejected with 413
+  maxRequestBodySize: 500 * 1024 * 1024,
 };

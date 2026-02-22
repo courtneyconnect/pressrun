@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system";
+import { authClient } from "./auth/auth-client";
 
 type UploadResult = {
   id: string;
@@ -8,27 +9,33 @@ type UploadResult = {
   sizeBytes: number;
 };
 
-// Upload directly to Vibecode storage — bypasses the backend proxy
-// which has a request body size limit that rejects large video files.
-const STORAGE_URL = "https://storage.vibecodeapp.com/v1/files/upload";
-
 export async function uploadFile(
   uri: string,
   filename: string,
   mimeType: string
 ): Promise<UploadResult> {
-  const response = await FileSystem.uploadAsync(STORAGE_URL, uri, {
-    httpMethod: "POST",
-    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-    fieldName: "file",
-    mimeType,
-    parameters: {},
-    headers: {},
-  });
+  const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL!;
 
-  let data: { file?: UploadResult; error?: string };
+  // Use FileSystem.uploadAsync — handles large video file:// URIs correctly on iOS/Android.
+  // Goes through the backend which proxies to storage (maxRequestBodySize raised to 500 MB).
+  const response = await FileSystem.uploadAsync(
+    `${BACKEND_URL}/api/upload`,
+    uri,
+    {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: "file",
+      mimeType,
+      parameters: {},
+      headers: {
+        Cookie: authClient.getCookie(),
+      },
+    }
+  );
+
+  let data: { data?: UploadResult; error?: string };
   try {
-    data = JSON.parse(response.body) as { file?: UploadResult; error?: string };
+    data = JSON.parse(response.body) as { data?: UploadResult; error?: string };
   } catch {
     throw new Error(`Upload failed: unexpected response (status ${response.status})`);
   }
@@ -37,9 +44,9 @@ export async function uploadFile(
     throw new Error(data.error || `Upload failed (${response.status})`);
   }
 
-  if (!data.file) {
-    throw new Error("Upload failed: no file data returned");
+  if (!data.data) {
+    throw new Error("Upload failed: no data returned from server");
   }
 
-  return data.file;
+  return data.data;
 }

@@ -16,7 +16,7 @@ import { Bus, MapPin, Calendar as CalendarIcon, Navigation, Star, BadgeCheck } f
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
-import type { Tour, Availability, SavedTourStop } from "@/types";
+import type { Tour, Availability, SavedTourStop, User } from "@/types";
 import * as Haptics from "expo-haptics";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -236,9 +236,17 @@ function SavedTab({ tours }: { tours: Tour[] }) {
 export default function ToursScreen() {
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role as string | undefined;
-  const isTalent = userRole === "TALENT";
   const [talentSubTab, setTalentSubTab] = useState<"myTours" | "saved">("myTours");
+
+  // Use profile data for role — session may not carry custom fields reliably
+  const { data: me } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => api.get<User>("/api/users/me"),
+    enabled: !!session,
+  });
+
+  const userRole = me?.role ?? (session?.user as any)?.role;
+  const isTalent = userRole === "TALENT" || userRole === "CREATOR";
 
   const {
     data: tours,

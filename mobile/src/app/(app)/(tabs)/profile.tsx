@@ -11,6 +11,7 @@ import {
   Dimensions,
   Modal,
 } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -25,6 +26,7 @@ import {
   ExternalLink,
   Plus,
   Shield,
+  X,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { authClient } from "@/lib/auth/auth-client";
@@ -80,10 +82,12 @@ function PlatformButton({
 function GridCell({
   example,
   onPress,
+  onVideoPress,
   index,
 }: {
   example: SeriesExample;
   onPress: () => void;
+  onVideoPress?: () => void;
   index: number;
 }) {
   const isVideo = example.type === "video";
@@ -96,7 +100,7 @@ function GridCell({
     return (
       <Pressable
         testID={`grid-cell-video-${index}`}
-        onPress={onPress}
+        onPress={() => example.type === "video" && onVideoPress ? onVideoPress() : onPress()}
         style={{
           width: CELL_SIZE,
           height: CELL_SIZE,
@@ -160,6 +164,41 @@ function GridCell({
         </Text>
       ) : null}
     </Pressable>
+  );
+}
+
+// ─── Full-screen in-app video player modal ────────────────────────────────────
+function VideoPreviewModal({ url, label, onClose }: { url: string; label?: string; onClose: () => void }) {
+  const player = useVideoPlayer(url, (p) => {
+    p.loop = false;
+    p.play();
+  });
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "#000" }}>
+        {/* Close button top right */}
+        <Pressable
+          onPress={onClose}
+          style={{ position: "absolute", top: 52, right: 16, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}
+        >
+          <X size={20} color="#fff" />
+        </Pressable>
+        {/* Video fills screen */}
+        <VideoView
+          player={player}
+          style={{ flex: 1 }}
+          contentFit="contain"
+          nativeControls
+        />
+        {/* Label at bottom */}
+        {label ? (
+          <View style={{ position: "absolute", bottom: 48, left: 24, right: 24 }}>
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", textAlign: "center" }}>{label}</Text>
+          </View>
+        ) : null}
+      </View>
+    </Modal>
   );
 }
 
@@ -240,6 +279,7 @@ export default function ProfileScreen() {
 
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   const [previewExample, setPreviewExample] = useState<SeriesExample | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<{ url: string; label?: string } | null>(null);
 
   const signOut = useMutation({
     mutationFn: async () => { await authClient.signOut(); },
@@ -542,6 +582,7 @@ export default function ProfileScreen() {
                           example={ex}
                           index={idx}
                           onPress={() => setPreviewExample(ex)}
+                          onVideoPress={() => setVideoPreviewUrl({ url: ex.url, label: ex.label ?? undefined })}
                         />
                       ))}
                     </View>
@@ -624,6 +665,13 @@ export default function ProfileScreen() {
         example={previewExample}
         onClose={() => setPreviewExample(null)}
       />
+      {videoPreviewUrl ? (
+        <VideoPreviewModal
+          url={videoPreviewUrl.url}
+          label={videoPreviewUrl.label}
+          onClose={() => setVideoPreviewUrl(null)}
+        />
+      ) : null}
     </View>
   );
 }

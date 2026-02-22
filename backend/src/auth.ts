@@ -9,6 +9,20 @@ export const auth = betterAuth({
   baseURL: env.BACKEND_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, { provider: "sqlite" }),
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const email = user.email?.toLowerCase().trim();
+          const allowed = await prisma.betaAllowlist.findUnique({ where: { email } });
+          if (!allowed) {
+            throw new Error("This app is currently in private beta. Your email is not on the access list.");
+          }
+          return { data: user };
+        },
+      },
+    },
+  },
   trustedOrigins: [
     "vibecode://*/*",
     "exp://*/*",

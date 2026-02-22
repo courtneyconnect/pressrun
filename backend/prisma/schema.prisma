@@ -402,3 +402,10 @@ model AdminAssignment {
   @@index([creatorId])
   @@index([adminId])
 }
+
+model BetaAllowlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  note      String?
+  createdAt DateTime @default(now())
+}

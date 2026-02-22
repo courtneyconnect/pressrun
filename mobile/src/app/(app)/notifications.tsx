@@ -57,20 +57,22 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: notifications, isLoading, refetch, isRefetching } = useQuery({
+  const { data: notifData, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => api.get<Notification[]>("/api/notifications"),
+    queryFn: () => api.get<{ notifications: Notification[]; total: number; unread: number }>("/api/notifications"),
   });
 
+  const notifications = notifData?.notifications ?? [];
+
   const markAllRead = useMutation({
-    mutationFn: () => api.post("/api/notifications/read-all", {}),
+    mutationFn: () => api.put("/api/notifications/read-all", {}),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
-  const unreadCount = (notifications ?? []).filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -97,7 +99,7 @@ export default function NotificationsScreen() {
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <ActivityIndicator size="large" color="#E53935" />
           </View>
-        ) : (notifications ?? []).length === 0 ? (
+        ) : notifications.length === 0 ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
             <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#1C1C1E", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
               <Bell size={28} color="#3C3C3E" />
@@ -110,7 +112,7 @@ export default function NotificationsScreen() {
         ) : (
           <FlashList
             testID="notifications-list"
-            data={notifications ?? []}
+            data={notifications}
             estimatedItemSize={80}
             renderItem={({ item }) => <NotificationItem item={item} />}
             keyExtractor={(item) => item.id}

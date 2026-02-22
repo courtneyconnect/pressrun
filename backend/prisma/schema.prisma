@@ -47,6 +47,7 @@ model User {
   talentProfile          TalentProfile?
   pressStopProfile       PressStopProfile?
   portfolioItems         PortfolioItem[]
+  contentSeries          ContentSeries[]
   tours                  Tour[]
   bookingsAsTalent       Booking[]               @relation("BookingTalent")
   bookingsAsPressStop    Booking[]               @relation("BookingPressStop")
@@ -299,4 +300,20 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, read])
+}
+
+model ContentSeries {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  durationMinutes Int      @default(60)
+  price           Int      @default(0)
+  active          Boolean  @default(true)
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }

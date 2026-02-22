@@ -17,6 +17,7 @@ usersRouter.get("/me", requireAuth, async (c) => {
       talentProfile: true,
       pressStopProfile: true,
       portfolioItems: { orderBy: { order: "asc" } },
+      contentSeries: { orderBy: { order: "asc" }, where: { active: true } },
     },
   });
 
@@ -165,6 +166,7 @@ usersRouter.get("/:id", async (c) => {
       talentProfile: true,
       pressStopProfile: true,
       portfolioItems: { orderBy: { order: "asc" } },
+      contentSeries: { orderBy: { order: "asc" }, where: { active: true } },
     },
   });
 
@@ -246,6 +248,98 @@ usersRouter.delete("/me/portfolio/:id", requireAuth, async (c) => {
 
   await prisma.portfolioItem.delete({ where: { id } });
 
+  return c.json({ data: { success: true } });
+});
+
+// GET /me/series - list current user's content series
+usersRouter.get("/me/series", requireAuth, async (c) => {
+  const user = c.get("user")!;
+  const series = await prisma.contentSeries.findMany({
+    where: { userId: user.id },
+    orderBy: { order: "asc" },
+  });
+  return c.json({ data: series });
+});
+
+// POST /me/series - create a content series
+usersRouter.post(
+  "/me/series",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1),
+      description: z.string().nullable().optional(),
+      durationMinutes: z.number().min(5).max(480).default(60),
+      price: z.number().min(0).default(0),
+      order: z.number().optional().default(0),
+    })
+  ),
+  async (c) => {
+    const user = c.get("user")!;
+    const body = c.req.valid("json");
+    const item = await prisma.contentSeries.create({
+      data: {
+        userId: user.id,
+        title: body.title,
+        description: body.description ?? null,
+        durationMinutes: body.durationMinutes,
+        price: body.price,
+        order: body.order,
+      },
+    });
+    return c.json({ data: item }, 201);
+  }
+);
+
+// PUT /me/series/:id - update a content series
+usersRouter.put(
+  "/me/series/:id",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1).optional(),
+      description: z.string().nullable().optional(),
+      durationMinutes: z.number().min(5).max(480).optional(),
+      price: z.number().min(0).optional(),
+      active: z.boolean().optional(),
+      order: z.number().optional(),
+    })
+  ),
+  async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const body = c.req.valid("json");
+
+    const existing = await prisma.contentSeries.findFirst({
+      where: { id, userId: user.id },
+    });
+    if (!existing) {
+      return c.json({ error: { message: "Not found", code: "NOT_FOUND" } }, 404);
+    }
+
+    const updated = await prisma.contentSeries.update({
+      where: { id },
+      data: body,
+    });
+    return c.json({ data: updated });
+  }
+);
+
+// DELETE /me/series/:id - delete a content series
+usersRouter.delete("/me/series/:id", requireAuth, async (c) => {
+  const user = c.get("user")!;
+  const id = c.req.param("id");
+
+  const existing = await prisma.contentSeries.findFirst({
+    where: { id, userId: user.id },
+  });
+  if (!existing) {
+    return c.json({ error: { message: "Not found", code: "NOT_FOUND" } }, 404);
+  }
+
+  await prisma.contentSeries.delete({ where: { id } });
   return c.json({ data: { success: true } });
 });
 

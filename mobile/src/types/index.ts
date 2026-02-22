@@ -84,6 +84,20 @@ export interface User {
   updatedAt: string;
   talentProfile?: TalentProfile | null;
   pressStopProfile?: PressStopProfile | null;
+  contentSeries?: ContentSeries[];
+}
+
+export interface ContentSeries {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  durationMinutes: number;
+  price: number;
+  active: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TalentProfile {

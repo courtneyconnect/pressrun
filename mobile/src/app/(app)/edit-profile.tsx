@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -48,6 +49,12 @@ const SERIES_CATEGORY_OPTIONS = [
   "Long Form",
   "Sponsored",
   "Other",
+];
+
+// ─── Posting timeline options ──────────────────────────────────────────────────
+const POSTING_TIMELINE_OPTIONS = [
+  "Same day", "1 day", "2 days", "3 days", "1 week",
+  "2 weeks", "3 weeks", "1 month", "2 months", "3 months+",
 ];
 
 // ─── Shared components ────────────────────────────────────────────────────────
@@ -171,6 +178,40 @@ function CategoryPicker({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
+function PostingTimelinePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = value || "1 week";
+  return (
+    <View className="mb-4">
+      <FieldLabel label="Estimated Posting Timeline" />
+      <Pressable
+        testID="posting-timeline-picker"
+        className="bg-[#1C1C1E] rounded-xl px-4 py-3.5 flex-row items-center justify-between"
+        onPress={() => setOpen((p) => !p)}
+      >
+        <Text className="text-white text-base">{selected}</Text>
+        {open ? <ChevronUp size={16} color="#8E8E93" /> : <ChevronDown size={16} color="#8E8E93" />}
+      </Pressable>
+      {open ? (
+        <View className="bg-[#1C1C1E] rounded-xl mt-1 overflow-hidden border border-[#2C2C2E]">
+          {POSTING_TIMELINE_OPTIONS.map((opt) => (
+            <Pressable
+              key={opt}
+              testID={`posting-timeline-option-${opt.toLowerCase().replace(/\s/g, "-")}`}
+              className={`px-4 py-3 border-b border-[#2C2C2E] ${opt === selected ? "bg-[#E53935]/10" : ""}`}
+              onPress={() => { Haptics.selectionAsync(); onChange(opt); setOpen(false); }}
+            >
+              <Text className={`text-base ${opt === selected ? "text-[#E53935] font-semibold" : "text-white"}`}>
+                {opt}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 // ─── Series examples ──────────────────────────────────────────────────────────
 function ExampleRow({
   example,
@@ -277,6 +318,7 @@ interface SeriesFormData {
   durationMinutes: number;
   price: string;
   category: string;
+  postingTimeline: string;
   uploadingCover: boolean;
   uploadingExampleIndex: number | null;
 }
@@ -445,6 +487,18 @@ function SeriesForm({
         </View>
       </View>
 
+      {/* Category */}
+      <CategoryPicker
+        value={item.category}
+        onChange={(v) => onChange({ ...item, category: v })}
+      />
+
+      {/* Posting Timeline */}
+      <PostingTimelinePicker
+        value={item.postingTimeline}
+        onChange={(v) => onChange({ ...item, postingTimeline: v })}
+      />
+
       {/* Examples */}
       <View>
         <View className="flex-row items-center justify-between mb-1.5">
@@ -522,6 +576,9 @@ export default function EditProfileScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  // Show My Cue toggle
+  const [showCue, setShowCue] = useState(true);
+
   // Content series
   const [seriesList, setSeriesList] = useState<SeriesFormData[]>([]);
   const [deletedSeriesIds, setDeletedSeriesIds] = useState<string[]>([]);
@@ -544,6 +601,7 @@ export default function EditProfileScreen() {
       setLinkedinUrl(user.linkedinUrl ?? "");
       setWebsiteUrl(user.websiteUrl ?? "");
       setImageUri(user.image ?? null);
+      setShowCue(user.showCue ?? true);
       if (user.contentSeries) {
         setSeriesList(
           user.contentSeries.map((s) => ({
@@ -555,6 +613,7 @@ export default function EditProfileScreen() {
             durationMinutes: s.durationMinutes,
             price: s.price > 0 ? String(s.price / 100) : "",
             category: s.category ?? "Other",
+            postingTimeline: s.postingTimeline ?? "1 week",
             uploadingCover: false,
             uploadingExampleIndex: null,
           }))
@@ -642,6 +701,7 @@ export default function EditProfileScreen() {
         linkedinUrl: linkedinUrl.trim() || null,
         websiteUrl: websiteUrl.trim() || null,
         image: imageUri || null,
+        showCue,
       });
 
       await Promise.all(deletedSeriesIds.map((id) => deleteSeries.mutateAsync(id)));
@@ -658,6 +718,8 @@ export default function EditProfileScreen() {
             })(),
             durationMinutes: s.durationMinutes,
             price: Math.round(parseFloat(s.price || "0") * 100),
+            category: s.category,
+            postingTimeline: s.postingTimeline,
           };
           return s.id
             ? updateSeries.mutateAsync({ id: s.id, data: payload })
@@ -798,13 +860,30 @@ export default function EditProfileScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setSeriesList((prev) => [
                   ...prev,
-                  { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", category: "Other", uploadingCover: false, uploadingExampleIndex: null },
+                  { title: "", description: "", coverImage: null, examples: [], durationMinutes: 60, price: "", category: "Other", postingTimeline: "1 week", uploadingCover: false, uploadingExampleIndex: null },
                 ]);
               }}
             >
               <Plus size={16} color="#8E8E93" />
               <Text className="text-gray-400 text-sm font-medium ml-2">Add Content Series</Text>
             </Pressable>
+
+            {/* Show My Cue Toggle */}
+            <View className="flex-row items-center justify-between bg-[#1C1C1E] rounded-xl px-4 py-4 mb-4">
+              <View className="flex-1 mr-4">
+                <Text className="text-white text-sm font-semibold">Show My Cue</Text>
+                <Text className="text-gray-500 text-xs mt-1">Display your next 5 upcoming bookings on your public profile</Text>
+              </View>
+              <Switch
+                value={showCue}
+                onValueChange={(v) => {
+                  setShowCue(v);
+                  Haptics.selectionAsync();
+                }}
+                trackColor={{ false: "#2C2C2E", true: "#E53935" }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
 
             {/* Save */}
             <Pressable

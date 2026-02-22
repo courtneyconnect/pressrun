@@ -24,6 +24,7 @@ model User {
   headline         String?
   verified         Boolean @default(false)
   profileComplete  Boolean @default(false)
+  showCue          Boolean @default(true)
   responseRate     Float   @default(0)
   avgRating        Float   @default(0)
   totalReviews     Int     @default(0)
@@ -187,6 +188,7 @@ model Booking {
   title              String
   description        String?
   proposedDate       DateTime?
+  preferredPostingDate DateTime?
   confirmedDate      DateTime?
   startTime          String?
   endTime            String?
@@ -337,6 +339,7 @@ model ContentSeries {
   price           Int      @default(0)
   active          Boolean  @default(true)
   category        String   @default("OTHER")
+  postingTimeline String?  // e.g. "1 day", "1 week", "1 month"
   order           Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

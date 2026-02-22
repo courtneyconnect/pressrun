@@ -10,16 +10,20 @@ import {
   Image,
   Linking,
   Dimensions,
+  Modal,
+  Alert,
   type ImageStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink } from "lucide-react-native";
+import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink, Calendar, Plus } from "lucide-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
+import * as ImagePicker from "expo-image-picker";
 import { api } from "@/lib/api/api";
-import type { SeriesDiscoverResult, SeriesExample } from "@/types";
+import { uploadFile } from "@/lib/upload";
+import type { SeriesDiscoverResult, SeriesExample, User } from "@/types";
 
 const SCREEN_WIDTH = Dimensions.get("window").width - 32; // mx-4 on each side
 const CARD_WIDTH = SCREEN_WIDTH;
@@ -61,6 +65,7 @@ type ExampleCard = {
   seriesTitle: string;
   seriesDurationMinutes: number;
   seriesPrice: number;
+  seriesPostingTimeline: string | null;
   creator: SeriesDiscoverResult["creator"];
 };
 
@@ -125,6 +130,12 @@ function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSe
                 <View className="flex-row items-center">
                   <MapPin size={11} color="#8E8E93" />
                   <Text className="text-gray-500 text-xs ml-0.5">{item.creator.city}</Text>
+                </View>
+              ) : null}
+              {item.seriesPostingTimeline ? (
+                <View className="flex-row items-center">
+                  <Calendar size={11} color="#8E8E93" />
+                  <Text className="text-gray-500 text-xs ml-1">Posts in {item.seriesPostingTimeline}</Text>
                 </View>
               ) : null}
             </View>
@@ -211,6 +222,12 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
                 <View className="flex-row items-center">
                   <MapPin size={11} color="#8E8E93" />
                   <Text className="text-gray-500 text-xs ml-0.5">{item.creator.city}</Text>
+                </View>
+              ) : null}
+              {item.seriesPostingTimeline ? (
+                <View className="flex-row items-center">
+                  <Calendar size={11} color="#8E8E93" />
+                  <Text className="text-gray-500 text-xs ml-1">Posts in {item.seriesPostingTimeline}</Text>
                 </View>
               ) : null}
             </View>
@@ -311,6 +328,12 @@ function SeriesDiscoverCard({
               <Clock size={11} color="#8E8E93" />
               <Text className="text-gray-500 text-xs ml-1">{durationLabel}</Text>
             </View>
+            {series.postingTimeline ? (
+              <View className="flex-row items-center">
+                <Calendar size={11} color="#8E8E93" />
+                <Text className="text-gray-500 text-xs ml-1">Posts in {series.postingTimeline}</Text>
+              </View>
+            ) : null}
           </View>
           <View className="flex-row items-center gap-2">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
@@ -326,9 +349,15 @@ function SeriesDiscoverCard({
 
 export default function DiscoverScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"videos" | "series">("videos");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [citySearch, setCitySearch] = useState<string>("");
+
+  // Upload sheet state
+  const [showUploadSheet, setShowUploadSheet] = useState(false);
+  const [selectedUploadSeriesId, setSelectedUploadSeriesId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: seriesResults, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["series-discover", citySearch],
@@ -339,6 +368,72 @@ export default function DiscoverScreen() {
       return api.get<SeriesDiscoverResult[]>(`/api/series-discover${query ? `?${query}` : ""}`);
     },
   });
+
+  // Fetch current user for upload sheet series selector
+  const { data: myUser } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => api.get<User>("/api/users/me"),
+  });
+
+  const mySeries = myUser?.contentSeries ?? [];
+
+  const updateSeriesMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      api.put(`/api/users/me/series/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["series-discover"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+
+  const handleUploadExample = async () => {
+    if (!selectedUploadSeriesId) {
+      Alert.alert("Select a series", "Please select a series to assign this example to.");
+      return;
+    }
+    const selectedSeries = mySeries.find((s) => s.id === selectedUploadSeriesId);
+    if (!selectedSeries) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const asset = result.assets[0];
+      setIsUploading(true);
+
+      const uploadResult = await uploadFile(asset.uri, "video.mp4", "video/mp4");
+      const uploadedUrl = uploadResult.url;
+
+      const currentExamples: SeriesExample[] = selectedSeries.examples
+        ? (() => { try { return JSON.parse(selectedSeries.examples) as SeriesExample[]; } catch { return []; } })()
+        : [];
+      const newExamples = [...currentExamples, { type: "video" as const, url: uploadedUrl, label: "" }];
+
+      await updateSeriesMutation.mutateAsync({
+        id: selectedUploadSeriesId,
+        data: {
+          title: selectedSeries.title,
+          description: selectedSeries.description,
+          coverImage: selectedSeries.coverImage,
+          durationMinutes: selectedSeries.durationMinutes,
+          price: selectedSeries.price,
+          category: selectedSeries.category,
+          postingTimeline: selectedSeries.postingTimeline,
+          examples: JSON.stringify(newExamples),
+        },
+      });
+
+      setIsUploading(false);
+      setShowUploadSheet(false);
+      Alert.alert("Uploaded!", "Your video example has been added to the series.");
+    } catch (err) {
+      setIsUploading(false);
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      Alert.alert("Upload Failed", msg);
+    }
+  };
 
   const exampleCards = useMemo((): ExampleCard[] => {
     if (!seriesResults) return [];
@@ -356,6 +451,7 @@ export default function DiscoverScreen() {
           seriesTitle: item.series.title,
           seriesDurationMinutes: item.series.durationMinutes,
           seriesPrice: item.series.price,
+          seriesPostingTimeline: item.series.postingTimeline ?? null,
           creator: item.creator,
         });
       }
@@ -380,13 +476,24 @@ export default function DiscoverScreen() {
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 pb-3 pt-2">
-          <Text className="text-2xl font-bold">
+        <View className="flex-row items-center px-4 pb-3 pt-2" style={{ gap: 8 }}>
+          <Text className="text-2xl font-bold flex-1">
             <Text className="text-white">Press</Text>
             <Text className="text-[#E53935]">Run</Text>
           </Text>
-          <Pressable testID="notifications-button" className="p-2">
+          <Pressable
+            testID="notifications-button"
+            className="p-2"
+            onPress={() => { /* bell tap */ }}
+          >
             <Bell size={22} color="#FFFFFF" />
+          </Pressable>
+          <Pressable
+            testID="upload-example-button"
+            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#E53935", alignItems: "center", justifyContent: "center" }}
+            onPress={() => setShowUploadSheet(true)}
+          >
+            <Plus size={20} color="#fff" />
           </Pressable>
         </View>
 
@@ -493,6 +600,74 @@ export default function DiscoverScreen() {
           />
         )}
       </SafeAreaView>
+
+      {/* Upload Example Bottom Sheet */}
+      <Modal
+        visible={showUploadSheet}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowUploadSheet(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}
+          onPress={() => setShowUploadSheet(false)}
+        />
+        <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700", marginBottom: 16 }}>Upload Example</Text>
+
+          {/* Series selector */}
+          <Text style={{ color: "#8E8E93", fontSize: 12, marginBottom: 8 }}>Assign to Series</Text>
+          {mySeries.length === 0 ? (
+            <Text style={{ color: "#555558", fontSize: 13, marginBottom: 16 }}>
+              You don't have any series yet. Create one in your profile first.
+            </Text>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0, marginBottom: 16 }}
+            >
+              {mySeries.map((s) => (
+                <Pressable
+                  key={s.id}
+                  onPress={() => setSelectedUploadSeriesId(s.id)}
+                  style={{
+                    backgroundColor: selectedUploadSeriesId === s.id ? "#E53935" : "#2C2C2E",
+                    borderRadius: 20,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    marginRight: 8,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>{s.title}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Upload button */}
+          <Pressable
+            testID="choose-video-button"
+            onPress={handleUploadExample}
+            disabled={isUploading || mySeries.length === 0}
+            style={{
+              backgroundColor: isUploading || mySeries.length === 0 ? "#4C4C4E" : "#E53935",
+              borderRadius: 14,
+              padding: 16,
+              alignItems: "center",
+            }}
+          >
+            {isUploading ? (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", marginLeft: 8 }}>Uploading...</Text>
+              </View>
+            ) : (
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Choose Video</Text>
+            )}
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -57,6 +57,7 @@ usersRouter.put(
       longitude: z.number().nullable().optional(),
       image: z.string().nullable().optional(),
       socialFollowers: z.number().optional(),
+      showCue: z.boolean().optional(),
     })
   ),
   async (c) => {
@@ -159,6 +160,47 @@ usersRouter.put(
     return c.json({ data: fullUser });
   }
 );
+
+// GET /:id/cue - get upcoming booking cue for a press stop
+usersRouter.get("/:id/cue", async (c) => {
+  const id = c.req.param("id");
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { showCue: true },
+  });
+  if (!user) return c.json({ error: { message: "Not found", code: "NOT_FOUND" } }, 404);
+  if (!user.showCue) return c.json({ data: [] });
+
+  const now = new Date();
+  const bookings = await prisma.booking.findMany({
+    where: {
+      pressStopId: id,
+      status: { in: ["CONFIRMED", "IN_PROGRESS"] },
+      OR: [
+        { confirmedDate: { gte: now } },
+        { proposedDate: { gte: now } },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+    take: 5,
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      confirmedDate: true,
+      proposedDate: true,
+      status: true,
+    },
+  });
+
+  const cue = bookings.map((b) => ({
+    id: b.id,
+    type: b.type,
+    date: b.confirmedDate ?? b.proposedDate,
+    status: b.status,
+  }));
+  return c.json({ data: cue });
+});
 
 // GET /:id - get public profile of any user
 usersRouter.get("/:id", async (c) => {
@@ -280,6 +322,7 @@ usersRouter.post(
       price: z.number().min(0).default(0),
       category: z.string().optional().default("OTHER"),
       order: z.number().optional().default(0),
+      postingTimeline: z.string().nullable().optional(),
     })
   ),
   async (c) => {
@@ -296,6 +339,7 @@ usersRouter.post(
         price: body.price,
         category: body.category,
         order: body.order,
+        postingTimeline: body.postingTimeline ?? null,
       },
     });
     return c.json({ data: item }, 201);
@@ -318,6 +362,7 @@ usersRouter.put(
       active: z.boolean().optional(),
       category: z.string().optional(),
       order: z.number().optional(),
+      postingTimeline: z.string().nullable().optional(),
     })
   ),
   async (c) => {

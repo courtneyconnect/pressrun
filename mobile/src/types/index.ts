@@ -66,6 +66,7 @@ export interface User {
   headline: string | null;
   verified: boolean;
   profileComplete: boolean;
+  showCue: boolean;
   responseRate: number;
   avgRating: number;
   totalReviews: number;
@@ -108,6 +109,7 @@ export interface ContentSeries {
   price: number;
   active: boolean;
   category: string;
+  postingTimeline: string | null;
   order: number;
   createdAt: string;
   updatedAt: string;
@@ -214,6 +216,7 @@ export interface Booking {
   title: string;
   description: string | null;
   proposedDate: string | null;
+  preferredPostingDate: string | null;
   confirmedDate: string | null;
   startTime: string | null;
   endTime: string | null;
@@ -297,4 +300,11 @@ export interface Availability {
   startTime: string;
   endTime: string;
   isAvailable: boolean;
+}
+
+export interface CueItem {
+  id: string;
+  type: string;
+  date: string | null;
+  status: string;
 }

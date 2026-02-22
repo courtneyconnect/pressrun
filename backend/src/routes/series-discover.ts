@@ -17,7 +17,7 @@ seriesDiscoverRouter.get("/", async (c) => {
 
   const series = await prisma.contentSeries.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     skip,
     take: limit,
     include: {

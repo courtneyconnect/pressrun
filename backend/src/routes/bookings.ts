@@ -85,6 +85,7 @@ bookingsRouter.post(
       title: z.string().min(1),
       description: z.string().optional(),
       proposedDate: z.string().optional(),
+      preferredPostingDate: z.string().optional(),
       startTime: z.string().optional(),
       endTime: z.string().optional(),
       location: z.string().optional(),
@@ -124,6 +125,7 @@ bookingsRouter.post(
         proposedDate: body.proposedDate
           ? new Date(body.proposedDate)
           : null,
+        preferredPostingDate: body.preferredPostingDate ? new Date(body.preferredPostingDate) : null,
         startTime: body.startTime ?? null,
         endTime: body.endTime ?? null,
         location: body.location ?? null,

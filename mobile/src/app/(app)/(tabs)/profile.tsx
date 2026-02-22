@@ -24,6 +24,7 @@ import {
   Play,
   ExternalLink,
   Plus,
+  Shield,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { authClient } from "@/lib/auth/auth-client";
@@ -583,6 +584,17 @@ export default function ProfileScreen() {
                   <View className="flex-row items-center">
                     <Edit3 size={16} color="#E53935" />
                     <Text className="text-[#E53935] font-semibold text-sm ml-2">Edit Profile</Text>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  testID="manage-admins-button"
+                  className="bg-[#1C1C1E] rounded-xl py-3.5 items-center mb-3"
+                  onPress={() => router.push("/admin-assignments" as any)}
+                >
+                  <View className="flex-row items-center">
+                    <Shield size={16} color="#8E8E93" />
+                    <Text className="text-gray-400 font-medium text-sm ml-2">Manage Admins</Text>
                   </View>
                 </Pressable>
 

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   MapPin,
@@ -20,10 +20,14 @@ import {
   MessageSquare,
   Video,
   Play,
+  UserPlus,
+  UserCheck,
+  Check,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
-import type { User, ContentSeries } from "@/types";
+import type { User, ContentSeries, Friendship } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
+import * as Haptics from "expo-haptics";
 
 function PlatformButton({ label, color, url }: { label: string; color: string; url: string }) {
   return (
@@ -33,6 +37,95 @@ function PlatformButton({ label, color, url }: { label: string; color: string; u
     >
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, marginRight: 6 }} />
       <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "600" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function FriendButton({ viewedUserId }: { viewedUserId: string }) {
+  const queryClient = useQueryClient();
+
+  const { data: friendsData } = useQuery({
+    queryKey: ["friends"],
+    queryFn: () => api.get<{ requested: Friendship[]; received: Friendship[] }>("/api/friends"),
+  });
+
+  const requestFriend = useMutation({
+    mutationFn: () => api.post("/api/friends/request", { addresseeId: viewedUserId }),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+  const acceptFriend = useMutation({
+    mutationFn: (friendshipId: string) => api.put(`/api/friends/${friendshipId}/accept`, {}),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+  const requested = friendsData?.requested ?? [];
+  const received = friendsData?.received ?? [];
+
+  const pendingSent = requested.find((f) => f.addresseeId === viewedUserId);
+  const receivedFromViewed = received.find((f) => f.requesterId === viewedUserId);
+  const isFriends = receivedFromViewed?.status === "ACCEPTED" || requested.find((f) => f.addresseeId === viewedUserId && f.status === "ACCEPTED");
+
+  if (isFriends) {
+    return (
+      <View
+        testID="friends-status"
+        style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e20", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 9, marginTop: 10, alignSelf: "center" }}
+      >
+        <UserCheck size={16} color="#22c55e" />
+        <Text style={{ color: "#22c55e", fontSize: 14, fontWeight: "700", marginLeft: 6 }}>Friends</Text>
+        <Check size={14} color="#22c55e" style={{ marginLeft: 4 }} />
+      </View>
+    );
+  }
+
+  if (pendingSent) {
+    return (
+      <View
+        testID="pending-status"
+        style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#2C2C2E", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 9, marginTop: 10, alignSelf: "center" }}
+      >
+        <UserPlus size={16} color="#8E8E93" />
+        <Text style={{ color: "#8E8E93", fontSize: 14, fontWeight: "600", marginLeft: 6 }}>Pending</Text>
+      </View>
+    );
+  }
+
+  if (receivedFromViewed && receivedFromViewed.status === "PENDING") {
+    return (
+      <Pressable
+        testID="accept-friend-button"
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); acceptFriend.mutate(receivedFromViewed.id); }}
+        disabled={acceptFriend.isPending}
+        style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#22c55e", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 9, marginTop: 10, alignSelf: "center" }}
+      >
+        <Check size={16} color="#fff" />
+        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", marginLeft: 6 }}>Accept</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      testID="add-friend-button"
+      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); requestFriend.mutate(); }}
+      disabled={requestFriend.isPending}
+      style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#1C1C1E", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 9, marginTop: 10, alignSelf: "center" }}
+    >
+      {requestFriend.isPending ? (
+        <ActivityIndicator size="small" color="#8E8E93" />
+      ) : (
+        <>
+          <UserPlus size={16} color="#8E8E93" />
+          <Text style={{ color: "#8E8E93", fontSize: 14, fontWeight: "600", marginLeft: 6 }}>Add Friend</Text>
+        </>
+      )}
     </Pressable>
   );
 }
@@ -118,6 +211,11 @@ export default function UserProfileScreen() {
                     {user.city}{user.state ? `, ${user.state}` : null}
                   </Text>
                 </View>
+              ) : null}
+
+              {/* Friend button — only for other users */}
+              {!isOwnProfile ? (
+                <FriendButton viewedUserId={id!} />
               ) : null}
             </View>
 

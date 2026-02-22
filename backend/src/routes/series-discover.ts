@@ -6,6 +6,7 @@ const seriesDiscoverRouter = new Hono();
 seriesDiscoverRouter.get("/", async (c) => {
   const city = c.req.query("city")?.trim();
   const category = c.req.query("category");
+  const type = c.req.query("type");
   const page = Math.max(1, Number(c.req.query("page") ?? 1));
   const limit = Math.min(50, Math.max(1, Number(c.req.query("limit") ?? 20)));
   const skip = (page - 1) * limit;
@@ -13,6 +14,9 @@ seriesDiscoverRouter.get("/", async (c) => {
   const where: Record<string, unknown> = { active: true };
   if (category && category !== "ALL") {
     where.category = category;
+  } else if (type && type !== "ALL") {
+    // ?type= is an alias for filtering by category (press stop type)
+    where.category = type;
   }
 
   const series = await prisma.contentSeries.findMany({

@@ -182,6 +182,46 @@ export interface PressStopProfile {
   operatingHours: string | null;
 }
 
+export interface SavedTourStop {
+  id: string;
+  tourId: string;
+  userId: string;
+  savedById: string;
+  seriesId: string | null;
+  createdAt: string;
+  pressStop?: {
+    id: string;
+    name: string;
+    image: string | null;
+    headline: string | null;
+    city: string | null;
+    avgRating?: number;
+    totalReviews?: number;
+    verified?: boolean;
+  };
+}
+
+export interface Friendship {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
+  createdAt: string;
+  requester?: { id: string; name: string; image: string | null; headline: string | null; verified: boolean };
+  addressee?: { id: string; name: string; image: string | null; headline: string | null; verified: boolean };
+}
+
+export interface AdminAssignment {
+  id: string;
+  creatorId: string;
+  adminId: string;
+  feePercent: number;
+  active: boolean;
+  createdAt: string;
+  creator?: { id: string; name: string; image: string | null; headline: string | null };
+  admin?: { id: string; name: string; image: string | null; email: string };
+}
+
 export interface Tour {
   id: string;
   talentId: string;
@@ -191,6 +231,8 @@ export interface Tour {
   endDate: string | null;
   createdAt: string;
   stops?: TourStop[];
+  pressStopTypes: string[] | null;
+  savedStops?: SavedTourStop[];
 }
 
 export interface TourStop {

@@ -116,10 +116,13 @@ export default function OnboardingScreen() {
                   </View>
                   <View className="flex-1">
                     <Text className="text-white font-bold text-lg">
-                      Talent
+                      Creator
                     </Text>
                     <Text className="text-gray-400 text-sm mt-0.5">
                       Book press stops for your tour
+                    </Text>
+                    <Text className="text-gray-600 text-xs mt-1">
+                      You can always do both — this sets your primary profile
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#8E8E93" />
@@ -144,7 +147,10 @@ export default function OnboardingScreen() {
                       Press Stop
                     </Text>
                     <Text className="text-gray-400 text-sm mt-0.5">
-                      Host talent at your venue
+                      Host creators at your venue
+                    </Text>
+                    <Text className="text-gray-600 text-xs mt-1">
+                      You can always do both — this sets your primary profile
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#8E8E93" />

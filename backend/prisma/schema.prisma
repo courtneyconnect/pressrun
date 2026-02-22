@@ -66,6 +66,12 @@ model User {
   reportsReceived        Report[]                @relation("ReportReported")
   availability           Availability[]
   availabilityExceptions AvailabilityException[]
+  savedTourStops         SavedTourStop[]         @relation("SavedByUser")
+  savedAsPressStop       SavedTourStop[]         @relation("SavedPressStop")
+  friendshipsRequested   Friendship[]            @relation("FriendshipRequester")
+  friendshipsReceived    Friendship[]            @relation("FriendshipAddressee")
+  adminAssignmentsAsCreator AdminAssignment[]    @relation("AssignedCreator")
+  adminAssignmentsAsAdmin   AdminAssignment[]    @relation("AssignedAdmin")
 
   @@index([email])
   @@index([role])
@@ -146,16 +152,18 @@ model PortfolioItem {
 }
 
 model Tour {
-  id        String    @id @default(cuid())
-  talentId  String
-  talent    User      @relation(fields: [talentId], references: [id], onDelete: Cascade)
-  name      String
-  status    String    @default("DRAFT")
-  startDate DateTime?
-  endDate   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  stops     TourStop[]
+  id             String    @id @default(cuid())
+  talentId       String
+  talent         User      @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  name           String
+  status         String    @default("DRAFT")
+  pressStopTypes String?   // JSON array of stop type preferences e.g. ["Podcast","Interview","Short Form"]
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  stops          TourStop[]
+  savedStops     SavedTourStop[]
 }
 
 model TourStop {
@@ -346,4 +354,51 @@ model ContentSeries {
 
   @@index([userId])
   @@index([category])
+}
+
+model SavedTourStop {
+  id          String   @id @default(cuid())
+  tourId      String
+  tour        Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  userId      String   // the press stop user who is saved
+  savedById   String   // the talent who saved it
+  savedBy     User     @relation("SavedByUser", fields: [savedById], references: [id], onDelete: Cascade)
+  pressStop   User     @relation("SavedPressStop", fields: [userId], references: [id], onDelete: Cascade)
+  seriesId    String?  // optional: specific series saved
+  createdAt   DateTime @default(now())
+
+  @@unique([tourId, userId])
+  @@index([tourId])
+  @@index([savedById])
+}
+
+model Friendship {
+  id          String   @id @default(cuid())
+  requesterId String
+  requester   User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User     @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      String   @default("PENDING")  // PENDING, ACCEPTED, DECLINED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+}
+
+model AdminAssignment {
+  id          String   @id @default(cuid())
+  creatorId   String
+  creator     User     @relation("AssignedCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  adminId     String
+  admin       User     @relation("AssignedAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  feePercent  Float    @default(2.0)  // additional % fee for the admin (minimum 2%)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([creatorId, adminId])
+  @@index([creatorId])
+  @@index([adminId])
 }

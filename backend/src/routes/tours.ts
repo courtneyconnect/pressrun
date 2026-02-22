@@ -31,6 +31,7 @@ toursRouter.post(
     z.object({
       name: z.string().min(1),
       status: z.string().optional().default("DRAFT"),
+      pressStopTypes: z.array(z.string()).optional().default([]),
       startDate: z.string().optional(),
       endDate: z.string().optional(),
       stops: z
@@ -59,6 +60,7 @@ toursRouter.post(
         talentId: user.id,
         name: body.name,
         status: body.status,
+        pressStopTypes: JSON.stringify(body.pressStopTypes),
         startDate: body.startDate ? new Date(body.startDate) : null,
         endDate: body.endDate ? new Date(body.endDate) : null,
         stops: {
@@ -125,6 +127,7 @@ toursRouter.put(
     z.object({
       name: z.string().optional(),
       status: z.string().optional(),
+      pressStopTypes: z.array(z.string()).optional(),
       startDate: z.string().optional(),
       endDate: z.string().optional(),
     })
@@ -150,6 +153,7 @@ toursRouter.put(
       data: {
         name: body.name ?? undefined,
         status: body.status ?? undefined,
+        pressStopTypes: body.pressStopTypes !== undefined ? JSON.stringify(body.pressStopTypes) : undefined,
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         endDate: body.endDate ? new Date(body.endDate) : undefined,
       },
@@ -337,5 +341,57 @@ toursRouter.delete(
     return c.json({ data: { success: true } });
   }
 );
+
+// POST /:id/save - save a press stop to a tour
+toursRouter.post("/:id/save", requireAuth, zValidator("json", z.object({
+  pressStopUserId: z.string(),
+  seriesId: z.string().optional(),
+})), async (c) => {
+  const user = c.get("user")!;
+  const tourId = c.req.param("id");
+  const body = c.req.valid("json");
+
+  const tour = await prisma.tour.findFirst({ where: { id: tourId, talentId: user.id } });
+  if (!tour) return c.json({ error: { message: "Tour not found", code: "NOT_FOUND" } }, 404);
+
+  const saved = await prisma.savedTourStop.upsert({
+    where: { tourId_userId: { tourId, userId: body.pressStopUserId } },
+    create: { tourId, userId: body.pressStopUserId, savedById: user.id, seriesId: body.seriesId ?? null },
+    update: { seriesId: body.seriesId ?? null },
+    include: { pressStop: { select: { id: true, name: true, image: true, headline: true, city: true } } },
+  });
+  return c.json({ data: saved }, 201);
+});
+
+// DELETE /:id/save/:userId - remove a saved press stop
+toursRouter.delete("/:id/save/:userId", requireAuth, async (c) => {
+  const user = c.get("user")!;
+  const tourId = c.req.param("id");
+  const pressStopUserId = c.req.param("userId");
+
+  const tour = await prisma.tour.findFirst({ where: { id: tourId, talentId: user.id } });
+  if (!tour) return c.json({ error: { message: "Tour not found", code: "NOT_FOUND" } }, 404);
+
+  await prisma.savedTourStop.deleteMany({ where: { tourId, userId: pressStopUserId } });
+  return c.json({ data: { success: true } });
+});
+
+// GET /:id/saved - get all saved press stops for a tour
+toursRouter.get("/:id/saved", requireAuth, async (c) => {
+  const user = c.get("user")!;
+  const tourId = c.req.param("id");
+
+  const tour = await prisma.tour.findFirst({ where: { id: tourId, talentId: user.id } });
+  if (!tour) return c.json({ error: { message: "Tour not found", code: "NOT_FOUND" } }, 404);
+
+  const saved = await prisma.savedTourStop.findMany({
+    where: { tourId },
+    include: {
+      pressStop: { select: { id: true, name: true, image: true, headline: true, city: true, avgRating: true, totalReviews: true, verified: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return c.json({ data: saved });
+});
 
 export { toursRouter };

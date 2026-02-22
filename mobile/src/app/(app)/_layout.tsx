@@ -12,6 +12,9 @@ export default function AppLayout() {
       <Stack.Screen name="series/[id]" />
       <Stack.Screen name="user/[id]" />
       <Stack.Screen name="tour-discovery" />
+      <Stack.Screen name="tour/[id]" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="admin-assignments" />
       <Stack.Screen
         name="onboarding"
         options={{ gestureEnabled: false }}

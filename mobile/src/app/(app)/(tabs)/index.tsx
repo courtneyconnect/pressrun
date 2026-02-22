@@ -21,6 +21,7 @@ import { FlashList } from "@shopify/flash-list";
 import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink, Calendar, Plus } from "lucide-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import * as ImagePicker from "expo-image-picker";
+import * as Haptics from "expo-haptics";
 import { api } from "@/lib/api/api";
 import { uploadFile } from "@/lib/upload";
 import type { SeriesDiscoverResult, SeriesExample, User } from "@/types";
@@ -484,7 +485,7 @@ export default function DiscoverScreen() {
           <Pressable
             testID="notifications-button"
             className="p-2"
-            onPress={() => { /* bell tap */ }}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/notifications" as any); }}
           >
             <Bell size={22} color="#FFFFFF" />
           </Pressable>

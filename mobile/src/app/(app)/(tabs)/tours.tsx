@@ -7,15 +7,16 @@ import {
   ScrollView,
   RefreshControl,
   Switch,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, MapPin, Calendar as CalendarIcon, Navigation } from "lucide-react-native";
+import { Bus, MapPin, Calendar as CalendarIcon, Navigation, Star, BadgeCheck } from "lucide-react-native";
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
-import type { Tour, Availability } from "@/types";
+import type { Tour, Availability, SavedTourStop } from "@/types";
 import * as Haptics from "expo-haptics";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -61,7 +62,75 @@ function TourCard({ tour, onPress }: { tour: Tour; onPress: () => void }) {
           {tour.stops?.length ?? 0} stops
         </Text>
       </View>
+
+      {tour.pressStopTypes && tour.pressStopTypes.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0, marginTop: 8 }}
+          contentContainerStyle={{ gap: 6 }}
+        >
+          {tour.pressStopTypes.slice(0, 4).map((type) => (
+            <View key={type} style={{ backgroundColor: "#E5393520", borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 }}>
+              <Text style={{ color: "#E53935", fontSize: 11, fontWeight: "600" }}>{type}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
     </Pressable>
+  );
+}
+
+function SavedStopCard({ stop }: { stop: SavedTourStop }) {
+  const router = useRouter();
+  const ps = stop.pressStop;
+  const initials = (ps?.name ?? "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  return (
+    <View
+      testID={`saved-stop-card-${stop.id}`}
+      style={{ backgroundColor: "#1C1C1E", borderRadius: 16, padding: 14, marginBottom: 10, flexDirection: "row", alignItems: "center" }}
+    >
+      <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", overflow: "hidden", marginRight: 12 }}>
+        {ps?.image ? (
+          <Image source={{ uri: ps.image }} style={{ width: 46, height: 46, borderRadius: 23 }} />
+        ) : (
+          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>{initials}</Text>
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700", marginRight: 4 }} numberOfLines={1}>
+            {ps?.name ?? "Unknown"}
+          </Text>
+          {ps?.verified ? <BadgeCheck size={13} color="#4FC3F7" /> : null}
+        </View>
+        {ps?.headline ? (
+          <Text style={{ color: "#8E8E93", fontSize: 12, marginTop: 1 }} numberOfLines={1}>{ps.headline}</Text>
+        ) : null}
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3, gap: 8 }}>
+          {ps?.city ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <MapPin size={10} color="#555558" />
+              <Text style={{ color: "#555558", fontSize: 11, marginLeft: 3 }}>{ps.city}</Text>
+            </View>
+          ) : null}
+          {ps?.avgRating ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Star size={10} color="#FFD700" fill="#FFD700" />
+              <Text style={{ color: "#555558", fontSize: 11, marginLeft: 3 }}>{ps.avgRating.toFixed(1)}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      <Pressable
+        testID={`book-saved-stop-${stop.id}`}
+        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push(`/press-stop/${ps?.id}` as any); }}
+        style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 }}
+      >
+        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -89,11 +158,87 @@ function AvailabilityRow({ item }: { item: Availability }) {
   );
 }
 
+function SavedTab({ tours }: { tours: Tour[] }) {
+  const [selectedTourId, setSelectedTourId] = useState<string | null>(tours[0]?.id ?? null);
+
+  const activeTourId = selectedTourId ?? tours[0]?.id ?? null;
+
+  const { data: savedStops, isLoading } = useQuery({
+    queryKey: ["saved-stops", activeTourId],
+    queryFn: () => activeTourId ? api.get<SavedTourStop[]>(`/api/tours/${activeTourId}/saved`) : Promise.resolve([]),
+    enabled: !!activeTourId,
+  });
+
+  if (tours.length === 0) {
+    return (
+      <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 24 }}>
+        <MapPin size={44} color="#2C2C2E" />
+        <Text style={{ color: "#555558", fontSize: 15, marginTop: 12 }}>No tours yet</Text>
+        <Text style={{ color: "#3C3C3E", fontSize: 13, marginTop: 4 }}>Create a tour first to save press stops</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      {/* Tour selector */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
+      >
+        {tours.map((t) => {
+          const active = (selectedTourId ?? tours[0]?.id) === t.id;
+          return (
+            <Pressable
+              key={t.id}
+              testID={`tour-pill-${t.id}`}
+              onPress={() => { Haptics.selectionAsync(); setSelectedTourId(t.id); }}
+              style={{
+                backgroundColor: active ? "#E53935" : "#1C1C1E",
+                borderRadius: 20,
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+              }}
+            >
+              <Text style={{ color: active ? "#fff" : "#8E8E93", fontSize: 13, fontWeight: active ? "700" : "500" }}>
+                {t.name}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Saved stops list */}
+      <ScrollView style={{ flex: 1, paddingHorizontal: 16 }}>
+        {isLoading ? (
+          <View style={{ alignItems: "center", paddingVertical: 40 }}>
+            <ActivityIndicator size="large" color="#E53935" />
+          </View>
+        ) : (savedStops ?? []).length === 0 ? (
+          <View style={{ alignItems: "center", paddingVertical: 40 }}>
+            <Star size={44} color="#2C2C2E" />
+            <Text style={{ color: "#555558", fontSize: 15, marginTop: 12 }}>No saved stops yet</Text>
+            <Text style={{ color: "#3C3C3E", fontSize: 13, marginTop: 4 }}>Open a tour to discover and save press stops</Text>
+          </View>
+        ) : (
+          (savedStops ?? []).map((stop) => (
+            <SavedStopCard key={stop.id} stop={stop} />
+          ))
+        )}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
 export default function ToursScreen() {
   const router = useRouter();
   const { data: session } = useSession();
   const userRole = (session?.user as any)?.role as string | undefined;
   const isTalent = userRole === "TALENT";
+  const [talentSubTab, setTalentSubTab] = useState<"myTours" | "saved">("myTours");
 
   const {
     data: tours,
@@ -145,39 +290,82 @@ export default function ToursScreen() {
         ) : null}
 
         {isTalent ? (
-          /* Talent: Tours List */
-          <ScrollView
-            testID="tours-list"
-            className="flex-1 px-4"
-            refreshControl={
-              <RefreshControl
-                refreshing={toursRefetching}
-                onRefresh={refetchTours}
-                tintColor="#E53935"
-              />
-            }
-          >
-            {toursLoading ? (
-              <View testID="tours-loading" className="items-center py-20">
-                <ActivityIndicator size="large" color="#E53935" />
-              </View>
-            ) : (tours ?? []).length === 0 ? (
-              <View className="items-center py-20">
-                <MapPin size={48} color="#2C2C2E" />
-                <Text className="text-gray-500 text-base mt-4">
-                  No tours yet
+          <View style={{ flex: 1 }}>
+            {/* Sub-tabs */}
+            <View style={{ flexDirection: "row", marginHorizontal: 16, marginBottom: 12, backgroundColor: "#1C1C1E", borderRadius: 12, padding: 3 }}>
+              <Pressable
+                testID="subtab-my-tours"
+                onPress={() => { Haptics.selectionAsync(); setTalentSubTab("myTours"); }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  backgroundColor: talentSubTab === "myTours" ? "#E53935" : "transparent",
+                }}
+              >
+                <Text style={{ color: talentSubTab === "myTours" ? "#fff" : "#8E8E93", fontSize: 14, fontWeight: "600" }}>
+                  My Tours
                 </Text>
-                <Text className="text-gray-600 text-sm mt-1">
-                  Create your first press tour
+              </Pressable>
+              <Pressable
+                testID="subtab-saved"
+                onPress={() => { Haptics.selectionAsync(); setTalentSubTab("saved"); }}
+                style={{
+                  flex: 1,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  backgroundColor: talentSubTab === "saved" ? "#E53935" : "transparent",
+                }}
+              >
+                <Text style={{ color: talentSubTab === "saved" ? "#fff" : "#8E8E93", fontSize: 14, fontWeight: "600" }}>
+                  Saved
                 </Text>
-              </View>
+              </Pressable>
+            </View>
+
+            {talentSubTab === "myTours" ? (
+              <ScrollView
+                testID="tours-list"
+                className="flex-1 px-4"
+                refreshControl={
+                  <RefreshControl
+                    refreshing={toursRefetching}
+                    onRefresh={refetchTours}
+                    tintColor="#E53935"
+                  />
+                }
+              >
+                {toursLoading ? (
+                  <View testID="tours-loading" className="items-center py-20">
+                    <ActivityIndicator size="large" color="#E53935" />
+                  </View>
+                ) : (tours ?? []).length === 0 ? (
+                  <View className="items-center py-20">
+                    <MapPin size={48} color="#2C2C2E" />
+                    <Text className="text-gray-500 text-base mt-4">
+                      No tours yet
+                    </Text>
+                    <Text className="text-gray-600 text-sm mt-1">
+                      Create your first press tour
+                    </Text>
+                  </View>
+                ) : (
+                  (tours ?? []).map((tour) => (
+                    <TourCard
+                      key={tour.id}
+                      tour={tour}
+                      onPress={() => router.push(`/tour/${tour.id}` as any)}
+                    />
+                  ))
+                )}
+                <View className="h-24" />
+              </ScrollView>
             ) : (
-              (tours ?? []).map((tour) => (
-                <TourCard key={tour.id} tour={tour} onPress={() => {}} />
-              ))
+              <SavedTab tours={tours ?? []} />
             )}
-            <View className="h-24" />
-          </ScrollView>
+          </View>
         ) : (
           /* PressStop: Availability */
           <ScrollView
@@ -221,7 +409,7 @@ export default function ToursScreen() {
             className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-[#E53935] items-center justify-center shadow-lg"
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/create-tour" as any); }}
           >
-            <Plus size={28} color="#FFFFFF" />
+            <Bus size={26} color="#FFFFFF" />
           </Pressable>
         ) : null}
       </SafeAreaView>

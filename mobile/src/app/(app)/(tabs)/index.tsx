@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, Bell, Star, BadgeCheck, Clock, Video, Play, ExternalLink } from "lucide-react-native";
+import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink } from "lucide-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample } from "@/types";
@@ -66,9 +66,10 @@ type ExampleCard = {
 
 // Inline video player for uploaded video files
 function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSeries: () => void }) {
-  const [playing, setPlaying] = useState(false);
   const player = useVideoPlayer(item.example.url, (p) => {
-    p.loop = false;
+    p.loop = true;
+    p.muted = true;
+    p.play();
   });
 
   const initials = (item.creator.name ?? "?")
@@ -79,11 +80,6 @@ function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSe
     : `${item.seriesDurationMinutes / 60}h`;
   const priceLabel = item.seriesPrice === 0 ? "Free" : `$${(item.seriesPrice / 100).toLocaleString()}`;
 
-  const handlePlay = () => {
-    setPlaying(true);
-    player.play();
-  };
-
   return (
     <View
       testID={`video-card-${item.seriesId}`}
@@ -91,25 +87,12 @@ function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSe
     >
       {/* 9:16 video area */}
       <View style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT, backgroundColor: "#000", position: "relative" }}>
-        {playing ? (
-          <VideoView
-            player={player}
-            style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT }}
-            contentFit="contain"
-            nativeControls
-          />
-        ) : (
-          // Thumbnail / play button overlay
-          <Pressable
-            style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT, alignItems: "center", justifyContent: "center" }}
-            onPress={handlePlay}
-          >
-            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(229,57,53,0.9)", alignItems: "center", justifyContent: "center" }}>
-              <Play size={28} color="#fff" fill="#fff" />
-            </View>
-            <Text style={{ color: "#888", fontSize: 11, marginTop: 10 }}>Tap to play</Text>
-          </Pressable>
-        )}
+        <VideoView
+          player={player}
+          style={{ width: "100%", height: CAPPED_VIDEO_HEIGHT }}
+          contentFit="contain"
+          nativeControls
+        />
 
         {/* Creator avatar + name — top left */}
         <View style={{ position: "absolute", top: 10, left: 12, flexDirection: "row", alignItems: "center", pointerEvents: "none" }}>

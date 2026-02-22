@@ -58,24 +58,45 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 // File upload endpoint
 app.post("/api/upload", async (c) => {
-  const formData = await c.req.formData();
+  let formData: FormData;
+  try {
+    formData = await c.req.formData();
+  } catch (e) {
+    console.error("[upload] Failed to parse form data:", e);
+    return c.json({ error: "Failed to parse form data" }, 400);
+  }
+
   const file = formData.get("file");
 
-  if (!file || !(file instanceof File)) {
+  if (!file) {
     return c.json({ error: "No file provided" }, 400);
+  }
+
+  // Accept File or any object with arrayBuffer (covers Blob-like objects from Bun)
+  if (!(file instanceof File) && typeof (file as { arrayBuffer?: unknown }).arrayBuffer !== "function") {
+    return c.json({ error: "Invalid file field" }, 400);
   }
 
   const storageForm = new FormData();
   storageForm.append("file", file);
 
-  const response = await fetch("https://storage.vibecodeapp.com/v1/files/upload", {
-    method: "POST",
-    body: storageForm,
-  });
+  let response: Response;
+  try {
+    response = await fetch("https://storage.vibecodeapp.com/v1/files/upload", {
+      method: "POST",
+      body: storageForm,
+    });
+  } catch (e) {
+    console.error("[upload] Storage fetch error:", e);
+    return c.json({ error: "Storage service unreachable" }, 502);
+  }
 
   if (!response.ok) {
-    const error = await response.json() as { error?: string };
-    return c.json({ error: error.error || "Upload failed" }, 500);
+    const text = await response.text();
+    console.error("[upload] Storage error:", response.status, text);
+    let errorMsg = "Upload failed";
+    try { errorMsg = (JSON.parse(text) as { error?: string }).error ?? errorMsg; } catch { /* ignore */ }
+    return c.json({ error: errorMsg }, 500);
   }
 
   const result = await response.json() as { file: { id: string; url: string; originalFilename: string; contentType: string; sizeBytes: number } };

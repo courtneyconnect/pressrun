@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Modal,
   Alert,
   type ImageStyle,
+  type ViewToken,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -71,12 +72,20 @@ type ExampleCard = {
 };
 
 // Inline video player for uploaded video files
-function UploadedVideoCard({ item, onViewSeries }: { item: ExampleCard; onViewSeries: () => void }) {
+function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard; onViewSeries: () => void; isActive: boolean }) {
   const player = useVideoPlayer(item.example.url, (p) => {
     p.loop = true;
     p.muted = true;
-    p.play();
   });
+
+  // Play/pause driven by scroll visibility
+  React.useEffect(() => {
+    if (isActive) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isActive, player]);
 
   const initials = (item.creator.name ?? "?")
     .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -248,9 +257,9 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
   );
 }
 
-function ExampleDiscoverCard({ item, onPress }: { item: ExampleCard; onPress: () => void }) {
+function ExampleDiscoverCard({ item, onPress, isActive }: { item: ExampleCard; onPress: () => void; isActive: boolean }) {
   if (item.example.type === "video") {
-    return <UploadedVideoCard item={item} onViewSeries={onPress} />;
+    return <UploadedVideoCard item={item} onViewSeries={onPress} isActive={isActive} />;
   }
   return <LinkExampleCard item={item} onViewSeries={onPress} />;
 }
@@ -473,6 +482,14 @@ export default function DiscoverScreen() {
     [router]
   );
 
+  // Track which video card is active (≥40% visible)
+  const [activeVideoKey, setActiveVideoKey] = useState<string | null>(null);
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 40 }).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const first = viewableItems.find((v) => v.isViewable);
+    setActiveVideoKey(first ? `${(first.item as ExampleCard).seriesId}-${first.index ?? 0}` : null);
+  }).current;
+
   return (
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
@@ -569,10 +586,19 @@ export default function DiscoverScreen() {
             testID="discover-list"
             data={exampleCards}
             estimatedItemSize={380}
-            renderItem={({ item }) => (
-              <ExampleDiscoverCard item={item} onPress={() => handleSeriesPress(item.seriesId)} />
-            )}
+            renderItem={({ item, index }) => {
+              const key = `${item.seriesId}-${index}`;
+              return (
+                <ExampleDiscoverCard
+                  item={item}
+                  onPress={() => handleSeriesPress(item.seriesId)}
+                  isActive={activeVideoKey === key}
+                />
+              );
+            }}
             keyExtractor={(item, idx) => `${item.seriesId}-${idx}`}
+            viewabilityConfig={viewabilityConfig}
+            onViewableItemsChanged={onViewableItemsChanged}
             refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#E53935" />}
             ListEmptyComponent={
               <View className="flex-1 items-center justify-center py-20">

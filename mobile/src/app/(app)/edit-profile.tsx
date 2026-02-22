@@ -334,9 +334,10 @@ function SeriesForm({
         i === exIndex ? { ...ex, url: result.url } : ex
       );
       onChange({ ...item, examples: updated, uploadingExampleIndex: null });
-    } catch {
+    } catch (err) {
       onChange({ ...item, uploadingExampleIndex: null });
-      Alert.alert("Error", "Failed to upload video.");
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      Alert.alert("Upload Failed", msg);
     }
   };
 
@@ -653,7 +654,10 @@ export default function EditProfileScreen() {
             title: s.title.trim(),
             description: s.description.trim() || null,
             coverImage: s.coverImage || null,
-            examples: s.examples.length > 0 ? JSON.stringify(s.examples) : null,
+            examples: (() => {
+              const valid = s.examples.filter((e) => e.url && e.url.trim().length > 0);
+              return valid.length > 0 ? JSON.stringify(valid) : null;
+            })(),
             durationMinutes: s.durationMinutes,
             price: Math.round(parseFloat(s.price || "0") * 100),
           };

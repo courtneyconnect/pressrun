@@ -156,7 +156,7 @@ function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard
               className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
               onPress={onViewSeries}
             >
-              <Text className="text-white text-xs font-semibold">Book Series</Text>
+              <Text className="text-white text-xs font-semibold">Book Stop</Text>
             </Pressable>
           </View>
         </View>
@@ -248,7 +248,7 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
               className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
               onPress={onViewSeries}
             >
-              <Text className="text-white text-xs font-semibold">Book Series</Text>
+              <Text className="text-white text-xs font-semibold">Book Stop</Text>
             </Pressable>
           </View>
         </View>

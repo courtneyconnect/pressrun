@@ -7,6 +7,7 @@ import {
   ScrollView,
   RefreshControl,
   Linking,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -79,10 +80,17 @@ export default function ProfileScreen() {
             <View className="px-4 pt-4">
               {/* Avatar + Name */}
               <View className="items-center mb-6">
-                <View className="w-24 h-24 rounded-full bg-[#1C1C1E] items-center justify-center mb-3">
-                  <Text className="text-white text-3xl font-bold">
-                    {initials}
-                  </Text>
+                <View className="w-24 h-24 rounded-full bg-[#1C1C1E] items-center justify-center mb-3 overflow-hidden">
+                  {user?.image ? (
+                    <Image
+                      source={{ uri: user.image }}
+                      style={{ width: 96, height: 96, borderRadius: 48 }}
+                    />
+                  ) : (
+                    <Text className="text-white text-3xl font-bold">
+                      {initials}
+                    </Text>
+                  )}
                 </View>
 
                 <View className="flex-row items-center">

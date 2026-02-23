@@ -28,8 +28,11 @@ analyticsRouter.get("/me", requireAuth, async (c) => {
     orderBy: { createdAt: "desc" },
   });
 
-  // Revenue = sum of agreedFee for COMPLETED bookings (minus platformFee)
-  const completedBookings = bookings.filter((b) => b.status === "COMPLETED");
+  // Revenue = sum of agreedFee for COMPLETED or ACCEPTED/CONFIRMED/IN_PROGRESS bookings (minus platformFee)
+  // COMPLETED = fully done; also count ACCEPTED/CONFIRMED/IN_PROGRESS as earned since they are committed
+  const completedBookings = bookings.filter((b) =>
+    ["COMPLETED", "ACCEPTED", "CONFIRMED", "IN_PROGRESS"].includes(b.status)
+  );
   const totalRevenueCents = completedBookings.reduce(
     (sum, b) => sum + Math.max(0, b.agreedFee - b.platformFee),
     0
@@ -55,9 +58,9 @@ analyticsRouter.get("/me", requireAuth, async (c) => {
       : 60;
   const totalContentMinutes = Math.round(completedBookings.length * avgDurationMinutes);
 
-  // Pending revenue = agreed fees for ACCEPTED/CONFIRMED/IN_PROGRESS bookings
+  // Pending revenue = agreed fees for PENDING/NEGOTIATING bookings only
   const pendingBookings = bookings.filter((b) =>
-    ["ACCEPTED", "CONFIRMED", "IN_PROGRESS", "NEGOTIATING"].includes(b.status)
+    ["PENDING", "NEGOTIATING"].includes(b.status)
   );
   const pendingRevenueCents = pendingBookings.reduce((sum, b) => sum + b.agreedFee, 0);
 

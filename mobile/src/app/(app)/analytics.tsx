@@ -645,7 +645,7 @@ export default function AnalyticsScreen() {
                               marginBottom: 4,
                             }}
                           >
-                            {formatCurrency(booking.agreedFee * 100)}
+                            {formatCurrency(booking.agreedFee)}
                           </Text>
                           <View
                             style={{

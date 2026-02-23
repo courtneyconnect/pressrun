@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
-import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink, Calendar, Plus } from "lucide-react-native";
+import { MapPin, Bell, Star, BadgeCheck, Clock, Video, ExternalLink, Calendar, Plus, Search } from "lucide-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
@@ -530,6 +530,13 @@ export default function DiscoverScreen() {
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/notifications" as any); }}
           >
             <Bell size={22} color="#FFFFFF" />
+          </Pressable>
+          <Pressable
+            testID="search-button"
+            className="p-2"
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/search" as any); }}
+          >
+            <Search size={22} color="#FFFFFF" />
           </Pressable>
           <Pressable
             testID="upload-example-button"

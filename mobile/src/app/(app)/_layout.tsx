@@ -14,6 +14,7 @@ export default function AppLayout() {
       <Stack.Screen name="tour-discovery" />
       <Stack.Screen name="tour/[id]" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="search" />
       <Stack.Screen name="admin-assignments" />
       <Stack.Screen
         name="onboarding"

@@ -29,9 +29,10 @@ import {
   UserCheck,
   Check,
   X,
+  ExternalLink,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
-import type { User, ContentSeries, Friendship, Review } from "@/types";
+import type { User, ContentSeries, Friendship, Review, SeriesExample } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
 import * as Haptics from "expo-haptics";
 
@@ -649,6 +650,101 @@ export default function UserProfileScreen() {
                     ))}
                   </View>
                 ) : null}
+
+                {/* Examples Feed */}
+                {(() => {
+                  const allExamples: { series: ContentSeries; example: SeriesExample }[] = [];
+                  for (const s of user.contentSeries ?? []) {
+                    if (!s.examples) continue;
+                    let parsed: SeriesExample[] = [];
+                    try { parsed = JSON.parse(s.examples) as SeriesExample[]; } catch { continue; }
+                    for (const ex of parsed) {
+                      if (ex.url && ex.url.trim().length > 0) {
+                        allExamples.push({ series: s, example: ex });
+                      }
+                    }
+                  }
+                  if (allExamples.length === 0) return null;
+                  return (
+                    <View style={{ marginBottom: 16 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                        <Play size={14} color="#E53935" />
+                        <Text style={{ color: "#8E8E93", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8, marginLeft: 6 }}>
+                          Examples
+                        </Text>
+                      </View>
+                      {allExamples.map((item, idx) => {
+                        if (item.example.type === "video") {
+                          return (
+                            <Pressable
+                              key={`example-${item.series.id}-${idx}`}
+                              testID={`example-video-${idx}`}
+                              onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                Linking.openURL(item.example.url);
+                              }}
+                              style={({ pressed }) => ({
+                                backgroundColor: "#1C1C1E",
+                                borderRadius: 14,
+                                padding: 14,
+                                marginBottom: 10,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                opacity: pressed ? 0.75 : 1,
+                              })}
+                            >
+                              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", marginRight: 12, flexShrink: 0 }}>
+                                <Video size={20} color="#E53935" />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
+                                  {item.example.label?.trim() || item.series.title}
+                                </Text>
+                                <Text style={{ color: "#636366", fontSize: 12, marginTop: 2 }}>Video example</Text>
+                              </View>
+                              <View style={{ backgroundColor: "#E53935", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginLeft: 8 }}>
+                                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>Play</Text>
+                              </View>
+                            </Pressable>
+                          );
+                        }
+                        // link type
+                        return (
+                          <Pressable
+                            key={`example-${item.series.id}-${idx}`}
+                            testID={`example-link-${idx}`}
+                            onPress={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              Linking.openURL(item.example.url);
+                            }}
+                            style={({ pressed }) => ({
+                              backgroundColor: "#1C1C1E",
+                              borderRadius: 14,
+                              padding: 14,
+                              marginBottom: 10,
+                              flexDirection: "row",
+                              alignItems: "center",
+                              opacity: pressed ? 0.75 : 1,
+                            })}
+                          >
+                            <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", marginRight: 12, flexShrink: 0 }}>
+                              <ExternalLink size={20} color="#4FC3F7" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
+                                {item.example.label?.trim() || item.series.title}
+                              </Text>
+                              <Text style={{ color: "#636366", fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                                {item.example.url}
+                              </Text>
+                            </View>
+                            <ExternalLink size={16} color="#636366" style={{ marginLeft: 8 }} />
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  );
+                })()}
 
                 {/* Message Button */}
                 {!isOwnProfile ? (

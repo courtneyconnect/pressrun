@@ -202,6 +202,33 @@ usersRouter.get("/:id/cue", async (c) => {
   return c.json({ data: cue });
 });
 
+// GET /search?q= - search users by name
+usersRouter.get("/search", async (c) => {
+  const q = (c.req.query("q") ?? "").trim();
+  if (!q) return c.json({ data: [] });
+
+  const users = await prisma.user.findMany({
+    where: {
+      name: { contains: q },
+    },
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      headline: true,
+      city: true,
+      state: true,
+      verified: true,
+      avgRating: true,
+      totalReviews: true,
+      role: true,
+    },
+    take: 20,
+  });
+
+  return c.json({ data: users });
+});
+
 // GET /:id - get public profile of any user
 usersRouter.get("/:id", async (c) => {
   const id = c.req.param("id");

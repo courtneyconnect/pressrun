@@ -86,7 +86,7 @@ export default function MessagesScreen() {
     isRefetching,
   } = useQuery({
     queryKey: ["conversations"],
-    queryFn: () => api.get<Conversation[]>("/api/messages/conversations"),
+    queryFn: () => api.get<Conversation[]>("/api/messages/conversations").then((res) => res ?? []),
     refetchInterval: 10000,
   });
 

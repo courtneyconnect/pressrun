@@ -61,8 +61,8 @@ messagesRouter.get("/conversations", requireAuth, async (c) => {
       });
 
       return {
-        partner,
-        latestMessage,
+        otherUser: partner,
+        lastMessage: latestMessage,
         unreadCount,
       };
     })
@@ -70,8 +70,8 @@ messagesRouter.get("/conversations", requireAuth, async (c) => {
 
   // Sort by latest message date
   conversations.sort((a, b) => {
-    const aDate = a.latestMessage?.createdAt ?? new Date(0);
-    const bDate = b.latestMessage?.createdAt ?? new Date(0);
+    const aDate = a.lastMessage?.createdAt ?? new Date(0);
+    const bDate = b.lastMessage?.createdAt ?? new Date(0);
     return new Date(bDate).getTime() - new Date(aDate).getTime();
   });
 

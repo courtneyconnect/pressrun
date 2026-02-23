@@ -379,6 +379,7 @@ export default function DiscoverScreen() {
     queryFn: () => {
       const params = new URLSearchParams();
       if (citySearch.trim()) params.set("city", citySearch.trim());
+      params.set("limit", "100");
       const query = params.toString();
       return api.get<SeriesDiscoverResult[]>(`/api/series-discover${query ? `?${query}` : ""}`);
     },
@@ -396,7 +397,7 @@ export default function DiscoverScreen() {
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       api.put(`/api/users/me/series/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["series-discover"] });
+      queryClient.invalidateQueries({ queryKey: ["series-discover"], exact: false });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
   });
@@ -452,6 +453,8 @@ export default function DiscoverScreen() {
 
   const exampleCards = useMemo((): ExampleCard[] => {
     if (!seriesResults) return [];
+    // seriesResults are already ordered by updatedAt desc from the backend
+    // Flatten all examples across all series — most recently updated series first
     const cards: ExampleCard[] = [];
     for (const item of seriesResults) {
       let examples: SeriesExample[] = [];

@@ -8,7 +8,7 @@ seriesDiscoverRouter.get("/", async (c) => {
   const category = c.req.query("category");
   const type = c.req.query("type");
   const page = Math.max(1, Number(c.req.query("page") ?? 1));
-  const limit = Math.min(50, Math.max(1, Number(c.req.query("limit") ?? 20)));
+  const limit = Math.min(200, Math.max(1, Number(c.req.query("limit") ?? 100)));
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = { active: true };

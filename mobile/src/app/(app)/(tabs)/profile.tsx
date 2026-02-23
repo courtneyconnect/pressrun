@@ -44,6 +44,7 @@ import { useSession, useInvalidateSession } from "@/lib/auth/use-session";
 import { uploadFile } from "@/lib/upload";
 import type { User, ContentSeries, SeriesExample } from "@/types";
 import * as Haptics from "expo-haptics";
+import { PressRunLoader } from "@/components/PressRunLoader";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CELL_SIZE = Math.floor((SCREEN_WIDTH - 2) / 3); // 2px total gap between 3 columns
@@ -740,8 +741,8 @@ export default function ProfileScreen() {
           }
         >
           {isLoading ? (
-            <View testID="profile-loading" className="items-center py-20">
-              <ActivityIndicator size="large" color="#E53935" />
+            <View testID="profile-loading" style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingVertical: 80 }}>
+              <PressRunLoader size={80} />
             </View>
           ) : (
             <View>

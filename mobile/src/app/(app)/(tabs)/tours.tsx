@@ -3,12 +3,12 @@ import {
   View,
   Text,
   Pressable,
-  ActivityIndicator,
   ScrollView,
   RefreshControl,
   Switch,
   Image,
 } from "react-native";
+import { PressRunLoader } from "@/components/PressRunLoader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -220,8 +220,8 @@ function SavedTab({ tours }: { tours: Tour[] }) {
       {/* Saved stops list */}
       <ScrollView style={{ flex: 1, paddingHorizontal: 16 }}>
         {isLoading ? (
-          <View style={{ alignItems: "center", paddingVertical: 40 }}>
-            <ActivityIndicator size="large" color="#E53935" />
+          <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
+            <PressRunLoader size={80} />
           </View>
         ) : (savedStops ?? []).length === 0 ? (
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
@@ -353,8 +353,8 @@ export default function ToursScreen() {
                 }
               >
                 {toursLoading ? (
-                  <View testID="tours-loading" className="items-center py-20">
-                    <ActivityIndicator size="large" color="#E53935" />
+                  <View testID="tours-loading" style={{ alignItems: 'center', paddingVertical: 80 }}>
+                    <PressRunLoader size={80} />
                   </View>
                 ) : (tours ?? []).length === 0 ? (
                   <View className="items-center py-20">
@@ -395,8 +395,8 @@ export default function ToursScreen() {
             }
           >
             {availLoading ? (
-              <View testID="availability-loading" className="items-center py-20">
-                <ActivityIndicator size="large" color="#E53935" />
+              <View testID="availability-loading" style={{ alignItems: 'center', paddingVertical: 80 }}>
+                <PressRunLoader size={80} />
               </View>
             ) : (availability?.slots ?? []).length === 0 ? (
               <View className="items-center py-20">

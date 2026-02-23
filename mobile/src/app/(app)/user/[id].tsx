@@ -36,6 +36,7 @@ import type { User, ContentSeries, Friendship, Review, SeriesExample } from "@/t
 import { useSession } from "@/lib/auth/use-session";
 import * as Haptics from "expo-haptics";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { PressRunLoader } from "@/components/PressRunLoader";
 
 function PlatformButton({ label, color, url }: { label: string; color: string; url: string }) {
   return (
@@ -363,7 +364,7 @@ function ReviewModal({
               <View style={{ flexDirection: "row", gap: 12 }}>
                 <Pressable
                   testID="review-cancel-button"
-                  onPress={onClose}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onClose(); }}
                   style={({ pressed }) => ({
                     flex: 1,
                     backgroundColor: "#2C2C2E",
@@ -377,7 +378,7 @@ function ReviewModal({
                 </Pressable>
                 <Pressable
                   testID="review-submit-button"
-                  onPress={() => submitReview.mutate()}
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); submitReview.mutate(); }}
                   disabled={rating === 0 || submitReview.isPending}
                   style={({ pressed }) => ({
                     flex: 1,
@@ -492,8 +493,8 @@ export default function UserProfileScreen() {
 
   if (isLoading || !user) {
     return (
-      <View className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator size="large" color="#E53935" />
+      <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+        <PressRunLoader size={80} />
       </View>
     );
   }
@@ -790,7 +791,7 @@ export default function UserProfileScreen() {
                   <Pressable
                     testID="message-user-button"
                     className="bg-[#E53935] rounded-2xl py-4 items-center mb-3 flex-row justify-center"
-                    onPress={handleMessage}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); handleMessage(); }}
                   >
                     <MessageSquare size={18} color="#fff" />
                     <Text className="text-white font-bold text-base ml-2">Message {user.name?.split(" ")[0]}</Text>

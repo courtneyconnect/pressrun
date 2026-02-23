@@ -3,10 +3,10 @@ import {
   View,
   Text,
   Pressable,
-  ActivityIndicator,
   ScrollView,
   RefreshControl,
 } from "react-native";
+import { PressRunLoader } from "@/components/PressRunLoader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -165,8 +165,8 @@ export default function BookingsScreen() {
 
         {/* Bookings List */}
         {isLoading ? (
-          <View testID="bookings-loading" className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#E53935" />
+          <View testID="bookings-loading" style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+            <PressRunLoader size={80} />
           </View>
         ) : (
           <ScrollView

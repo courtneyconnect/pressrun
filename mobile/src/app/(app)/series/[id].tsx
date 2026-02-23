@@ -34,6 +34,7 @@ import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample, Booking } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
 import * as Haptics from "expo-haptics";
+import { PressRunLoader } from "@/components/PressRunLoader";
 
 const MONTHS_LONG = [
   "January", "February", "March", "April", "May", "June",
@@ -577,8 +578,8 @@ export default function SeriesDetailScreen() {
 
   if (isLoading || !series || !creator) {
     return (
-      <View className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator size="large" color="#E53935" />
+      <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+        <PressRunLoader size={80} />
       </View>
     );
   }

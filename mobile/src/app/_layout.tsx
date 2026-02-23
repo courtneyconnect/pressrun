@@ -8,10 +8,12 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useSession } from "@/lib/auth/use-session";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { api } from "@/lib/api/api";
 import type { User } from "@/types";
+import { SplashAnimation } from "@/components/SplashAnimation";
+import { PressRunLoader } from "@/components/PressRunLoader";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,8 +50,8 @@ function RootLayoutNav() {
 
   if (isLoading) {
     return (
-      <View testID="loading-indicator" className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator size="large" color="#E53935" />
+      <View testID="loading-indicator" style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+        <PressRunLoader size={80} />
       </View>
     );
   }
@@ -70,12 +72,22 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <KeyboardProvider>
           <StatusBar style="light" />
           <RootLayoutNav />
+          {showSplash ? (
+            <SplashAnimation
+              onComplete={() => {
+                SplashScreen.hideAsync();
+                setShowSplash(false);
+              }}
+            />
+          ) : null}
         </KeyboardProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

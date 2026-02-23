@@ -15,6 +15,7 @@ import {
   type ImageStyle,
   type ViewToken,
 } from "react-native";
+import { PressRunLoader } from "@/components/PressRunLoader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -159,7 +160,7 @@ function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
               style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
-              onPress={onViewSeries}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onViewSeries(); }}
             >
               <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
             </Pressable>
@@ -251,7 +252,7 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
               style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
-              onPress={onViewSeries}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onViewSeries(); }}
             >
               <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
             </Pressable>
@@ -352,7 +353,7 @@ function SeriesDiscoverCard({
           </View>
           <View className="flex-row items-center gap-2">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
-            <Pressable className="bg-[#E53935] rounded-lg px-3 py-1.5" onPress={onPress}>
+            <Pressable className="bg-[#E53935] rounded-lg px-3 py-1.5" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPress(); }}>
               <Text className="text-white text-xs font-semibold">View</Text>
             </Pressable>
           </View>
@@ -407,6 +408,7 @@ export default function DiscoverScreen() {
       Alert.alert("Select a series", "Please select a series to assign this example to.");
       return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const selectedSeries = mySeries.find((s) => s.id === selectedUploadSeriesId);
     if (!selectedSeries) return;
 
@@ -443,6 +445,7 @@ export default function DiscoverScreen() {
 
       setIsUploading(false);
       setShowUploadSheet(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert("Uploaded!", "Your video example has been added to the series.");
     } catch (err) {
       setIsUploading(false);
@@ -544,7 +547,7 @@ export default function DiscoverScreen() {
           <Pressable
             testID="upload-example-button"
             style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#E53935", alignItems: "center", justifyContent: "center" }}
-            onPress={() => setShowUploadSheet(true)}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setShowUploadSheet(true); }}
           >
             <Plus size={20} color="#fff" />
           </Pressable>
@@ -570,7 +573,7 @@ export default function DiscoverScreen() {
           <Pressable
             testID="tab-press-stops"
             className={`flex-1 py-2.5 rounded-xl items-center ${activeTab === "videos" ? "bg-[#E53935]" : "bg-[#1C1C1E]"}`}
-            onPress={() => setActiveTab("videos")}
+            onPress={() => { Haptics.selectionAsync(); setActiveTab("videos"); }}
           >
             <Text className={`font-semibold text-sm ${activeTab === "videos" ? "text-white" : "text-gray-400"}`}>
               Press Stops
@@ -579,7 +582,7 @@ export default function DiscoverScreen() {
           <Pressable
             testID="tab-series"
             className={`flex-1 py-2.5 rounded-xl items-center ${activeTab === "series" ? "bg-[#E53935]" : "bg-[#1C1C1E]"}`}
-            onPress={() => setActiveTab("series")}
+            onPress={() => { Haptics.selectionAsync(); setActiveTab("series"); }}
           >
             <Text className={`font-semibold text-sm ${activeTab === "series" ? "text-white" : "text-gray-400"}`}>
               Series
@@ -613,8 +616,8 @@ export default function DiscoverScreen() {
 
         {/* Results */}
         {isLoading ? (
-          <View testID="discover-loading" className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#E53935" />
+          <View testID="discover-loading" style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+            <PressRunLoader size={80} />
           </View>
         ) : activeTab === "videos" ? (
           <FlashList

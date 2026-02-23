@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +19,7 @@ import {
   Lock,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
+import { PressRunLoader } from "@/components/PressRunLoader";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -318,12 +318,9 @@ export default function AnalyticsScreen() {
         {isLoading ? (
           <View
             testID="analytics-loading"
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            style={{ flex: 1, backgroundColor: '#000', alignItems: "center", justifyContent: "center" }}
           >
-            <ActivityIndicator size="large" color="#E53935" />
-            <Text style={{ color: "#555558", fontSize: 14, marginTop: 12 }}>
-              Loading your analytics...
-            </Text>
+            <PressRunLoader size={80} />
           </View>
         ) : isError ? (
           <View

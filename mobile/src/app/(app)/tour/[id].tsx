@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -18,6 +19,9 @@ import {
   BadgeCheck,
   Star,
   Clock,
+  ChevronDown,
+  Globe,
+  EyeOff,
 } from "lucide-react-native";
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
@@ -27,6 +31,7 @@ import * as Haptics from "expo-haptics";
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: "#22c55e",
   DRAFT: "#eab308",
+  CLOSED: "#8E8E93",
   COMPLETED: "#6b7280",
   CANCELLED: "#ef4444",
 };
@@ -176,12 +181,27 @@ function FeedCard({
 export default function TourDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"feed" | "saved">("feed");
+  const [showStatusSheet, setShowStatusSheet] = useState(false);
 
   const { data: tour, isLoading: tourLoading } = useQuery({
     queryKey: ["tour", id],
     queryFn: () => api.get<Tour>(`/api/tours/${id}`),
     enabled: !!id,
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: (status: string) => api.put(`/api/tours/${id}`, { status }),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ["tour", id] });
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
+      setShowStatusSheet(false);
+    },
+    onError: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
   });
 
   const firstCity = tour?.stops?.[0]?.city ?? "";
@@ -231,9 +251,14 @@ export default function TourDetailScreen() {
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700", flex: 1 }} numberOfLines={1}>
             {tour.name}
           </Text>
-          <View style={{ backgroundColor: statusColor + "30", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
+          <Pressable
+            testID="status-badge"
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowStatusSheet(true); }}
+            style={{ flexDirection: "row", alignItems: "center", backgroundColor: statusColor + "25", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, gap: 4 }}
+          >
             <Text style={{ color: statusColor, fontSize: 12, fontWeight: "700" }}>{tour.status}</Text>
-          </View>
+            <ChevronDown size={12} color={statusColor} />
+          </Pressable>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
@@ -354,6 +379,113 @@ export default function TourDetailScreen() {
           <View style={{ height: 80 }} />
         </ScrollView>
       </SafeAreaView>
+
+      {/* Status Action Sheet */}
+      <Modal visible={showStatusSheet} transparent animationType="slide" onRequestClose={() => setShowStatusSheet(false)}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+          onPress={() => setShowStatusSheet(false)}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 44, paddingTop: 12 }}>
+              {/* Handle */}
+              <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#3C3C3E", alignSelf: "center", marginBottom: 20 }} />
+
+              <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700", textAlign: "center", marginBottom: 4 }}>Tour Status</Text>
+              <Text style={{ color: "#8E8E93", fontSize: 13, textAlign: "center", marginBottom: 24, paddingHorizontal: 32 }}>
+                Control who can see your tour
+              </Text>
+
+              <View style={{ paddingHorizontal: 16, gap: 10 }}>
+                {/* Post / Make Active */}
+                {tour.status !== "ACTIVE" ? (
+                  <Pressable
+                    testID="status-post-button"
+                    onPress={() => updateStatus.mutate("ACTIVE")}
+                    disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: pressed ? "#166534" : "#15803d",
+                      borderRadius: 16,
+                      padding: 16,
+                      opacity: updateStatus.isPending ? 0.7 : 1,
+                    })}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                      <Globe size={20} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Post Tour</Text>
+                      <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 2 }}>Make it visible to all press stops on the app</Text>
+                    </View>
+                    {updateStatus.isPending ? <ActivityIndicator size="small" color="#fff" /> : null}
+                  </Pressable>
+                ) : null}
+
+                {/* Close */}
+                {tour.status !== "CLOSED" ? (
+                  <Pressable
+                    testID="status-close-button"
+                    onPress={() => updateStatus.mutate("CLOSED")}
+                    disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: pressed ? "#3a1f00" : "#2C2C2E",
+                      borderRadius: 16,
+                      padding: 16,
+                      opacity: updateStatus.isPending ? 0.7 : 1,
+                    })}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                      <EyeOff size={20} color="#8E8E93" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Close Tour</Text>
+                      <Text style={{ color: "#8E8E93", fontSize: 13, marginTop: 2 }}>Hide from public feed, stays on your profile</Text>
+                    </View>
+                    {updateStatus.isPending ? <ActivityIndicator size="small" color="#8E8E93" /> : null}
+                  </Pressable>
+                ) : null}
+
+                {/* Back to Draft */}
+                {tour.status === "ACTIVE" ? (
+                  <Pressable
+                    testID="status-draft-button"
+                    onPress={() => updateStatus.mutate("DRAFT")}
+                    disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: pressed ? "#3a2f00" : "#2C2C2E",
+                      borderRadius: 16,
+                      padding: 16,
+                      opacity: updateStatus.isPending ? 0.7 : 1,
+                    })}
+                  >
+                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(234,179,8,0.15)", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                      <Text style={{ color: "#eab308", fontSize: 16 }}>✏️</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>Back to Draft</Text>
+                      <Text style={{ color: "#8E8E93", fontSize: 13, marginTop: 2 }}>Unpublish and continue editing</Text>
+                    </View>
+                  </Pressable>
+                ) : null}
+
+                {/* Cancel sheet */}
+                <Pressable
+                  onPress={() => setShowStatusSheet(false)}
+                  style={{ backgroundColor: "#1C1C1E", borderRadius: 16, padding: 16, alignItems: "center", marginTop: 4 }}
+                >
+                  <Text style={{ color: "#8E8E93", fontSize: 16, fontWeight: "600" }}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

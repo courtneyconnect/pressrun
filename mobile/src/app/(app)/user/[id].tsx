@@ -790,11 +790,21 @@ export default function UserProfileScreen() {
                 {!isOwnProfile ? (
                   <Pressable
                     testID="message-user-button"
-                    className="bg-[#E53935] rounded-2xl py-4 items-center mb-3 flex-row justify-center"
                     onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); handleMessage(); }}
+                    style={({ pressed }) => ({
+                      backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                      borderRadius: 16,
+                      paddingVertical: 14,
+                      paddingHorizontal: 24,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 12,
+                      height: 52,
+                    })}
                   >
                     <MessageSquare size={18} color="#fff" />
-                    <Text className="text-white font-bold text-base ml-2">Message {user.name?.split(" ")[0]}</Text>
+                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>Message {user.name?.split(" ")[0]}</Text>
                   </Pressable>
                 ) : null}
               </View>

@@ -159,10 +159,20 @@ function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard
           <View className="items-end">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
-              style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "#c62828" : "#E53935",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                marginTop: 6,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              })}
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onViewSeries(); }}
             >
-              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
+              <Calendar size={13} color="#fff" />
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", marginLeft: 5 }}>Book Stop</Text>
             </Pressable>
           </View>
         </View>
@@ -251,10 +261,20 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
           <View className="items-end">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
-              style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? "#c62828" : "#E53935",
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                marginTop: 6,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              })}
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onViewSeries(); }}
             >
-              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
+              <Calendar size={13} color="#fff" />
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", marginLeft: 5 }}>Book Stop</Text>
             </Pressable>
           </View>
         </View>

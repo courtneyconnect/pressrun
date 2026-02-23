@@ -230,28 +230,46 @@ export default function BookingDetailScreen() {
             ) : null}
 
             {/* Action Buttons */}
-            <View className="gap-3 mb-8">
+            <View style={{ gap: 12, marginBottom: 32 }}>
               {booking.status === "PENDING" && isPressStop ? (
                 <>
                   <Pressable
                     testID="accept-booking-button"
-                    className="bg-[#E53935] rounded-xl py-4 items-center flex-row justify-center"
-                    onPress={() => updateStatus.mutate("ACCEPTED")}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); updateStatus.mutate("ACCEPTED"); }}
                     disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      backgroundColor: pressed ? "#c62828" : "#E53935",
+                      borderRadius: 16,
+                      height: 52,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 24,
+                      opacity: updateStatus.isPending ? 0.6 : 1,
+                    })}
                   >
-                    <CheckCircle size={18} color="#FFFFFF" />
-                    <Text className="text-white font-semibold ml-2">
+                    <CheckCircle size={19} color="#FFFFFF" />
+                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>
                       Accept Booking
                     </Text>
                   </Pressable>
                   <Pressable
                     testID="reject-booking-button"
-                    className="bg-[#1C1C1E] rounded-xl py-4 items-center flex-row justify-center"
                     onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                     disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                      borderRadius: 16,
+                      height: 52,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 24,
+                      opacity: updateStatus.isPending ? 0.6 : 1,
+                    })}
                   >
-                    <XCircle size={18} color="#8E8E93" />
-                    <Text className="text-gray-400 font-semibold ml-2">
+                    <XCircle size={19} color="#8E8E93" />
+                    <Text style={{ color: "#8E8E93", fontWeight: "600", fontSize: 16, marginLeft: 8 }}>
                       Decline
                     </Text>
                   </Pressable>
@@ -261,11 +279,21 @@ export default function BookingDetailScreen() {
               {booking.status === "PENDING" && isTalent ? (
                 <Pressable
                   testID="cancel-booking-button"
-                  className="bg-[#1C1C1E] rounded-xl py-4 items-center"
                   onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                   disabled={updateStatus.isPending}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                    borderRadius: 16,
+                    height: 52,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 24,
+                    opacity: updateStatus.isPending ? 0.6 : 1,
+                  })}
                 >
-                  <Text className="text-gray-400 font-semibold">
+                  <XCircle size={19} color="#8E8E93" />
+                  <Text style={{ color: "#8E8E93", fontWeight: "600", fontSize: 16, marginLeft: 8 }}>
                     Cancel Booking
                   </Text>
                 </Pressable>
@@ -275,21 +303,43 @@ export default function BookingDetailScreen() {
                 <>
                   <Pressable
                     testID="start-session-button"
-                    className="bg-[#E53935] rounded-xl py-4 items-center"
-                    onPress={() => updateStatus.mutate("IN_PROGRESS")}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); updateStatus.mutate("IN_PROGRESS"); }}
                     disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      backgroundColor: pressed ? "#c62828" : "#E53935",
+                      borderRadius: 16,
+                      height: 52,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 24,
+                      opacity: updateStatus.isPending ? 0.6 : 1,
+                    })}
                   >
-                    <Text className="text-white font-semibold">
+                    <CheckCircle size={19} color="#FFFFFF" />
+                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>
                       Start Session
                     </Text>
                   </Pressable>
                   <Pressable
                     testID="cancel-confirmed-button"
-                    className="bg-[#1C1C1E] rounded-xl py-4 items-center"
                     onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning); updateStatus.mutate("CANCELLED"); }}
                     disabled={updateStatus.isPending}
+                    style={({ pressed }) => ({
+                      backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                      borderRadius: 16,
+                      height: 52,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingHorizontal: 24,
+                      opacity: updateStatus.isPending ? 0.6 : 1,
+                    })}
                   >
-                    <Text className="text-gray-400 font-semibold">Cancel</Text>
+                    <XCircle size={19} color="#8E8E93" />
+                    <Text style={{ color: "#8E8E93", fontWeight: "600", fontSize: 16, marginLeft: 8 }}>
+                      Cancel
+                    </Text>
                   </Pressable>
                 </>
               ) : null}
@@ -297,11 +347,21 @@ export default function BookingDetailScreen() {
               {booking.status === "IN_PROGRESS" ? (
                 <Pressable
                   testID="complete-session-button"
-                  className="bg-[#E53935] rounded-xl py-4 items-center"
                   onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); updateStatus.mutate("COMPLETED"); }}
                   disabled={updateStatus.isPending}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
+                    borderRadius: 16,
+                    height: 52,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 24,
+                    opacity: updateStatus.isPending ? 0.6 : 1,
+                  })}
                 >
-                  <Text className="text-white font-semibold">
+                  <CheckCircle size={19} color="#FFFFFF" />
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>
                     Mark Complete
                   </Text>
                 </Pressable>

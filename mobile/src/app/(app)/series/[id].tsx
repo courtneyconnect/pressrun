@@ -732,10 +732,12 @@ export default function SeriesDetailScreen() {
                     backgroundColor: pressed ? "#c62828" : "#E53935",
                     borderRadius: 16,
                     paddingVertical: 15,
+                    paddingHorizontal: 24,
                     alignItems: "center",
                     justifyContent: "center",
                     flexDirection: "row",
                     marginBottom: 10,
+                    height: 52,
                   })}
                 >
                   <CalendarDays size={18} color="#fff" />
@@ -749,13 +751,15 @@ export default function SeriesDetailScreen() {
                   testID="message-creator-button"
                   onPress={handleMessage}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#c62828" : "#E53935",
+                    backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
                     borderRadius: 16,
                     paddingVertical: 15,
+                    paddingHorizontal: 24,
                     alignItems: "center",
                     justifyContent: "center",
                     flexDirection: "row",
                     marginBottom: 10,
+                    height: 52,
                   })}
                 >
                   <MessageSquare size={18} color="#fff" />

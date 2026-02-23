@@ -10,11 +10,14 @@ import {
   Image,
   Dimensions,
   Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Edit3,
   Star,
@@ -27,11 +30,13 @@ import {
   Plus,
   Shield,
   X,
+  Check,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import { authClient } from "@/lib/auth/auth-client";
 import { useSession, useInvalidateSession } from "@/lib/auth/use-session";
 import type { User, ContentSeries, SeriesExample } from "@/types";
+import * as Haptics from "expo-haptics";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CELL_SIZE = Math.floor((SCREEN_WIDTH - 2) / 3); // 2px total gap between 3 columns
@@ -266,6 +271,168 @@ function PreviewModal({
   );
 }
 
+// ─── Add Series Modal ─────────────────────────────────────────────────────────
+const SERIES_CATEGORIES = [
+  "Interview", "Vlog", "Review", "Tutorial",
+  "Podcast", "Livestream", "Short Form", "Long Form",
+];
+
+function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Interview");
+  const [success, setSuccess] = useState(false);
+
+  const createSeries = useMutation({
+    mutationFn: () =>
+      api.post<ContentSeries>("/api/users/me/series", {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        durationMinutes: 60,
+        price: 0,
+        category,
+        postingTimeline: null,
+      }),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        setTitle("");
+        setDescription("");
+        setCategory("Interview");
+        onClose();
+      }, 1200);
+    },
+    onError: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+  });
+
+  const handleClose = () => {
+    setTitle("");
+    setDescription("");
+    setCategory("Interview");
+    setSuccess(false);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
+      <Pressable
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+        onPress={handleClose}
+      >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 40 }}>
+              {/* Drag handle */}
+              <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}>
+                <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#3C3C3E" }} />
+              </View>
+
+              {/* Header */}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#2C2C2E" }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>New Content Series</Text>
+                  <Text style={{ color: "#8E8E93", fontSize: 13, marginTop: 2 }}>You can add more details in Edit Profile</Text>
+                </View>
+                <Pressable onPress={handleClose} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center" }}>
+                  <X size={16} color="#8E8E93" />
+                </Pressable>
+              </View>
+
+              <ScrollView style={{ paddingHorizontal: 20, paddingTop: 20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                {success ? (
+                  <View style={{ alignItems: "center", paddingVertical: 36 }}>
+                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#22c55e20", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                      <Check size={32} color="#22c55e" />
+                    </View>
+                    <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>Series Created!</Text>
+                  </View>
+                ) : (
+                  <>
+                    {/* Title */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Series Name *</Text>
+                    <TextInput
+                      style={{ backgroundColor: "#2C2C2E", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: "#fff", fontSize: 15, marginBottom: 16 }}
+                      placeholder="e.g. Tech Reviews, Street Interviews..."
+                      placeholderTextColor="#555558"
+                      value={title}
+                      onChangeText={setTitle}
+                      returnKeyType="next"
+                      autoFocus
+                    />
+
+                    {/* Description */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Description (optional)</Text>
+                    <TextInput
+                      style={{ backgroundColor: "#2C2C2E", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: "#fff", fontSize: 15, marginBottom: 16, minHeight: 80, textAlignVertical: "top" }}
+                      placeholder="What kind of content do you create?"
+                      placeholderTextColor="#555558"
+                      value={description}
+                      onChangeText={setDescription}
+                      multiline
+                      numberOfLines={3}
+                    />
+
+                    {/* Category */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>Category</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 20 }}>
+                      {SERIES_CATEGORIES.map((cat) => (
+                        <Pressable
+                          key={cat}
+                          onPress={() => { Haptics.selectionAsync(); setCategory(cat); }}
+                          style={{
+                            backgroundColor: category === cat ? "#E53935" : "#2C2C2E",
+                            borderRadius: 20,
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            marginRight: 8,
+                          }}
+                        >
+                          <Text style={{ color: category === cat ? "#fff" : "#8E8E93", fontSize: 13, fontWeight: "600" }}>{cat}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+
+                    {createSeries.isError ? (
+                      <Text style={{ color: "#E53935", fontSize: 13, marginBottom: 12, textAlign: "center" }}>
+                        Failed to create series. Please try again.
+                      </Text>
+                    ) : null}
+
+                    <Pressable
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); createSeries.mutate(); }}
+                      disabled={!title.trim() || createSeries.isPending}
+                      style={{
+                        backgroundColor: !title.trim() ? "#4C1010" : "#E53935",
+                        borderRadius: 14,
+                        paddingVertical: 15,
+                        alignItems: "center",
+                        marginBottom: 8,
+                        opacity: createSeries.isPending ? 0.7 : 1,
+                      }}
+                    >
+                      {createSeries.isPending ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={{ color: !title.trim() ? "#8E3333" : "#fff", fontSize: 16, fontWeight: "700" }}>Create Series</Text>
+                      )}
+                    </Pressable>
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // ─── Main profile screen ──────────────────────────────────────────────────────
 export default function ProfileScreen() {
   const router = useRouter();
@@ -280,6 +447,7 @@ export default function ProfileScreen() {
   const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
   const [previewExample, setPreviewExample] = useState<SeriesExample | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<{ url: string; label?: string } | null>(null);
+  const [showAddSeriesModal, setShowAddSeriesModal] = useState(false);
 
   const signOut = useMutation({
     mutationFn: async () => { await authClient.signOut(); },
@@ -517,7 +685,7 @@ export default function ProfileScreen() {
                     {/* Add + button */}
                     <Pressable
                       testID="add-series-tab-button"
-                      onPress={() => router.push("/edit-profile" as any)}
+                      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowAddSeriesModal(true); }}
                       style={{
                         width: 36,
                         height: 36,
@@ -607,7 +775,7 @@ export default function ProfileScreen() {
                     Add a content series so press stops can discover and book your work.
                   </Text>
                   <Pressable
-                    onPress={() => router.push("/edit-profile" as any)}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setShowAddSeriesModal(true); }}
                     style={{ backgroundColor: "#E53935", borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 }}
                   >
                     <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Add Content Series</Text>
@@ -672,6 +840,7 @@ export default function ProfileScreen() {
           onClose={() => setVideoPreviewUrl(null)}
         />
       ) : null}
+      <AddSeriesModal visible={showAddSeriesModal} onClose={() => setShowAddSeriesModal(false)} />
     </View>
   );
 }

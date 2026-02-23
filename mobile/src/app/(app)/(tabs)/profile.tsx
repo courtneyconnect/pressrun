@@ -13,6 +13,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,10 +32,15 @@ import {
   Shield,
   X,
   Check,
+  Camera,
+  Video,
+  Upload,
 } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 import { api } from "@/lib/api/api";
 import { authClient } from "@/lib/auth/auth-client";
 import { useSession, useInvalidateSession } from "@/lib/auth/use-session";
+import { uploadFile } from "@/lib/upload";
 import type { User, ContentSeries, SeriesExample } from "@/types";
 import * as Haptics from "expo-haptics";
 
@@ -284,6 +290,10 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
   const [category, setCategory] = useState("Interview");
   const [cities, setCities] = useState<string[]>([]);
   const [cityInput, setCityInput] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [videoExamples, setVideoExamples] = useState<SeriesExample[]>([]);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const createSeries = useMutation({
@@ -296,18 +306,16 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
         category,
         postingTimeline: null,
         cities: cities.length > 0 ? JSON.stringify(cities) : null,
+        coverImage: coverImage ?? null,
+        examples: videoExamples.length > 0 ? JSON.stringify(videoExamples) : null,
       }),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["series-discover"], exact: false });
       setSuccess(true);
       setTimeout(() => {
-        setSuccess(false);
-        setTitle("");
-        setDescription("");
-        setCategory("Interview");
-        setCities([]);
-        setCityInput("");
+        resetForm();
         onClose();
       }, 1200);
     },
@@ -316,13 +324,19 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
     },
   });
 
-  const handleClose = () => {
+  const resetForm = () => {
     setTitle("");
     setDescription("");
     setCategory("Interview");
     setCities([]);
     setCityInput("");
+    setCoverImage(null);
+    setVideoExamples([]);
     setSuccess(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
     onClose();
   };
 
@@ -340,6 +354,51 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const pickCoverPhoto = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.85,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      setUploadingCover(true);
+      const asset = result.assets[0];
+      const ext = asset.uri.split(".").pop() ?? "jpg";
+      const mime = ext === "png" ? "image/png" : "image/jpeg";
+      const uploaded = await uploadFile(asset.uri, `cover.${ext}`, mime);
+      setCoverImage(uploaded.url);
+    } catch (e) {
+      Alert.alert("Upload failed", e instanceof Error ? e.message : "Could not upload photo.");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const pickVideoExample = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      setUploadingVideo(true);
+      const asset = result.assets[0];
+      const uploaded = await uploadFile(asset.uri, "example.mp4", "video/mp4");
+      setVideoExamples((prev) => [...prev, { type: "video", url: uploaded.url, label: "" }]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (e) {
+      Alert.alert("Upload failed", e instanceof Error ? e.message : "Could not upload video.");
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setVideoExamples((prev) => prev.filter((_, i) => i !== index));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <Pressable
@@ -348,7 +407,7 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
       >
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ width: "100%" }}>
           <Pressable onPress={(e) => e.stopPropagation()}>
-            <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 40 }}>
+            <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 40, maxHeight: "92%" }}>
               {/* Drag handle */}
               <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}>
                 <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#3C3C3E" }} />
@@ -358,7 +417,7 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
               <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#2C2C2E" }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>New Content Series</Text>
-                  <Text style={{ color: "#8E8E93", fontSize: 13, marginTop: 2 }}>You can add more details in Edit Profile</Text>
+                  <Text style={{ color: "#8E8E93", fontSize: 13, marginTop: 2 }}>Add details, a cover photo, and a video example</Text>
                 </View>
                 <Pressable onPress={handleClose} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center" }}>
                   <X size={16} color="#8E8E93" />
@@ -375,6 +434,47 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                   </View>
                 ) : (
                   <>
+                    {/* Cover Photo */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>Cover Photo</Text>
+                    <Pressable
+                      onPress={pickCoverPhoto}
+                      disabled={uploadingCover}
+                      style={{
+                        height: 140,
+                        backgroundColor: "#2C2C2E",
+                        borderRadius: 16,
+                        marginBottom: 16,
+                        overflow: "hidden",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderWidth: coverImage ? 0 : 1.5,
+                        borderColor: "#3C3C3E",
+                        borderStyle: "dashed",
+                      }}
+                    >
+                      {uploadingCover ? (
+                        <View style={{ alignItems: "center" }}>
+                          <ActivityIndicator size="small" color="#E53935" />
+                          <Text style={{ color: "#8E8E93", fontSize: 12, marginTop: 8 }}>Uploading...</Text>
+                        </View>
+                      ) : coverImage ? (
+                        <>
+                          <Image source={{ uri: coverImage }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                          <View style={{ position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 8, padding: 6 }}>
+                            <Camera size={14} color="#fff" />
+                          </View>
+                        </>
+                      ) : (
+                        <View style={{ alignItems: "center" }}>
+                          <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#3C3C3E", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                            <Camera size={20} color="#8E8E93" />
+                          </View>
+                          <Text style={{ color: "#8E8E93", fontSize: 13, fontWeight: "600" }}>Add Cover Photo</Text>
+                          <Text style={{ color: "#555558", fontSize: 11, marginTop: 2 }}>16:9 recommended</Text>
+                        </View>
+                      )}
+                    </Pressable>
+
                     {/* Title */}
                     <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Series Name *</Text>
                     <TextInput
@@ -384,7 +484,6 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                       value={title}
                       onChangeText={setTitle}
                       returnKeyType="next"
-                      autoFocus
                     />
 
                     {/* Description */}
@@ -420,12 +519,8 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                     </ScrollView>
 
                     {/* Cities */}
-                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>
-                      Cities (optional)
-                    </Text>
-                    <Text style={{ color: "#555558", fontSize: 12, marginBottom: 10 }}>
-                      Add cities where you create this type of content
-                    </Text>
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>Cities (optional)</Text>
+                    <Text style={{ color: "#555558", fontSize: 12, marginBottom: 10 }}>Add cities where you create this type of content</Text>
                     <View style={{ flexDirection: "row", marginBottom: 10 }}>
                       <TextInput
                         style={{ flex: 1, backgroundColor: "#2C2C2E", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: "#fff", fontSize: 15, marginRight: 8 }}
@@ -439,20 +534,13 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                       <Pressable
                         onPress={addCity}
                         disabled={!cityInput.trim()}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 12,
-                          backgroundColor: cityInput.trim() ? "#E53935" : "#2C2C2E",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
+                        style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: cityInput.trim() ? "#E53935" : "#2C2C2E", alignItems: "center", justifyContent: "center" }}
                       >
                         <Plus size={20} color={cityInput.trim() ? "#fff" : "#555558"} />
                       </Pressable>
                     </View>
                     {cities.length > 0 ? (
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                         {cities.map((city) => (
                           <Pressable
                             key={city}
@@ -464,9 +552,52 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                           </Pressable>
                         ))}
                       </View>
-                    ) : (
-                      <View style={{ marginBottom: 20 }} />
-                    )}
+                    ) : null}
+
+                    {/* Video Examples */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6, marginTop: 4 }}>Video Examples (optional)</Text>
+                    <Text style={{ color: "#555558", fontSize: 12, marginBottom: 12 }}>Show press stops what your content looks like</Text>
+
+                    {videoExamples.map((ex, i) => (
+                      <View key={i} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#2C2C2E", borderRadius: 12, padding: 12, marginBottom: 8 }}>
+                        <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: "#3C3C3E", alignItems: "center", justifyContent: "center", marginRight: 10 }}>
+                          <Video size={16} color="#E53935" />
+                        </View>
+                        <Text style={{ color: "#fff", fontSize: 13, flex: 1 }} numberOfLines={1}>Video {i + 1}</Text>
+                        <Pressable onPress={() => removeVideo(i)} style={{ padding: 4 }}>
+                          <X size={14} color="#8E8E93" />
+                        </Pressable>
+                      </View>
+                    ))}
+
+                    <Pressable
+                      onPress={pickVideoExample}
+                      disabled={uploadingVideo}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "#2C2C2E",
+                        borderRadius: 12,
+                        paddingVertical: 13,
+                        marginBottom: 20,
+                        borderWidth: 1.5,
+                        borderColor: "#3C3C3E",
+                        borderStyle: "dashed",
+                      }}
+                    >
+                      {uploadingVideo ? (
+                        <>
+                          <ActivityIndicator size="small" color="#E53935" />
+                          <Text style={{ color: "#8E8E93", fontSize: 14, fontWeight: "600", marginLeft: 8 }}>Uploading video...</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} color="#E53935" />
+                          <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "600", marginLeft: 8 }}>Upload Video Example</Text>
+                        </>
+                      )}
+                    </Pressable>
 
                     {createSeries.isError ? (
                       <Text style={{ color: "#E53935", fontSize: 13, marginBottom: 12, textAlign: "center" }}>
@@ -476,14 +607,14 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
 
                     <Pressable
                       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); createSeries.mutate(); }}
-                      disabled={!title.trim() || createSeries.isPending}
+                      disabled={!title.trim() || createSeries.isPending || uploadingCover || uploadingVideo}
                       style={{
                         backgroundColor: !title.trim() ? "#4C1010" : "#E53935",
                         borderRadius: 14,
                         paddingVertical: 15,
                         alignItems: "center",
                         marginBottom: 8,
-                        opacity: createSeries.isPending ? 0.7 : 1,
+                        opacity: (createSeries.isPending || uploadingCover || uploadingVideo) ? 0.7 : 1,
                       }}
                     >
                       {createSeries.isPending ? (

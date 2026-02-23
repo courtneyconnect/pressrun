@@ -207,24 +207,24 @@ usersRouter.get("/search", async (c) => {
   const q = (c.req.query("q") ?? "").trim();
   if (!q) return c.json({ data: [] });
 
-  const users = await prisma.user.findMany({
-    where: {
-      name: { contains: q },
-    },
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      headline: true,
-      city: true,
-      state: true,
-      verified: true,
-      avgRating: true,
-      totalReviews: true,
-      role: true,
-    },
-    take: 20,
-  });
+  const pattern = `%${q}%`;
+  const users = await prisma.$queryRaw<Array<{
+    id: string;
+    name: string;
+    image: string | null;
+    headline: string | null;
+    city: string | null;
+    state: string | null;
+    verified: boolean;
+    avgRating: number | null;
+    totalReviews: number;
+    role: string;
+  }>>`
+    SELECT id, name, image, headline, city, state, verified, "avgRating", "totalReviews", role
+    FROM "User"
+    WHERE name LIKE ${pattern}
+    LIMIT 50
+  `;
 
   return c.json({ data: users });
 });

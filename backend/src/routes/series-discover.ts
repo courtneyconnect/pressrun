@@ -42,11 +42,19 @@ seriesDiscoverRouter.get("/", async (c) => {
     },
   });
 
-  // Filter by creator city if provided (post-filter since SQLite has no good case-insensitive contains)
+  // Filter by creator city or series cities if provided (post-filter since SQLite has no good case-insensitive contains)
   const filtered = city
-    ? series.filter((s) =>
-        s.user.city?.toLowerCase().includes(city.toLowerCase())
-      )
+    ? series.filter((s) => {
+        const creatorCityMatch = s.user.city?.toLowerCase().includes(city.toLowerCase());
+        let seriesCityMatch = false;
+        if (s.cities) {
+          try {
+            const cityArr = JSON.parse(s.cities) as string[];
+            seriesCityMatch = cityArr.some((c) => c.toLowerCase().includes(city.toLowerCase()));
+          } catch {}
+        }
+        return creatorCityMatch || seriesCityMatch;
+      })
     : series;
 
   const result = filtered.map(({ user, ...s }) => ({ series: s, creator: user }));

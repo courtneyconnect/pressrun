@@ -25,6 +25,7 @@ model User {
   verified         Boolean @default(false)
   profileComplete     Boolean @default(false)
   onboardingComplete  Boolean @default(false)
+  contentCategories   String? // JSON array of category strings
   showCue          Boolean @default(true)
   responseRate     Float   @default(0)
   avgRating        Float   @default(0)

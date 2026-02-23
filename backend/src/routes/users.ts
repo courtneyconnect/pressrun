@@ -40,6 +40,7 @@ usersRouter.post(
     z.object({
       role: z.enum(["TALENT", "PRESS_STOP"]),
       name: z.string().min(1).optional(),
+      contentCategories: z.array(z.string()).optional(),
     })
   ),
   async (c) => {
@@ -51,6 +52,7 @@ usersRouter.post(
         onboardingComplete: true,
         role: body.role,
         ...(body.name ? { name: body.name } : {}),
+        ...(body.contentCategories ? { contentCategories: JSON.stringify(body.contentCategories) } : {}),
       },
     });
     return c.json({ data: updated });

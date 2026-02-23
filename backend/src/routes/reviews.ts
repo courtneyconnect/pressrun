@@ -51,7 +51,6 @@ reviewsRouter.post(
 
     const review = await prisma.review.create({
       data: {
-        bookingId: "direct",
         reviewerId: user.id,
         revieweeId: body.revieweeId,
         rating: body.rating,

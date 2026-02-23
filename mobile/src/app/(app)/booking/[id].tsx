@@ -86,7 +86,7 @@ export default function BookingDetailScreen() {
 
   const updateStatus = useMutation({
     mutationFn: (status: string) =>
-      api.patch<Booking>(`/api/bookings/${id}`, { status }),
+      api.put<Booking>(`/api/bookings/${id}/status`, { status }),
     onSuccess: (_data, status) => {
       queryClient.invalidateQueries({ queryKey: ["booking", id] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });

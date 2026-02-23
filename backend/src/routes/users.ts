@@ -31,6 +31,32 @@ usersRouter.get("/me", requireAuth, async (c) => {
   return c.json({ data: dbUser });
 });
 
+// POST /me/complete-onboarding - mark onboarding done and set initial role
+usersRouter.post(
+  "/me/complete-onboarding",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({
+      role: z.enum(["TALENT", "PRESS_STOP"]),
+      name: z.string().min(1).optional(),
+    })
+  ),
+  async (c) => {
+    const user = c.get("user")!;
+    const body = c.req.valid("json");
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        onboardingComplete: true,
+        role: body.role,
+        ...(body.name ? { name: body.name } : {}),
+      },
+    });
+    return c.json({ data: updated });
+  }
+);
+
 // PUT /me - update profile
 usersRouter.put(
   "/me",

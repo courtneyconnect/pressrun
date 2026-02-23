@@ -23,7 +23,8 @@ model User {
   bio              String?
   headline         String?
   verified         Boolean @default(false)
-  profileComplete  Boolean @default(false)
+  profileComplete     Boolean @default(false)
+  onboardingComplete  Boolean @default(false)
   showCue          Boolean @default(true)
   responseRate     Float   @default(0)
   avgRating        Float   @default(0)

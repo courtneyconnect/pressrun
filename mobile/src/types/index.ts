@@ -66,6 +66,7 @@ export interface User {
   headline: string | null;
   verified: boolean;
   profileComplete: boolean;
+  onboardingComplete: boolean;
   showCue: boolean;
   responseRate: number;
   avgRating: number;

@@ -6,7 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useSession } from "@/lib/auth/use-session";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
+import { api } from "@/lib/api/api";
+import type { User } from "@/types";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,6 +32,19 @@ const PressRunTheme = {
 
 function RootLayoutNav() {
   const { data: session, isLoading } = useSession();
+  const router = useRouter();
+
+  const { data: userProfile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => api.get<User>("/api/users/me"),
+    enabled: !!session?.user,
+  });
+
+  useEffect(() => {
+    if (session?.user && userProfile && !userProfile.onboardingComplete) {
+      router.replace("/(app)/onboarding" as any);
+    }
+  }, [session?.user, userProfile?.onboardingComplete]);
 
   if (isLoading) {
     return (

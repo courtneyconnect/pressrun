@@ -16,6 +16,7 @@ export default function AppLayout() {
       <Stack.Screen name="notifications" />
       <Stack.Screen name="search" />
       <Stack.Screen name="admin-assignments" />
+      <Stack.Screen name="analytics" options={{ headerShown: false }} />
       <Stack.Screen
         name="onboarding"
         options={{ gestureEnabled: false }}

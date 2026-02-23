@@ -35,6 +35,7 @@ import {
   Camera,
   Video,
   Upload,
+  BarChart2,
 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { api } from "@/lib/api/api";
@@ -1022,6 +1023,17 @@ export default function ProfileScreen() {
 
               {/* ── Actions ── */}
               <View className="px-4 pt-6">
+                <Pressable
+                  testID="analytics-button"
+                  className="bg-[#1C1C1E] rounded-xl py-3.5 items-center mb-3"
+                  onPress={() => router.push("/analytics" as any)}
+                >
+                  <View className="flex-row items-center">
+                    <BarChart2 size={16} color="#E53935" />
+                    <Text className="text-[#E53935] font-semibold text-sm ml-2">My Analytics</Text>
+                  </View>
+                </Pressable>
+
                 <Pressable
                   testID="edit-profile-button"
                   className="border border-[#E53935] rounded-xl py-3.5 items-center mb-3"

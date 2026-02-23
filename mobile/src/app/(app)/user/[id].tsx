@@ -35,6 +35,7 @@ import { api } from "@/lib/api/api";
 import type { User, ContentSeries, Friendship, Review, SeriesExample } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
 import * as Haptics from "expo-haptics";
+import * as VideoThumbnails from "expo-video-thumbnails";
 
 function PlatformButton({ label, color, url }: { label: string; color: string; url: string }) {
   return (
@@ -402,6 +403,65 @@ function ReviewModal({
   );
 }
 
+function VideoExampleRow({ example, seriesTitle, onPress }: { example: SeriesExample; seriesTitle: string; onPress: () => void }) {
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    VideoThumbnails.getThumbnailAsync(example.url, { time: 1000 })
+      .then((result) => { if (!cancelled) setThumbnail(result.uri); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [example.url]);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: "#1C1C1E",
+        borderRadius: 14,
+        marginBottom: 10,
+        overflow: "hidden",
+        opacity: pressed ? 0.78 : 1,
+      })}
+    >
+      {/* Thumbnail banner */}
+      <View style={{ width: "100%", height: 160, backgroundColor: "#111", position: "relative" }}>
+        {thumbnail ? (
+          <Image source={{ uri: thumbnail }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+        ) : (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Video size={32} color="#3C3C3E" />
+          </View>
+        )}
+        {/* Play overlay */}
+        <View style={{
+          position: "absolute",
+          bottom: 10,
+          right: 10,
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <Play size={14} color="#fff" fill="#fff" />
+        </View>
+      </View>
+      {/* Label row */}
+      <View style={{ paddingHorizontal: 14, paddingVertical: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600", flex: 1 }} numberOfLines={1}>
+          {example.label?.trim() || seriesTitle}
+        </Text>
+        <View style={{ backgroundColor: "#E53935", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginLeft: 8 }}>
+          <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>Play</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function UserProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -676,36 +736,15 @@ export default function UserProfileScreen() {
                       {allExamples.map((item, idx) => {
                         if (item.example.type === "video") {
                           return (
-                            <Pressable
+                            <VideoExampleRow
                               key={`example-${item.series.id}-${idx}`}
-                              testID={`example-video-${idx}`}
+                              example={item.example}
+                              seriesTitle={item.series.title}
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                 Linking.openURL(item.example.url);
                               }}
-                              style={({ pressed }) => ({
-                                backgroundColor: "#1C1C1E",
-                                borderRadius: 14,
-                                padding: 14,
-                                marginBottom: 10,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                opacity: pressed ? 0.75 : 1,
-                              })}
-                            >
-                              <View style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: "#2C2C2E", alignItems: "center", justifyContent: "center", marginRight: 12, flexShrink: 0 }}>
-                                <Video size={20} color="#E53935" />
-                              </View>
-                              <View style={{ flex: 1 }}>
-                                <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
-                                  {item.example.label?.trim() || item.series.title}
-                                </Text>
-                                <Text style={{ color: "#636366", fontSize: 12, marginTop: 2 }}>Video example</Text>
-                              </View>
-                              <View style={{ backgroundColor: "#E53935", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginLeft: 8 }}>
-                                <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>Play</Text>
-                              </View>
-                            </Pressable>
+                            />
                           );
                         }
                         // link type

@@ -89,6 +89,8 @@ function PlatformButton({
   );
 }
 
+import * as VideoThumbnails from "expo-video-thumbnails";
+
 // ─── Grid cell component ──────────────────────────────────────────────────────
 function GridCell({
   example,
@@ -104,39 +106,60 @@ function GridCell({
   const isVideo = example.type === "video";
   const platform = !isVideo ? getPlatformInfo(example.url) : null;
   const colIndex = index % 3;
-  // 1px gap between cells: left cells get marginRight, right edge gets nothing
   const marginLeft = colIndex === 0 ? 0 : 1;
+
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isVideo || !example.url) return;
+    let cancelled = false;
+    VideoThumbnails.getThumbnailAsync(example.url, { time: 1000 })
+      .then((result) => {
+        if (!cancelled) setThumbnail(result.uri);
+      })
+      .catch(() => {
+        // Silently fall back to play-icon placeholder
+      });
+    return () => { cancelled = true; };
+  }, [example.url, isVideo]);
 
   if (isVideo) {
     return (
       <Pressable
         testID={`grid-cell-video-${index}`}
-        onPress={() => example.type === "video" && onVideoPress ? onVideoPress() : onPress()}
+        onPress={() => onVideoPress ? onVideoPress() : onPress()}
         style={{
           width: CELL_SIZE,
           height: CELL_SIZE,
           backgroundColor: "#1A1A1A",
           marginLeft,
           marginBottom: 1,
-          alignItems: "center",
-          justifyContent: "center",
+          overflow: "hidden",
         }}
       >
+        {thumbnail ? (
+          <Image
+            source={{ uri: thumbnail }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center", backgroundColor: "#1A1A1A" }} />
+        )}
+        {/* Play badge overlay */}
         <View style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: "rgba(255,255,255,0.12)",
+          position: "absolute",
+          bottom: 6,
+          right: 6,
+          width: 28,
+          height: 28,
+          borderRadius: 14,
+          backgroundColor: "rgba(0,0,0,0.55)",
           alignItems: "center",
           justifyContent: "center",
         }}>
-          <Play size={16} color="#FFFFFF" fill="#FFFFFF" />
+          <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
         </View>
-        {example.label ? (
-          <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, marginTop: 4, paddingHorizontal: 4, textAlign: "center" }} numberOfLines={1}>
-            {example.label}
-          </Text>
-        ) : null}
       </Pressable>
     );
   }

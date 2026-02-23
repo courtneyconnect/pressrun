@@ -45,9 +45,11 @@ function parseBookingData(data: string | null): BookingData | null {
 
 function FriendRequestActions({
   friendshipId,
+  notificationId,
   onActioned,
 }: {
   friendshipId: string;
+  notificationId: string;
   onActioned: (result: "accepted" | "declined") => void;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -65,8 +67,16 @@ function FriendRequestActions({
     mutationFn: () => api.put(`/api/friends/${friendshipId}/accept`, {}),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Mark notification read so buttons stay hidden after refetch
+      api.put(`/api/notifications/${notificationId}/read`, {}).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
+      onActioned("accepted");
+    },
+    onError: () => {
+      // Already accepted — treat as success silently
+      api.put(`/api/notifications/${notificationId}/read`, {}).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       onActioned("accepted");
     },
   });
@@ -75,8 +85,14 @@ function FriendRequestActions({
     mutationFn: () => api.delete(`/api/friends/${friendshipId}`),
     onSuccess: () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      api.put(`/api/notifications/${notificationId}/read`, {}).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
+      onActioned("declined");
+    },
+    onError: () => {
+      api.put(`/api/notifications/${notificationId}/read`, {}).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       onActioned("declined");
     },
   });
@@ -245,9 +261,10 @@ function NotificationItem({
         </Text>
 
         {/* Friend request actions */}
-        {isFriendRequest && friendData?.friendshipId && actionResult === null ? (
+        {isFriendRequest && friendData?.friendshipId && actionResult === null && !item.read ? (
           <FriendRequestActions
             friendshipId={friendData.friendshipId}
+            notificationId={item.id}
             onActioned={(result) => setActionResult(result)}
           />
         ) : null}

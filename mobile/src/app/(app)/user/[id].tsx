@@ -50,7 +50,7 @@ function FriendButton({ viewedUserId }: { viewedUserId: string }) {
   });
 
   const requestFriend = useMutation({
-    mutationFn: () => api.post("/api/friends/request", { addresseeId: viewedUserId }),
+    mutationFn: () => api.post("/api/friends/request", { userId: viewedUserId }),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       queryClient.invalidateQueries({ queryKey: ["friends"] });

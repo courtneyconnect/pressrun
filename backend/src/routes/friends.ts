@@ -47,6 +47,18 @@ friendsRouter.post("/request", requireAuth, zValidator("json", z.object({
   const friendship = await prisma.friendship.create({
     data: { requesterId: user.id, addresseeId: body.userId },
   });
+
+  // Notify the recipient of the friend request
+  await prisma.notification.create({
+    data: {
+      userId: body.userId,
+      type: "FRIEND_REQUEST",
+      title: "New Friend Request",
+      body: `${user.name ?? "Someone"} sent you a friend request`,
+      data: JSON.stringify({ friendshipId: friendship.id, requesterId: user.id }),
+    },
+  });
+
   return c.json({ data: friendship }, 201);
 });
 
@@ -64,6 +76,18 @@ friendsRouter.put("/:id/accept", requireAuth, async (c) => {
     where: { id },
     data: { status: "ACCEPTED" },
   });
+
+  // Notify the original requester that their request was accepted
+  await prisma.notification.create({
+    data: {
+      userId: friendship.requesterId,
+      type: "FRIEND_ACCEPTED",
+      title: "Friend Request Accepted",
+      body: `${user.name ?? "Someone"} accepted your friend request`,
+      data: JSON.stringify({ friendshipId: id, addresseeId: user.id }),
+    },
+  });
+
   return c.json({ data: updated });
 });
 

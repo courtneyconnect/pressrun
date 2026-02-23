@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, X, MapPin, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { ArrowLeft, Plus, X, MapPin, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import type { Tour } from "@/types";
 import * as Haptics from "expo-haptics";
@@ -44,6 +44,11 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+const SHORT_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -54,6 +59,17 @@ function getFirstDayOfMonth(year: number, month: number): number {
 
 function isoDate(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatDisplayDate(iso: string): string {
+  if (!iso) return "";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return iso;
+  return `${SHORT_MONTHS[month]} ${day}, ${year}`;
 }
 
 function CalendarModal({
@@ -204,11 +220,11 @@ function CalendarModal({
           <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#2C2C2E" }}>
             <View style={{ alignItems: "center" }}>
               <Text style={{ color: "#8E8E93", fontSize: 11 }}>Start</Text>
-              <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{startDate || "—"}</Text>
+              <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{startDate ? formatDisplayDate(startDate) : "—"}</Text>
             </View>
             <View style={{ alignItems: "center" }}>
               <Text style={{ color: "#8E8E93", fontSize: 11 }}>End</Text>
-              <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{endDate || "—"}</Text>
+              <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{endDate ? formatDisplayDate(endDate) : "—"}</Text>
             </View>
           </View>
         ) : null}
@@ -218,6 +234,141 @@ function CalendarModal({
           style={{ backgroundColor: "#E53935", borderRadius: 14, padding: 14, alignItems: "center", marginTop: 16 }}
         >
           <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>Done</Text>
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
+
+function SingleDatePickerModal({
+  visible,
+  onClose,
+  value,
+  onSelect,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  value: string;
+  onSelect: (date: string) => void;
+}) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState<number>(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(today.getMonth());
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+
+  const handleDayPress = (day: number) => {
+    const dateStr = isoDate(viewYear, viewMonth, day);
+    Haptics.selectionAsync();
+    onSelect(dateStr);
+    onClose();
+  };
+
+  const isSelected = (day: number): boolean => {
+    return isoDate(viewYear, viewMonth, day) === value;
+  };
+
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)" }}
+        onPress={onClose}
+      />
+      <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 }}>
+        {/* Header */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <Pressable onPress={prevMonth} style={{ padding: 8 }}>
+            <ChevronLeft size={22} color="#fff" />
+          </Pressable>
+          <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700" }}>
+            {MONTHS[viewMonth]} {viewYear}
+          </Text>
+          <Pressable onPress={nextMonth} style={{ padding: 8 }}>
+            <ChevronRight size={22} color="#fff" />
+          </Pressable>
+        </View>
+
+        {/* Instruction */}
+        <Text style={{ color: "#8E8E93", fontSize: 12, textAlign: "center", marginBottom: 12 }}>
+          Tap a date to select
+        </Text>
+
+        {/* Day headers */}
+        <View style={{ flexDirection: "row", marginBottom: 6 }}>
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+            <Text key={d} style={{ flex: 1, color: "#555558", fontSize: 12, fontWeight: "600", textAlign: "center" }}>{d}</Text>
+          ))}
+        </View>
+
+        {/* Calendar grid */}
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          {cells.map((day, idx) => {
+            if (day === null) {
+              return <View key={`empty-${idx}`} style={{ width: "14.28%", height: 40 }} />;
+            }
+            const selected = isSelected(day);
+            return (
+              <Pressable
+                key={`day-${day}`}
+                onPress={() => handleDayPress(day)}
+                style={{
+                  width: "14.28%",
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: selected ? "#E53935" : "transparent",
+                  borderRadius: selected ? 20 : 0,
+                }}
+              >
+                <Text style={{
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: selected ? "700" : "400",
+                }}>
+                  {day}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Selected date display */}
+        {value ? (
+          <View style={{ alignItems: "center", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#2C2C2E" }}>
+            <Text style={{ color: "#8E8E93", fontSize: 11 }}>Selected</Text>
+            <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{formatDisplayDate(value)}</Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          onPress={onClose}
+          style={{ backgroundColor: "#2C2C2E", borderRadius: 14, padding: 14, alignItems: "center", marginTop: 16 }}
+        >
+          <Text style={{ color: "#8E8E93", fontSize: 15, fontWeight: "700" }}>Cancel</Text>
         </Pressable>
       </View>
     </Modal>
@@ -244,6 +395,8 @@ export default function CreateTourScreen() {
     arrivalDate: "",
     departureDate: "",
   });
+  const [showArrivalPicker, setShowArrivalPicker] = useState<boolean>(false);
+  const [showDeparturePicker, setShowDeparturePicker] = useState<boolean>(false);
 
   // Step 3
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -374,8 +527,8 @@ export default function CreateTourScreen() {
                   {startDate ? (
                     <View>
                       <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
-                        {startDate}
-                        {endDate ? ` — ${endDate}` : null}
+                        {formatDisplayDate(startDate)}
+                        {endDate ? ` — ${formatDisplayDate(endDate)}` : null}
                       </Text>
                       <Text style={{ color: "#555558", fontSize: 12, marginTop: 2 }}>Tap to change</Text>
                     </View>
@@ -433,7 +586,7 @@ export default function CreateTourScreen() {
                         </Text>
                         {stop.arrivalDate ? (
                           <Text style={{ color: "#555558", fontSize: 12, marginTop: 2 }}>
-                            {stop.arrivalDate}{stop.departureDate ? ` – ${stop.departureDate}` : null}
+                            {formatDisplayDate(stop.arrivalDate)}{stop.departureDate ? ` – ${formatDisplayDate(stop.departureDate)}` : null}
                           </Text>
                         ) : null}
                       </View>
@@ -470,24 +623,49 @@ export default function CreateTourScreen() {
                     onChangeText={(v) => setNewStop((s) => ({ ...s, state: v }))}
                   />
                 </View>
-                <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-                  <TextInput
-                    testID="stop-arrival-input"
-                    style={{ flex: 1, backgroundColor: "#2C2C2E", color: "#fff", fontSize: 13, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10 }}
-                    placeholder="Arrival (YYYY-MM-DD)"
-                    placeholderTextColor="#555558"
-                    value={newStop.arrivalDate}
-                    onChangeText={(v) => setNewStop((s) => ({ ...s, arrivalDate: v }))}
-                  />
-                  <TextInput
-                    testID="stop-departure-input"
-                    style={{ flex: 1, backgroundColor: "#2C2C2E", color: "#fff", fontSize: 13, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10 }}
-                    placeholder="Departure (YYYY-MM-DD)"
-                    placeholderTextColor="#555558"
-                    value={newStop.departureDate}
-                    onChangeText={(v) => setNewStop((s) => ({ ...s, departureDate: v }))}
-                  />
-                </View>
+
+                {/* Arrival date picker button */}
+                <Pressable
+                  testID="stop-arrival-input"
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowArrivalPicker(true); }}
+                  style={{
+                    backgroundColor: "#2C2C2E",
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
+                  }}
+                >
+                  <Text style={{ color: newStop.arrivalDate ? "#fff" : "#555558", fontSize: 14 }}>
+                    {newStop.arrivalDate ? formatDisplayDate(newStop.arrivalDate) : "Arrival Date"}
+                  </Text>
+                  <CalendarDays size={16} color="#8E8E93" />
+                </Pressable>
+
+                {/* Departure date picker button */}
+                <Pressable
+                  testID="stop-departure-input"
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowDeparturePicker(true); }}
+                  style={{
+                    backgroundColor: "#2C2C2E",
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
+                  }}
+                >
+                  <Text style={{ color: newStop.departureDate ? "#fff" : "#555558", fontSize: 14 }}>
+                    {newStop.departureDate ? formatDisplayDate(newStop.departureDate) : "Departure Date"}
+                  </Text>
+                  <CalendarDays size={16} color="#8E8E93" />
+                </Pressable>
+
                 <Pressable
                   testID="add-stop-button"
                   onPress={addStop}
@@ -575,6 +753,20 @@ export default function CreateTourScreen() {
         endDate={endDate}
         onSelectStart={setStartDate}
         onSelectEnd={setEndDate}
+      />
+
+      <SingleDatePickerModal
+        visible={showArrivalPicker}
+        onClose={() => setShowArrivalPicker(false)}
+        value={newStop.arrivalDate}
+        onSelect={(date) => setNewStop((s) => ({ ...s, arrivalDate: date }))}
+      />
+
+      <SingleDatePickerModal
+        visible={showDeparturePicker}
+        onClose={() => setShowDeparturePicker(false)}
+        value={newStop.departureDate}
+        onSelect={(date) => setNewStop((s) => ({ ...s, departureDate: date }))}
       />
     </View>
   );

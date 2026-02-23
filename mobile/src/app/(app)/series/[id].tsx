@@ -27,11 +27,148 @@ import {
   CalendarDays,
   X,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react-native";
 import { api } from "@/lib/api/api";
 import type { SeriesDiscoverResult, SeriesExample, Booking } from "@/types";
 import { useSession } from "@/lib/auth/use-session";
 import * as Haptics from "expo-haptics";
+
+const MONTHS_LONG = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const SHORT_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+function getFirstDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 1).getDay();
+}
+function isoDate(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+function formatDisplayDate(iso: string): string {
+  if (!iso) return "";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return iso;
+  return `${SHORT_MONTHS[month]} ${day}, ${year}`;
+}
+
+function SingleDatePickerModal({
+  visible,
+  onClose,
+  value,
+  onSelect,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  value: string;
+  onSelect: (date: string) => void;
+}) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState<number>(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(today.getMonth());
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else { setViewMonth((m) => m - 1); }
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else { setViewMonth((m) => m + 1); }
+  };
+
+  const handleDayPress = (day: number) => {
+    const dateStr = isoDate(viewYear, viewMonth, day);
+    onSelect(dateStr);
+    onClose();
+  };
+
+  const isSelected = (day: number): boolean => isoDate(viewYear, viewMonth, day) === value;
+
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)" }} onPress={onClose} />
+      <View style={{ backgroundColor: "#1C1C1E", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <Pressable onPress={prevMonth} style={{ padding: 8 }}>
+            <ChevronLeft size={22} color="#fff" />
+          </Pressable>
+          <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700" }}>
+            {MONTHS_LONG[viewMonth]} {viewYear}
+          </Text>
+          <Pressable onPress={nextMonth} style={{ padding: 8 }}>
+            <ChevronRight size={22} color="#fff" />
+          </Pressable>
+        </View>
+        <Text style={{ color: "#8E8E93", fontSize: 12, textAlign: "center", marginBottom: 12 }}>
+          Tap a date to select
+        </Text>
+        <View style={{ flexDirection: "row", marginBottom: 6 }}>
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+            <Text key={d} style={{ flex: 1, color: "#555558", fontSize: 12, fontWeight: "600", textAlign: "center" }}>{d}</Text>
+          ))}
+        </View>
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          {cells.map((day, idx) => {
+            if (day === null) {
+              return <View key={`empty-${idx}`} style={{ width: "14.28%", height: 40 }} />;
+            }
+            const selected = isSelected(day);
+            return (
+              <Pressable
+                key={`day-${day}`}
+                onPress={() => handleDayPress(day)}
+                style={{
+                  width: "14.28%",
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: selected ? "#E53935" : "transparent",
+                  borderRadius: selected ? 20 : 0,
+                }}
+              >
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: selected ? "700" : "400" }}>
+                  {day}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        {value ? (
+          <View style={{ alignItems: "center", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#2C2C2E" }}>
+            <Text style={{ color: "#8E8E93", fontSize: 11 }}>Selected</Text>
+            <Text style={{ color: "#E53935", fontSize: 14, fontWeight: "700", marginTop: 2 }}>{formatDisplayDate(value)}</Text>
+          </View>
+        ) : null}
+        <Pressable
+          onPress={onClose}
+          style={{ backgroundColor: "#2C2C2E", borderRadius: 14, padding: 14, alignItems: "center", marginTop: 16 }}
+        >
+          <Text style={{ color: "#8E8E93", fontSize: 15, fontWeight: "700" }}>Cancel</Text>
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
 
 type BookingFormState = {
   title: string;
@@ -63,6 +200,7 @@ function BookNowModal({
     description: "",
   });
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 
   const createBooking = useMutation({
     mutationFn: () =>
@@ -271,16 +409,25 @@ function BookNowModal({
                   />
 
                   <Text style={labelStyle}>Proposed Date</Text>
-                  <TextInput
+                  <Pressable
                     testID="booking-date-input"
-                    style={inputStyle}
-                    value={form.proposedDate}
-                    onChangeText={(v) => setForm((f) => ({ ...f, proposedDate: v }))}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#555558"
-                    keyboardType="numbers-and-punctuation"
-                    returnKeyType="next"
-                  />
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                      backgroundColor: "#2C2C2E",
+                      borderRadius: 12,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Text style={{ color: form.proposedDate ? "#fff" : "#555558", fontSize: 15 }}>
+                      {form.proposedDate ? formatDisplayDate(form.proposedDate) : "Proposed Date"}
+                    </Text>
+                    <CalendarDays size={16} color="#8E8E93" />
+                  </Pressable>
 
                   <Text style={labelStyle}>Fee (USD)</Text>
                   <View
@@ -369,6 +516,12 @@ function BookNowModal({
           </Pressable>
         </KeyboardAvoidingView>
       </Pressable>
+      <SingleDatePickerModal
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        value={form.proposedDate}
+        onSelect={(date) => setForm((f) => ({ ...f, proposedDate: date }))}
+      />
     </Modal>
   );
 }
@@ -575,7 +728,7 @@ export default function SeriesDetailScreen() {
                     setBookingModalVisible(true);
                   }}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#1a9e50" : "#22c55e",
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
                     borderRadius: 16,
                     paddingVertical: 15,
                     alignItems: "center",

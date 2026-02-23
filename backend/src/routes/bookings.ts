@@ -96,17 +96,17 @@ bookingsRouter.post(
     const user = c.get("user")!;
     const body = c.req.valid("json");
 
-    // Verify press stop exists and is a PRESS_STOP user
+    // Verify press stop (creator) exists
     const pressStop = await prisma.user.findUnique({
       where: { id: body.pressStopId },
       include: { pressStopProfile: true },
     });
 
-    if (!pressStop || pressStop.role !== "PRESS_STOP") {
+    if (!pressStop) {
       return c.json(
         {
           error: {
-            message: "Press stop not found",
+            message: "Creator not found",
             code: "NOT_FOUND",
           },
         },

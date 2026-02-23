@@ -290,8 +290,8 @@ model AvailabilityException {
 
 model Review {
   id              String   @id @default(cuid())
-  bookingId       String
-  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId       String?
+  booking         Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reviewerId      String
   reviewer        User     @relation("ReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
   revieweeId      String

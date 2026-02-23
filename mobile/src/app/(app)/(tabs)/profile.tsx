@@ -1025,25 +1025,37 @@ export default function ProfileScreen() {
               {/* ── Actions ── */}
               <View className="px-4 pt-6">
                 <Pressable
-                  testID="analytics-button"
-                  className="bg-[#1C1C1E] rounded-xl py-3.5 items-center mb-3"
-                  onPress={() => router.push("/analytics" as any)}
+                  testID="edit-profile-button"
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
+                    borderRadius: 14,
+                    height: 52,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
+                  })}
+                  onPress={() => router.push("/edit-profile" as any)}
                 >
-                  <View className="flex-row items-center">
-                    <BarChart2 size={16} color="#E53935" />
-                    <Text className="text-[#E53935] font-semibold text-sm ml-2">My Analytics</Text>
-                  </View>
+                  <Edit3 size={18} color="#fff" />
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15, marginLeft: 8 }}>Edit Profile</Text>
                 </Pressable>
 
                 <Pressable
-                  testID="edit-profile-button"
-                  className="border border-[#E53935] rounded-xl py-3.5 items-center mb-3"
-                  onPress={() => router.push("/edit-profile" as any)}
+                  testID="analytics-button"
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                    borderRadius: 14,
+                    height: 52,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
+                  })}
+                  onPress={() => router.push("/analytics" as any)}
                 >
-                  <View className="flex-row items-center">
-                    <Edit3 size={16} color="#E53935" />
-                    <Text className="text-[#E53935] font-semibold text-sm ml-2">Edit Profile</Text>
-                  </View>
+                  <BarChart2 size={18} color="#fff" />
+                  <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15, marginLeft: 8 }}>My Analytics</Text>
                 </Pressable>
 
                 <Pressable

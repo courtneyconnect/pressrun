@@ -751,7 +751,7 @@ export default function SeriesDetailScreen() {
                   testID="message-creator-button"
                   onPress={handleMessage}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#3a3a3c" : "#2C2C2E",
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
                     borderRadius: 16,
                     paddingVertical: 15,
                     paddingHorizontal: 24,

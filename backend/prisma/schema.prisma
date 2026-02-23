@@ -343,6 +343,7 @@ model ContentSeries {
   description     String?
   coverImage      String?
   examples        String?  // JSON array of { type: "video"|"link", url: string, label?: string }
+  cities          String?  // JSON array of city strings, e.g. ["New York", "Los Angeles"]
   durationMinutes Int      @default(60)
   price           Int      @default(0)
   active          Boolean  @default(true)

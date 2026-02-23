@@ -282,6 +282,8 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Interview");
+  const [cities, setCities] = useState<string[]>([]);
+  const [cityInput, setCityInput] = useState("");
   const [success, setSuccess] = useState(false);
 
   const createSeries = useMutation({
@@ -293,6 +295,7 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
         price: 0,
         category,
         postingTimeline: null,
+        cities: cities.length > 0 ? JSON.stringify(cities) : null,
       }),
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -303,6 +306,8 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
         setTitle("");
         setDescription("");
         setCategory("Interview");
+        setCities([]);
+        setCityInput("");
         onClose();
       }, 1200);
     },
@@ -315,8 +320,24 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
     setTitle("");
     setDescription("");
     setCategory("Interview");
+    setCities([]);
+    setCityInput("");
     setSuccess(false);
     onClose();
+  };
+
+  const addCity = () => {
+    const trimmed = cityInput.trim();
+    if (trimmed && !cities.includes(trimmed)) {
+      setCities((prev) => [...prev, trimmed]);
+      Haptics.selectionAsync();
+    }
+    setCityInput("");
+  };
+
+  const removeCity = (city: string) => {
+    setCities((prev) => prev.filter((c) => c !== city));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
@@ -397,6 +418,55 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
                         </Pressable>
                       ))}
                     </ScrollView>
+
+                    {/* Cities */}
+                    <Text style={{ color: "#8E8E93", fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 6 }}>
+                      Cities (optional)
+                    </Text>
+                    <Text style={{ color: "#555558", fontSize: 12, marginBottom: 10 }}>
+                      Add cities where you create this type of content
+                    </Text>
+                    <View style={{ flexDirection: "row", marginBottom: 10 }}>
+                      <TextInput
+                        style={{ flex: 1, backgroundColor: "#2C2C2E", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: "#fff", fontSize: 15, marginRight: 8 }}
+                        placeholder="e.g. New York, Los Angeles..."
+                        placeholderTextColor="#555558"
+                        value={cityInput}
+                        onChangeText={setCityInput}
+                        returnKeyType="done"
+                        onSubmitEditing={addCity}
+                      />
+                      <Pressable
+                        onPress={addCity}
+                        disabled={!cityInput.trim()}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 12,
+                          backgroundColor: cityInput.trim() ? "#E53935" : "#2C2C2E",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Plus size={20} color={cityInput.trim() ? "#fff" : "#555558"} />
+                      </Pressable>
+                    </View>
+                    {cities.length > 0 ? (
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                        {cities.map((city) => (
+                          <Pressable
+                            key={city}
+                            onPress={() => removeCity(city)}
+                            style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#2C2C2E", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 }}
+                          >
+                            <Text style={{ color: "#fff", fontSize: 13, marginRight: 5 }}>{city}</Text>
+                            <X size={12} color="#8E8E93" />
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : (
+                      <View style={{ marginBottom: 20 }} />
+                    )}
 
                     {createSeries.isError ? (
                       <Text style={{ color: "#E53935", fontSize: 13, marginBottom: 12, textAlign: "center" }}>
@@ -722,6 +792,19 @@ export default function ProfileScreen() {
                         {activeSeries.postingTimeline ? (
                           <Text style={{ color: "#555558", fontSize: 11 }}>Posts in {activeSeries.postingTimeline}</Text>
                         ) : null}
+                        {activeSeries.cities ? (() => {
+                          try {
+                            const cityArr = JSON.parse(activeSeries.cities) as string[];
+                            if (cityArr.length > 0) {
+                              return (
+                                <Text style={{ color: "#555558", fontSize: 11 }}>
+                                  {cityArr.slice(0, 3).join(", ")}{cityArr.length > 3 ? ` +${cityArr.length - 3}` : ""}
+                                </Text>
+                              );
+                            }
+                          } catch {}
+                          return null;
+                        })() : null}
                       </View>
                       {activeSeries.description ? (
                         <Text style={{ color: "#6E6E73", fontSize: 12, marginTop: 4, lineHeight: 17 }} numberOfLines={2}>

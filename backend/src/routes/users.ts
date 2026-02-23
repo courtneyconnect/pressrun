@@ -350,6 +350,7 @@ usersRouter.post(
       category: z.string().optional().default("OTHER"),
       order: z.number().optional().default(0),
       postingTimeline: z.string().nullable().optional(),
+      cities: z.string().nullable().optional(),
     })
   ),
   async (c) => {
@@ -367,6 +368,7 @@ usersRouter.post(
         category: body.category,
         order: body.order,
         postingTimeline: body.postingTimeline ?? null,
+        cities: body.cities ?? null,
       },
     });
     return c.json({ data: item }, 201);
@@ -390,6 +392,7 @@ usersRouter.put(
       category: z.string().optional(),
       order: z.number().optional(),
       postingTimeline: z.string().nullable().optional(),
+      cities: z.string().nullable().optional(),
     })
   ),
   async (c) => {

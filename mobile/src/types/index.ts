@@ -105,6 +105,7 @@ export interface ContentSeries {
   description: string | null;
   coverImage: string | null;
   examples: string | null; // JSON string of SeriesExample[]
+  cities: string | null; // JSON string of city strings
   durationMinutes: number;
   price: number;
   active: boolean;

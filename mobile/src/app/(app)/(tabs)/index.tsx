@@ -76,14 +76,19 @@ function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard
   const player = useVideoPlayer(item.example.url, (p) => {
     p.loop = true;
     p.muted = true;
+    // Do NOT call p.play() here — we control playback via isActive prop
   });
 
-  // Play/pause driven by scroll visibility
+  // Play/pause driven by scroll visibility — only one video plays at a time
   React.useEffect(() => {
-    if (isActive) {
-      player.play();
-    } else {
-      player.pause();
+    try {
+      if (isActive) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    } catch {
+      // Player may not be ready yet; ignore
     }
   }, [isActive, player]);
 
@@ -482,12 +487,25 @@ export default function DiscoverScreen() {
     [router]
   );
 
-  // Track which video card is active (≥40% visible)
+  // When user switches away from video tab, stop any playing video
+  React.useEffect(() => {
+    if (activeTab !== "videos") {
+      setActiveVideoKey(null);
+    }
+  }, [activeTab]);
+
+  // Track which video card is active (≥50% visible) — only one plays at a time
   const [activeVideoKey, setActiveVideoKey] = useState<string | null>(null);
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 40 }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    const first = viewableItems.find((v) => v.isViewable);
-    setActiveVideoKey(first ? `${(first.item as ExampleCard).seriesId}-${first.index ?? 0}` : null);
+    // Find the first fully-viewable video card
+    const first = viewableItems.find((v) => v.isViewable && v.item != null);
+    if (first) {
+      const key = `${(first.item as ExampleCard).seriesId}-${first.index ?? 0}`;
+      setActiveVideoKey(key);
+    } else {
+      setActiveVideoKey(null);
+    }
   }).current;
 
   return (

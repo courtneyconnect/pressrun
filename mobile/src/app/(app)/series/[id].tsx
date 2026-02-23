@@ -383,7 +383,7 @@ function BookNowModal({
                     onPress={handleClose}
                     style={{
                       marginTop: 28,
-                      backgroundColor: "#22c55e",
+                      backgroundColor: "#E53935",
                       borderRadius: 14,
                       paddingVertical: 14,
                       paddingHorizontal: 32,
@@ -746,11 +746,19 @@ export default function SeriesDetailScreen() {
                 {/* Message button */}
                 <Pressable
                   testID="message-creator-button"
-                  className="bg-[#E53935] rounded-2xl py-4 items-center mb-3 flex-row justify-center"
                   onPress={handleMessage}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
+                    borderRadius: 16,
+                    paddingVertical: 15,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    marginBottom: 10,
+                  })}
                 >
                   <MessageSquare size={18} color="#fff" />
-                  <Text className="text-white font-bold text-base ml-2">Message {creator.name?.split(" ")[0]}</Text>
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>Message {creator.name?.split(" ")[0]}</Text>
                 </Pressable>
               </>
             ) : null}

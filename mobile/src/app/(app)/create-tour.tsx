@@ -669,10 +669,10 @@ export default function CreateTourScreen() {
                 <Pressable
                   testID="add-stop-button"
                   onPress={addStop}
-                  style={{ backgroundColor: "#2C2C2E", borderRadius: 10, paddingVertical: 10, flexDirection: "row", alignItems: "center", justifyContent: "center" }}
+                  style={{ backgroundColor: "#E53935", borderRadius: 10, paddingVertical: 11, flexDirection: "row", alignItems: "center", justifyContent: "center" }}
                 >
-                  <Plus size={16} color="#E53935" />
-                  <Text style={{ color: "#E53935", fontWeight: "600", fontSize: 14, marginLeft: 6 }}>Add Stop</Text>
+                  <Plus size={16} color="#fff" />
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14, marginLeft: 6 }}>Add Stop</Text>
                 </Pressable>
               </View>
 

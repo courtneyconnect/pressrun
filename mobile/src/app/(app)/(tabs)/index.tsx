@@ -158,10 +158,10 @@ function UploadedVideoCard({ item, onViewSeries, isActive }: { item: ExampleCard
           <View className="items-end">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
-              className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
+              style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
               onPress={onViewSeries}
             >
-              <Text className="text-white text-xs font-semibold">Book Stop</Text>
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
             </Pressable>
           </View>
         </View>
@@ -250,10 +250,10 @@ function LinkExampleCard({ item, onViewSeries }: { item: ExampleCard; onViewSeri
           <View className="items-end">
             <Text className="text-white font-bold text-sm">{priceLabel}</Text>
             <Pressable
-              className="bg-[#E53935] rounded-lg px-3 py-1 mt-1"
+              style={{ backgroundColor: "#E53935", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginTop: 4 }}
               onPress={onViewSeries}
             >
-              <Text className="text-white text-xs font-semibold">Book Stop</Text>
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Book Stop</Text>
             </Pressable>
           </View>
         </View>

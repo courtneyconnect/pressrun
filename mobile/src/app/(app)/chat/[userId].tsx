@@ -67,8 +67,7 @@ export default function ChatScreen() {
 
   const { mutate: sendMessageMutate, isPending: isSending } = useMutation({
     mutationFn: (content: string) =>
-      api.post<Message>("/api/messages", {
-        receiverId: userId,
+      api.post<Message>(`/api/messages/${userId}`, {
         content,
         type: "TEXT",
       }),

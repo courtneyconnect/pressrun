@@ -271,7 +271,16 @@ export default function UserProfileScreen() {
                   <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wider ml-1.5">Content Series</Text>
                 </View>
                 {user.contentSeries!.map((s: ContentSeries) => (
-                  <View key={s.id} className="bg-[#1C1C1E] rounded-2xl p-4 mb-3">
+                  <Pressable
+                    key={s.id}
+                    testID={`series-card-${s.id}`}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push(`/series/${s.id}` as any);
+                    }}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                    className="bg-[#1C1C1E] rounded-2xl p-4 mb-3"
+                  >
                     <View className="flex-row items-start justify-between mb-1">
                       <Text className="text-white font-semibold text-base flex-1 mr-3" numberOfLines={2}>{s.title}</Text>
                       <View className="bg-[#E53935]/15 rounded-lg px-2.5 py-1">
@@ -287,7 +296,7 @@ export default function UserProfileScreen() {
                       <Video size={13} color="#8E8E93" />
                       <Text className="text-gray-500 text-xs ml-1.5">{durationLabel(s.durationMinutes)} per shoot</Text>
                     </View>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             ) : null}

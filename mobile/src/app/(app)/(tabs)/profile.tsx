@@ -404,12 +404,14 @@ function AddSeriesModal({ visible, onClose }: { visible: boolean; onClose: () =>
   const pickVideoExample = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        mediaTypes: ['videos'] as any,
       });
       if (result.canceled || !result.assets?.[0]) return;
       setUploadingVideo(true);
       const asset = result.assets[0];
-      const uploaded = await uploadFile(asset.uri, "example.mp4", "video/mp4");
+      const ext = asset.uri.split(".").pop()?.toLowerCase() ?? "mp4";
+      const mime = ext === "mov" ? "video/quicktime" : ext === "avi" ? "video/avi" : "video/mp4";
+      const uploaded = await uploadFile(asset.uri, `video.${ext}`, mime);
       setVideoExamples((prev) => [...prev, { type: "video", url: uploaded.url, label: "" }]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {

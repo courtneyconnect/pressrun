@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system";
+import { Platform } from "react-native";
 import { authClient } from "./auth/auth-client";
 
 type UploadResult = {
@@ -15,6 +16,23 @@ export async function uploadFile(
   mimeType: string
 ): Promise<UploadResult> {
   const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL!;
+
+  if (Platform.OS === "web") {
+    // On web, URIs are blob: or data: URLs — convert to Blob and use fetch + FormData.
+    const blobResp = await fetch(uri);
+    const blob = await blobResp.blob();
+    const formData = new FormData();
+    formData.append("file", blob, filename);
+    const fetchResp = await fetch(`${BACKEND_URL}/api/upload`, {
+      method: "POST",
+      body: formData,
+      headers: { Cookie: authClient.getCookie() },
+    });
+    const data = await fetchResp.json() as { data?: UploadResult; error?: string };
+    if (!fetchResp.ok) throw new Error(data.error || `Upload failed (${fetchResp.status})`);
+    if (!data.data) throw new Error("Upload failed: no data returned from server");
+    return data.data;
+  }
 
   // Use FileSystem.uploadAsync — handles large video file:// URIs correctly on iOS/Android.
   // Goes through the backend which proxies to storage (maxRequestBodySize raised to 500 MB).

@@ -45,6 +45,7 @@ import { uploadFile } from "@/lib/upload";
 import type { User, ContentSeries, SeriesExample } from "@/types";
 import * as Haptics from "expo-haptics";
 import { PressRunLoader } from "@/components/PressRunLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const CELL_SIZE = Math.floor((SCREEN_WIDTH - 2) / 3); // 2px total gap between 3 columns
@@ -737,6 +738,7 @@ export default function ProfileScreen() {
     : [];
 
   return (
+    <ErrorBoundary>
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         <ScrollView
@@ -1110,5 +1112,6 @@ export default function ProfileScreen() {
       ) : null}
       <AddSeriesModal visible={showAddSeriesModal} onClose={() => setShowAddSeriesModal(false)} />
     </View>
+    </ErrorBoundary>
   );
 }

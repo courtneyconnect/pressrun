@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { api } from "@/lib/api/api";
 import type { Booking, BookingStatus } from "@/types";
 import * as Haptics from "expo-haptics";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const STATUS_FILTERS: { label: string; value: BookingStatus | "ALL" }[] = [
   { label: "All", value: "ALL" },
@@ -129,6 +130,7 @@ export default function BookingsScreen() {
   );
 
   return (
+    <ErrorBoundary>
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         <View className="px-4 pt-2 pb-3">
@@ -201,5 +203,6 @@ export default function BookingsScreen() {
         )}
       </SafeAreaView>
     </View>
+    </ErrorBoundary>
   );
 }

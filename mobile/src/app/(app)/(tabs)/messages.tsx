@@ -15,6 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 import { api } from "@/lib/api/api";
 import type { Conversation } from "@/types";
 import * as Haptics from "expo-haptics";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function ConversationRow({
   conversation,
@@ -91,6 +92,7 @@ export default function MessagesScreen() {
   });
 
   return (
+    <ErrorBoundary>
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         <View className="px-4 pt-2 pb-3">
@@ -139,5 +141,6 @@ export default function MessagesScreen() {
         )}
       </SafeAreaView>
     </View>
+    </ErrorBoundary>
   );
 }

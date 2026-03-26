@@ -1,14 +1,25 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import { prisma } from "../prisma";
 
 const seriesDiscoverRouter = new Hono();
 
-seriesDiscoverRouter.get("/", async (c) => {
-  const city = c.req.query("city")?.trim();
-  const category = c.req.query("category");
-  const type = c.req.query("type");
-  const page = Math.max(1, Number(c.req.query("page") ?? 1));
-  const limit = Math.min(200, Math.max(1, Number(c.req.query("limit") ?? 100)));
+seriesDiscoverRouter.get(
+  "/",
+  zValidator(
+    "query",
+    z.object({
+      city: z.string().optional(),
+      category: z.string().optional(),
+      type: z.string().optional(),
+      page: z.coerce.number().int().min(1).optional().default(1),
+      limit: z.coerce.number().int().min(1).max(200).optional().default(100),
+    })
+  ),
+  async (c) => {
+  const { city: rawCity, category, type, page, limit } = c.req.valid("query");
+  const city = rawCity?.trim();
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = { active: true };
@@ -60,7 +71,8 @@ seriesDiscoverRouter.get("/", async (c) => {
   const result = filtered.map(({ user, ...s }) => ({ series: s, creator: user }));
 
   return c.json({ data: result });
-});
+  }
+);
 
 // GET /:id - get a single series with creator info
 seriesDiscoverRouter.get("/:id", async (c) => {

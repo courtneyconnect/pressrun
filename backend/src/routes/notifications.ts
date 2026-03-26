@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware";
 import type { AuthVariables } from "../middleware";
@@ -6,10 +8,19 @@ import type { AuthVariables } from "../middleware";
 const notificationsRouter = new Hono<{ Variables: AuthVariables }>();
 
 // GET / - list user's notifications
-notificationsRouter.get("/", requireAuth, async (c) => {
+notificationsRouter.get(
+  "/",
+  requireAuth,
+  zValidator(
+    "query",
+    z.object({
+      page: z.coerce.number().int().min(1).optional().default(1),
+      limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+    })
+  ),
+  async (c) => {
   const user = c.get("user")!;
-  const page = Number(c.req.query("page") ?? "1");
-  const limit = Number(c.req.query("limit") ?? "20");
+  const { page, limit } = c.req.valid("query");
   const skip = (page - 1) * limit;
 
   const [notifications, total] = await Promise.all([
@@ -31,7 +42,8 @@ notificationsRouter.get("/", requireAuth, async (c) => {
       totalPages: Math.ceil(total / limit),
     },
   });
-});
+  }
+);
 
 // PUT /:id/read - mark notification as read
 notificationsRouter.put("/:id/read", requireAuth, async (c) => {

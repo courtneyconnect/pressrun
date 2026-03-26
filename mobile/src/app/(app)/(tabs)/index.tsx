@@ -27,6 +27,7 @@ import * as Haptics from "expo-haptics";
 import { api } from "@/lib/api/api";
 import { uploadFile } from "@/lib/upload";
 import type { SeriesDiscoverResult, SeriesExample, User } from "@/types";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const SCREEN_WIDTH = Dimensions.get("window").width - 32; // mx-4 on each side
 const CARD_WIDTH = SCREEN_WIDTH;
@@ -535,6 +536,7 @@ export default function DiscoverScreen() {
   }).current;
 
   return (
+    <ErrorBoundary>
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         {/* Header */}
@@ -754,5 +756,6 @@ export default function DiscoverScreen() {
         </View>
       </Modal>
     </View>
+    </ErrorBoundary>
   );
 }

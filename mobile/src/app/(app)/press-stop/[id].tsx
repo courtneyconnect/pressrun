@@ -452,7 +452,7 @@ export default function PressStopDetailScreen() {
                         {formatDate(proposedDate)}
                       </Text>
                     </Pressable>
-                    {showDatePicker ? (
+                    {showDatePicker && Platform.OS !== "web" ? (
                       <DateTimePicker
                         value={proposedDate}
                         mode="date"
@@ -482,6 +482,13 @@ export default function PressStopDetailScreen() {
                       >
                         <Text style={{ color: "#E53935", fontWeight: "600" }}>Done</Text>
                       </Pressable>
+                    ) : null}
+                    {showDatePicker && Platform.OS === "web" ? (
+                      <View style={{ marginTop: 8, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: "#2C2C2E", borderRadius: 10 }}>
+                        <Text style={{ color: "#8E8E93", fontSize: 13 }}>
+                          Date selection is not available in web preview.
+                        </Text>
+                      </View>
                     ) : null}
                   </View>
 

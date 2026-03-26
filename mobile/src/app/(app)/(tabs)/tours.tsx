@@ -18,6 +18,7 @@ import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Tour, Availability, SavedTourStop, User } from "@/types";
 import * as Haptics from "expo-haptics";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -278,6 +279,7 @@ export default function ToursScreen() {
   });
 
   return (
+    <ErrorBoundary>
     <View className="flex-1 bg-black">
       <SafeAreaView className="flex-1" edges={["top"]}>
         <View className="px-4 pt-2 pb-3">
@@ -429,5 +431,6 @@ export default function ToursScreen() {
         ) : null}
       </SafeAreaView>
     </View>
+    </ErrorBoundary>
   );
 }

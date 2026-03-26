@@ -93,11 +93,20 @@ messagesRouter.get("/unread-count", requireAuth, async (c) => {
 });
 
 // GET /:userId - get messages with a specific user
-messagesRouter.get("/:userId", requireAuth, async (c) => {
+messagesRouter.get(
+  "/:userId",
+  requireAuth,
+  zValidator(
+    "query",
+    z.object({
+      page: z.coerce.number().int().min(1).optional().default(1),
+      limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+    })
+  ),
+  async (c) => {
   const user = c.get("user")!;
   const otherUserId = c.req.param("userId");
-  const page = Number(c.req.query("page") ?? "1");
-  const limit = Number(c.req.query("limit") ?? "50");
+  const { page, limit } = c.req.valid("query");
   const skip = (page - 1) * limit;
 
   const messages = await prisma.message.findMany({
@@ -128,7 +137,8 @@ messagesRouter.get("/:userId", requireAuth, async (c) => {
   });
 
   return c.json({ data: messages });
-});
+  }
+);
 
 // POST /:userId - send a message
 messagesRouter.post(

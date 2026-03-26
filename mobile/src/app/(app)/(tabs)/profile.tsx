@@ -115,13 +115,17 @@ function GridCell({
   React.useEffect(() => {
     if (!isVideo || !example.url) return;
     let cancelled = false;
-    VideoThumbnails.getThumbnailAsync(example.url, { time: 1000 })
-      .then((result) => {
-        if (!cancelled) setThumbnail(result.uri);
-      })
-      .catch(() => {
-        // Silently fall back to play-icon placeholder
-      });
+    try {
+      VideoThumbnails.getThumbnailAsync(example.url, { time: 1000 })
+        .then((result) => {
+          if (!cancelled) setThumbnail(result.uri);
+        })
+        .catch(() => {
+          // Silently fall back to play-icon placeholder
+        });
+    } catch {
+      // Not supported on this platform (e.g. web)
+    }
     return () => { cancelled = true; };
   }, [example.url, isVideo]);
 

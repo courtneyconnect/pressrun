@@ -18,6 +18,7 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
+  TrendingUp,
 } from "lucide-react-native";
 import { format } from "date-fns";
 import { api } from "@/lib/api/api";
@@ -363,6 +364,30 @@ export default function BookingDetailScreen() {
                   <CheckCircle size={19} color="#FFFFFF" />
                   <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>
                     Mark Complete
+                  </Text>
+                </Pressable>
+              ) : null}
+
+              {(booking.status === "ACCEPTED" || booking.status === "NEGOTIATING") ? (
+                <Pressable
+                  testID="negotiate-button"
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    router.push(`/booking/negotiate?bookingId=${booking.id}` as any);
+                  }}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#c62828" : "#E53935",
+                    borderRadius: 16,
+                    height: 52,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 24,
+                  })}
+                >
+                  <TrendingUp size={19} color="#FFFFFF" />
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16, marginLeft: 8 }}>
+                    Negotiate
                   </Text>
                 </Pressable>
               ) : null}

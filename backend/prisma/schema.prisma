@@ -17,6 +17,7 @@ model User {
   image         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  pushToken     String?
 
   // PressRun-specific fields
   role             String  @default("TALENT") // TALENT, PRESS_STOP, ADMIN

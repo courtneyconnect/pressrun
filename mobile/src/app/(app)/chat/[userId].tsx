@@ -18,6 +18,7 @@ import { api } from "@/lib/api/api";
 import { useSession } from "@/lib/auth/use-session";
 import type { Message } from "@/types";
 import * as Haptics from "expo-haptics";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 function MessageBubble({
   message,
@@ -58,11 +59,21 @@ export default function ChatScreen() {
   const [messageText, setMessageText] = useState<string>("");
   const flatListRef = useRef<FlatList>(null);
 
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isOtherTyping, setIsOtherTyping] = useState<boolean>(false);
+
+  const handleTypingReceived = useCallback(() => {
+    setIsOtherTyping(true);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+  }, []);
+
+  const { sendTyping } = useWebSocket(userId ?? "", handleTypingReceived);
+
   const { data: messages, isLoading } = useQuery({
     queryKey: ["messages", userId],
     queryFn: () => api.get<Message[]>(`/api/messages/${userId}`),
     enabled: !!userId,
-    refetchInterval: 5000,
   });
 
   const { mutate: sendMessageMutate, isPending: isSending } = useMutation({
@@ -134,6 +145,13 @@ export default function ChatScreen() {
             />
           )}
 
+          {/* Typing indicator */}
+          {isOtherTyping ? (
+            <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
+              <Text style={{ color: "#8E8E93", fontSize: 12 }}>typing...</Text>
+            </View>
+          ) : null}
+
           {/* Input Bar */}
           <View className="flex-row items-end px-4 py-3 border-t border-[#2C2C2E] bg-black">
             <TextInput
@@ -142,7 +160,10 @@ export default function ChatScreen() {
               placeholder="Type a message..."
               placeholderTextColor="#8E8E93"
               value={messageText}
-              onChangeText={setMessageText}
+              onChangeText={(text) => {
+                setMessageText(text);
+                sendTyping();
+              }}
               multiline
               returnKeyType="default"
             />

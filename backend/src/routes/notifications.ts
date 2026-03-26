@@ -92,4 +92,25 @@ notificationsRouter.get("/unread-count", requireAuth, async (c) => {
   return c.json({ data: { count } });
 });
 
+// POST /register-token - save Expo push token for the authenticated user
+notificationsRouter.post(
+  "/register-token",
+  requireAuth,
+  zValidator(
+    "json",
+    z.object({ token: z.string().min(1) })
+  ),
+  async (c) => {
+    const user = c.get("user")!;
+    const { token } = c.req.valid("json");
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { pushToken: token },
+    });
+
+    return c.json({ data: { success: true } });
+  }
+);
+
 export { notificationsRouter };

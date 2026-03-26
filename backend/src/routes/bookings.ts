@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware";
 import type { AuthVariables } from "../middleware";
+import { sendPushNotification } from "../pushNotifications";
 
 const bookingsRouter = new Hono<{ Variables: AuthVariables }>();
 
@@ -335,6 +336,20 @@ bookingsRouter.put(
       },
     });
 
+    // Send push notification
+    const notifyUser = await prisma.user.findUnique({
+      where: { id: notifyUserId },
+      select: { pushToken: true },
+    });
+    if (notifyUser?.pushToken) {
+      await sendPushNotification(
+        notifyUser.pushToken,
+        "Booking Status Updated",
+        `Booking "${booking.title}" is now ${body.status}`,
+        { bookingId: booking.id, screen: "booking" }
+      );
+    }
+
     return c.json({ data: updated });
   }
 );
@@ -408,6 +423,20 @@ bookingsRouter.post(
         data: JSON.stringify({ bookingId, offerId: offer.id }),
       },
     });
+
+    // Send push notification for the new offer
+    const offerNotifyUser = await prisma.user.findUnique({
+      where: { id: notifyUserId },
+      select: { pushToken: true },
+    });
+    if (offerNotifyUser?.pushToken) {
+      await sendPushNotification(
+        offerNotifyUser.pushToken,
+        "New Offer",
+        `New offer of $${(body.amount / 100).toFixed(2)} for "${booking.title}"`,
+        { bookingId, screen: "booking" }
+      );
+    }
 
     return c.json({ data: offer }, 201);
   }

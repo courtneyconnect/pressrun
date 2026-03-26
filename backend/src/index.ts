@@ -5,6 +5,8 @@ import "./env";
 import { logger } from "hono/logger";
 import { auth } from "./auth";
 import { authMiddleware } from "./middleware";
+import { registerConnection, removeConnection, broadcastTyping, type WSData } from "./websocket";
+import { prisma } from "./prisma";
 import { usersRouter } from "./routes/users";
 import { discoverRouter } from "./routes/discovery";
 import { toursRouter } from "./routes/tours";
@@ -129,7 +131,43 @@ const port = Number(process.env.PORT) || 3000;
 
 export default {
   port,
-  fetch: app.fetch,
+  fetch: async (req: Request, server: { upgrade: (req: Request, options: { data: WSData }) => boolean }) => {
+    // Handle WebSocket upgrade
+    if (req.headers.get("upgrade") === "websocket") {
+      const url = new URL(req.url);
+      const token = url.searchParams.get("token");
+      if (!token) return new Response("Unauthorized", { status: 401 });
+
+      // Validate session token
+      const session = await prisma.session.findUnique({
+        where: { token },
+        include: { user: true },
+      });
+      if (!session || session.expiresAt < new Date()) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const success = server.upgrade(req, { data: { userId: session.userId } });
+      return success ? undefined : new Response("WS upgrade failed", { status: 500 });
+    }
+    return app.fetch(req);
+  },
+  websocket: {
+    open(ws: import("bun").ServerWebSocket<WSData>) {
+      registerConnection(ws.data.userId, ws);
+    },
+    message(ws: import("bun").ServerWebSocket<WSData>, data: string | Buffer) {
+      try {
+        const msg = JSON.parse(data.toString()) as { type: string; receiverId?: string };
+        if (msg.type === "typing" && msg.receiverId) {
+          broadcastTyping(ws.data.userId, msg.receiverId);
+        }
+      } catch { /* ignore */ }
+    },
+    close(ws: import("bun").ServerWebSocket<WSData>) {
+      removeConnection(ws.data.userId);
+    },
+  },
   // Allow up to 500 MB so large video uploads don't get rejected with 413
   maxRequestBodySize: 500 * 1024 * 1024,
   // Max allowed by Bun (255s) — prevents large video uploads from timing out mid-stream

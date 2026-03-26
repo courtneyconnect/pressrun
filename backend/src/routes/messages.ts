@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import { requireAuth } from "../middleware";
 import type { AuthVariables } from "../middleware";
+import { broadcastNewMessage } from "../websocket";
+import { sendPushNotification } from "../pushNotifications";
 
 const messagesRouter = new Hono<{ Variables: AuthVariables }>();
 
@@ -196,6 +198,23 @@ messagesRouter.post(
         data: JSON.stringify({ senderId: user.id, messageId: message.id }),
       },
     });
+
+    // Broadcast via WebSocket
+    broadcastNewMessage(message, user.id, receiverId);
+
+    // Send push notification if receiver has a push token
+    const receiverUser = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { pushToken: true },
+    });
+    if (receiverUser?.pushToken) {
+      await sendPushNotification(
+        receiverUser.pushToken,
+        "New Message",
+        `${user.name}: ${body.content.substring(0, 100)}`,
+        { senderId: user.id, screen: "chat" }
+      );
+    }
 
     return c.json({ data: message }, 201);
   }

@@ -1,0 +1,694 @@
+<title>Press Run in iMessage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a single iMessage screen. On a phone it fills the screen; on a wide screen a chapter rail sits beside a phone frame. */
+/* One deliberate dark look: iMessage dark mode inside Press Run's black, charcoal and red. */
+:root{
+  color-scheme:dark;
+  --ink:#0A0A0B; --char:#19191B; --char2:#232326; --line:#2E2E33; --fg:#F4F4F5; --muted:#9A9AA2;
+  --red:#F0413A; --red-soft:#3B1513; --in:#26262A; --out:#0A84FF; --out-fg:#FFFFFF; --note:#FF8F87;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--fg);font:15px/1.4 var(--body);-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:8px}
+
+.app{height:100%;display:grid;grid-template-columns:minmax(0,360px) auto;justify-content:center;align-items:center;gap:48px;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.rail{display:grid;gap:18px;align-content:center;max-height:100%;overflow:auto}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.rail h1{font:900 54px/.9 var(--display);text-transform:uppercase;margin:0;letter-spacing:.01em;text-wrap:balance}
+.rail h1 em{font-style:normal;color:var(--red)}
+.rail p{margin:0;color:var(--muted);max-width:44ch}
+.chapters{display:grid;gap:6px}
+.chap{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--char)}
+.chap b{display:block;font-weight:600}
+.chap span.sub{display:block;color:var(--muted);font-size:13px}
+.chap .n{font:800 22px/1 var(--display);color:var(--muted);text-align:center}
+.chap[aria-current="true"]{border-color:var(--red);background:var(--red-soft)}
+.chap[aria-current="true"] .n{color:var(--red)}
+.legend{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:8px;vertical-align:-1px}
+
+.phone{width:390px;height:min(820px,calc(100vh - 48px));border-radius:52px;border:10px solid #000;box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6);background:#000;overflow:hidden;position:relative;display:flex;flex-direction:column}
+@media (max-width:820px){
+  .app{display:block;padding:0}
+  .rail{display:none}
+  .phone{width:100%;height:100%;border:0;border-radius:0;box-shadow:none}
+}
+
+/* iMessage chrome */
+.owner{display:flex;justify-content:center;padding:10px 12px 0;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.pill{display:inline-flex;align-items:center;gap:7px;font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:var(--char2);color:var(--fg);transition:background .3s}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--out)}
+.pill[data-who="stop"] i{background:var(--red)}
+.head{display:grid;grid-template-columns:90px 1fr 90px;align-items:center;padding:6px 8px 10px;border-bottom:1px solid #1c1c1f;background:rgba(18,18,20,.92);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.back{color:var(--out);font-size:16px;display:flex;align-items:center;gap:2px;justify-self:start;padding:6px}
+.back svg{width:12px;height:20px}
+.who{display:grid;justify-items:center;gap:3px}
+.avatar{width:46px;height:46px;border-radius:50%;background:#333 center/cover no-repeat;border:1px solid #333}
+.who b{font-size:12px;font-weight:500;display:flex;align-items:center;gap:3px}
+.who b::after{content:"›";color:var(--muted);font-size:14px}
+.chapno{justify-self:end;font:600 11px/1 var(--mono);color:var(--muted);letter-spacing:.06em;padding:6px}
+
+.stage{flex:1;position:relative;overflow:hidden;background:#000}
+.thread{position:absolute;inset:0;overflow-y:auto;padding:12px 12px 18px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:3px;transition:transform .35s ease,opacity .35s ease;scroll-behavior:smooth;overscroll-behavior:contain}
+.thread[data-pos="left"]{transform:translateX(-30%);opacity:0;pointer-events:none}
+.thread[data-pos="right"]{transform:translateX(30%);opacity:0;pointer-events:none}
+.sys{align-self:center;text-align:center;font-size:11.5px;color:var(--muted);margin:12px 0 6px}
+.sys b{font-weight:600;color:#c9c9cf}
+.note{align-self:stretch;margin:10px 4px;padding:9px 11px;border-radius:12px;border:1px dashed #5a2a27;color:var(--note);font-size:12.5px;line-height:1.4;background:rgba(240,65,58,.06)}
+.note::before{content:"Behind the scenes · ";font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.row{display:flex;flex-direction:column;max-width:78%;position:relative}
+.row.in{align-self:flex-start}
+.row.out{align-self:flex-end;align-items:flex-end}
+.row + .row.gap{margin-top:8px}
+.b{padding:8px 13px;border-radius:19px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15.5px;line-height:1.32;position:relative}
+.in .b{background:var(--in);color:var(--fg)}
+.out .b{background:var(--out);color:var(--out-fg)}
+.in.tail .b{border-bottom-left-radius:5px}
+.out.tail .b{border-bottom-right-radius:5px}
+.b .lnk{text-decoration:underline;text-underline-offset:2px}
+.status{font-size:11px;color:var(--muted);margin:2px 6px 0}
+.appear{animation:pop .22s ease-out}
+@keyframes pop{from{transform:translateY(6px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.appear{animation:none}.thread{transition:none}}
+
+.typing{align-self:flex-start;background:var(--in);border-radius:19px;padding:12px 14px;display:flex;gap:5px;margin-top:4px}
+.typing i{width:8px;height:8px;border-radius:50%;background:#8e8e94;animation:dot 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,60%,100%{opacity:.35;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+
+/* Tapback badge */
+.tb{position:absolute;top:-14px;right:-10px;min-width:30px;height:30px;border-radius:15px;background:var(--out);display:grid;place-items:center;font-size:15px;border:2px solid #000;z-index:2;padding:0 5px}
+.tb.pop{animation:tb .3s ease-out}
+@keyframes tb{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* Press Run card (renders like an image bubble) */
+.card{width:236px;border-radius:18px;overflow:hidden;background:var(--char);border:1px solid #2a2a2e;cursor:pointer;text-align:left;display:block;position:relative;transition:opacity .3s,filter .3s}
+.card.dropped{opacity:.4;filter:grayscale(1)}
+.cover{height:150px;position:relative;overflow:hidden;background:linear-gradient(160deg,var(--c1),var(--c2))}
+.cover .stripes{position:absolute;left:-10%;right:-10%;bottom:-6px;height:22px;display:flex;gap:14px;transform:skewX(-28deg);justify-content:center;opacity:.9}
+.cover .stripes i{width:30px;background:var(--red);box-shadow:0 0 18px rgba(240,65,58,.7);border-radius:3px}
+.cover .title{position:absolute;left:14px;right:14px;top:30px;font:900 31px/.86 var(--display);text-transform:uppercase;color:#fff;letter-spacing:.01em;text-shadow:0 2px 14px rgba(0,0,0,.4)}
+.cover .glyph{position:absolute;right:12px;top:10px;font:800 13px/1 var(--mono);color:rgba(255,255,255,.55);letter-spacing:.1em}
+.num{position:absolute;left:10px;top:9px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font:900 18px/28px var(--display);text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:1}
+.cover .title{top:40px}
+.info{padding:10px 12px 11px;display:grid;gap:7px}
+.info h3{margin:0;font:800 20px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.info .fmt{font-size:12px;color:var(--muted);margin-top:-3px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;border-top:1px solid var(--line);padding-top:8px}
+.stats div{display:grid;gap:1px;min-width:0}
+.stats .k{font:600 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stats .v{font:800 17px/1.05 var(--display);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.stats .wide{grid-column:1/-1}
+.cta{font:600 10.5px/1 var(--mono);letter-spacing:.06em;color:var(--note);text-transform:uppercase}
+
+/* Clip bubble */
+.clip{width:150px;aspect-ratio:9/16;border-radius:18px;overflow:hidden;position:relative;cursor:pointer;background:linear-gradient(170deg,var(--c1),#000 85%);border:1px solid #2a2a2e;display:block;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
+.clip .cap{position:absolute;left:10px;right:10px;bottom:34px;font:800 17px/.95 var(--display);text-transform:uppercase;color:#fff}
+.clip .playbtn{position:absolute;inset:0;display:grid;place-items:center}
+.clip .playbtn span{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);display:grid;place-items:center;border:1px solid rgba(255,255,255,.3)}
+.clip .playbtn svg{width:16px;height:16px;margin-left:3px;fill:#fff}
+.clip .dur{position:absolute;left:10px;bottom:10px;font:600 11px/1 var(--mono);color:#fff;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:6px}
+.clip .rec{position:absolute;right:10px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red)}
+
+/* Contact card and run sheet */
+.vcard{width:236px;border-radius:18px;background:var(--in);padding:12px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+.vcard .avatar{width:44px;height:44px}
+.vcard b{display:block}
+.vcard span{font-size:12px;color:var(--muted)}
+.vcard em{font-style:normal;color:var(--out);font-size:13px}
+.sheet{width:262px;border-radius:18px;overflow:hidden;background:#F4F4F5;color:#0A0A0B}
+.sheet .top{background:var(--ink);color:#fff;padding:12px 14px 10px;display:grid;gap:4px}
+.sheet .top .k{font:600 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--red)}
+.sheet .top h3{margin:0;font:900 26px/.9 var(--display);text-transform:uppercase}
+.sheet .top span{font-size:11.5px;color:#bbb}
+.sheet ol{list-style:none;margin:0;padding:6px 14px 4px}
+.sheet li{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:9px 0;border-top:1px solid #dadadf}
+.sheet li:first-child{border-top:0}
+.sheet .day{font:900 15px/1 var(--display);text-transform:uppercase;color:var(--red)}
+.sheet .day small{display:block;font:600 10px/1.3 var(--mono);color:#555;margin-top:3px;letter-spacing:.04em}
+.sheet li b{display:block;font-size:13.5px}
+.sheet li span{display:block;font-size:12px;color:#444;line-height:1.35}
+.sheet .foot{padding:8px 14px 12px;font:600 10px/1.4 var(--mono);color:#555;letter-spacing:.04em;border-top:2px dashed #cfcfd4}
+
+/* Composer */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 12px 2px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));scrollbar-width:none;background:#000}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid var(--out);color:var(--out);font-size:14px;white-space:nowrap}
+.chip.go{background:var(--out);color:#fff}
+.hint{padding:6px 16px 0;font-size:12px;color:var(--note);text-align:center;background:#000}
+.composer{display:flex;align-items:center;gap:8px;padding:8px 10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));background:#000}
+.plus{width:34px;height:34px;border-radius:50%;background:var(--char2);display:grid;place-items:center;color:var(--muted);font-size:22px;flex:0 0 auto}
+.field{flex:1;min-width:0;min-height:36px;border:1px solid #3a3a3f;border-radius:19px;padding:7px 42px 7px 13px;position:relative;text-align:left;font-size:15.5px;line-height:1.3;color:var(--muted);white-space:pre-wrap;max-height:120px;overflow:auto}
+.field.ready{color:var(--fg)}
+.send{position:absolute;right:4px;bottom:3px;width:29px;height:29px;border-radius:50%;background:#3a3a3f;display:grid;place-items:center}
+.field.ready .send{background:var(--out);animation:pulse 1.6s infinite}
+.send svg{width:15px;height:15px;fill:#fff}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(10,132,255,.6)}70%{box-shadow:0 0 0 9px rgba(10,132,255,0)}100%{box-shadow:0 0 0 0 rgba(10,132,255,0)}}
+@media (prefers-reduced-motion:reduce){.field.ready .send{animation:none}}
+
+/* Overlays */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:20;display:grid;place-items:center}
+.lift{position:absolute;z-index:21;pointer-events:none;margin:0}
+.picker{position:absolute;z-index:21;display:flex;gap:4px;padding:6px 8px;border-radius:26px;background:#2c2c30;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.picker button{width:40px;height:40px;border-radius:50%;font-size:22px;display:grid;place-items:center}
+.picker button[aria-pressed="true"]{background:var(--out)}
+.picker button:hover{background:#3a3a40}
+.pick-label{position:absolute;z-index:21;font:600 10.5px/1.3 var(--mono);color:#ddd;letter-spacing:.04em;text-align:center;width:280px}
+.player{width:min(320px,86%);aspect-ratio:9/16;border-radius:22px;overflow:hidden;position:relative;background:linear-gradient(170deg,var(--c1),#000 80%);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.player .bar{position:absolute;left:12px;right:12px;top:12px;height:3px;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden}
+.player .bar i{display:block;height:100%;width:0;background:#fff}
+.player .tag{position:absolute;left:12px;top:24px;font:600 10px/1.3 var(--mono);color:rgba(255,255,255,.75);letter-spacing:.08em;text-transform:uppercase}
+.player .x{position:absolute;right:10px;top:22px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.5);display:grid;place-items:center;font-size:16px}
+.player .scene{position:absolute;left:18px;right:18px;bottom:22%;font:900 34px/.92 var(--display);text-transform:uppercase;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.5);transition:opacity .35s, transform .35s}
+.player .scene.q{font:600 21px/1.25 var(--body);text-transform:none}
+.player .stripes{position:absolute;left:-10%;right:-10%;bottom:7%;height:30px;display:flex;gap:16px;transform:skewX(-28deg);justify-content:center}
+.player .stripes i{width:34px;background:var(--red);box-shadow:0 0 22px rgba(240,65,58,.8);border-radius:3px;animation:walk 1.2s linear infinite}
+.player .stripes i:nth-child(2){animation-delay:.3s}.player .stripes i:nth-child(3){animation-delay:.6s}.player .stripes i:nth-child(4){animation-delay:.9s}
+@keyframes walk{0%,100%{opacity:1}50%{opacity:.45}}
+.player .time{position:absolute;right:14px;bottom:12px;font:600 11px/1 var(--mono);color:#fff}
+
+.menu{width:min(360px,92%);max-height:86%;overflow:auto;background:var(--char);border:1px solid var(--line);border-radius:20px;padding:18px;display:grid;gap:12px}
+.menu h2{margin:0;font:900 30px/.9 var(--display);text-transform:uppercase}
+.menu p{margin:0;color:var(--muted);font-size:13.5px}
+.toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:15;background:var(--red);color:#fff;font:600 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 13px;border-radius:999px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.endcap{align-self:center;display:grid;justify-items:center;gap:8px;margin:18px 0 6px;text-align:center}
+.endcap span{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.endcap .row2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{padding:9px 14px;border-radius:999px;background:var(--char2);font-size:14px;border:1px solid var(--line)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+</style>
+
+<div class="app">
+  <aside class="rail" aria-label="About this mockup">
+    <div class="eyebrow">Press Run · M1 clickable mockup</div>
+    <h1>Book a press run <em>by text</em></h1>
+    <p>Tap through five chapters of the real iMessage flow. Tap the blue send button to reply. On cards and clips, tap a card (or long-press a clip) to react the way a booker would.</p>
+    <nav class="chapters" id="railChapters" aria-label="Chapters"></nav>
+    <div class="legend">
+      <div><i style="background:var(--in)"></i>Press Run's messages</div>
+      <div><i style="background:var(--out)"></i>The person holding the phone</div>
+      <div><i style="background:transparent;border:1px dashed var(--note)"></i>Behind-the-scenes notes (not sent)</div>
+    </div>
+    <p style="font-size:12px">Names of bookers, follower counts, prices and clips are examples for the mockup.</p>
+  </aside>
+
+  <main class="phone" id="phone">
+    <div class="owner"><span class="pill" id="ownerPill" data-who="booker"><i></i><span id="ownerText">Dre's phone · Booker</span></span></div>
+    <header class="head">
+      <button class="back" id="menuBtn" type="button" aria-label="Open chapters"><svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Chapters</button>
+      <div class="who"><div class="avatar" id="headAvatar"></div><b>Press Run</b></div>
+      <div class="chapno" id="chapNo">1 / 5</div>
+    </header>
+    <div class="stage" id="stage">
+      <div class="thread" id="t-booker" data-pos="center" aria-live="polite"></div>
+      <div class="thread" id="t-stop" data-pos="right" aria-live="polite"></div>
+    </div>
+    <div class="hint" id="hint" hidden></div>
+    <div class="chips" id="chips" hidden></div>
+    <div class="composer">
+      <div class="plus" aria-hidden="true">+</div>
+      <button class="field" id="field" type="button" disabled><span id="fieldText">iMessage</span><span class="send" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M8 1.5 2.5 7l1.4 1.4L7 5.3V14.5h2V5.3l3.1 3.1L13.5 7z"/></svg></span></button>
+    </div>
+  </main>
+</div>
+
+<script>
+const LOGO = "data:image/jpeg;base64,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";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+document.querySelectorAll(".avatar").forEach(a => a.style.backgroundImage = `url(${LOGO})`);
+
+/* ---------- Example stops (Courtney's four series; numbers are mockup examples) ---------- */
+const STOPS = {
+  1:{key:"mfm", name:"Music for a Minute", lines:["Music","for a","Minute"], glyph:"♪ 60s", fmt:"Street interview · Manhattan", aud:"169K", price:"Free", open:"Nov 12 · 13 · 15", c1:"#6b1512", c2:"#19191B",
+     place:"Washington Square Park (arch side)", day:"Thu", date:"Nov 13", time:"2:30 PM", pre:"1:30 PM", talent:"Nova Reign",
+     more:"Music for a Minute: 60-sec street interview, posted on IG + TikTok, raw clip shared after.\nIG 48K · TikTok 112K · YouTube 9K\nFilms Thu–Sat afternoons around Washington Sq and SoHo. Needs 48 hours' notice.",
+     clip:["Music for a Minute","“What song got you through this year?”","“Okay, this one. Every single morning.” 🎧","60 seconds. One artist. One street."]},
+  2:{key:"pfyt", name:"Penny for Your Thoughts", lines:["Penny","for Your","Thoughts"], glyph:"1¢", fmt:"Street series · Manhattan", aud:"74K", price:"Free", open:"Nov 12 · 14", c1:"#3a3a40", c2:"#0A0A0B",
+     place:"Union Square (south steps)", day:"Wed", date:"Nov 12", time:"4:00 PM", pre:"3:00 PM", talent:"Jay Mo",
+     more:"Penny for Your Thoughts: one question, one penny, one honest answer. Posted on IG + TikTok.\nIG 30K · TikTok 44K\nFilms weekday afternoons around Union Square. Needs 24 hours' notice.",
+     clip:["Penny for Your Thoughts","“Penny for your thoughts?”","“Honestly? I think everybody's scared to start.”","One question. One penny."]},
+  3:{key:"motfm", name:"Motivation for a Minute", lines:["Motivation","for a","Minute"], glyph:"⚡ 60s", fmt:"Street series · Brooklyn", aud:"58K", price:"Free", open:"Nov 13 · 14", c1:"#8a2a12", c2:"#141416",
+     place:"Domino Park, Williamsburg", day:"Fri", date:"Nov 14", time:"1:00 PM", pre:"12:00 PM", talent:"Jay Mo",
+     more:"Motivation for a Minute: 60 seconds of advice from the guest, cut for Reels and TikTok.\nIG 21K · TikTok 37K\nFilms Thu–Fri around Williamsburg. Needs 48 hours' notice.",
+     clip:["Motivation for a Minute","“What would you tell yourself at 17?”","“Stop waiting for permission.”","60 seconds of real talk."]},
+  4:{key:"movfm", name:"Movies for a Minute", lines:["Movies","for a","Minute"], glyph:"🎬 60s", fmt:"Street interview · Midtown", aud:"41K", price:"$150–$300", open:"Nov 15", c1:"#2b2b55", c2:"#0A0A0B",
+     place:"Bryant Park (fountain side)", day:"Sat", date:"Nov 15", time:"12:00 PM", pre:"11:00 AM", talent:"Nova Reign",
+     more:"Movies for a Minute: film and TV talk, best for actors and soundtrack moments.\nIG 18K · TikTok 23K\nFilms Saturdays in Midtown. Needs 1 week's notice.",
+     clip:["Movies for a Minute","“Last movie that made you cry?”","“Don't laugh. It was a cartoon.”","Film talk in 60 seconds."]}
+};
+let stopPreviewPrice = "Free";
+
+/* ---------- State ---------- */
+const S = {chap:0, run:0, active:"booker", picks:[], shortlist:new Set(), reactions:{}, dropped:new Set(), mode:null, waitResolve:null, skip:null, chain:Promise.resolve()};
+
+function threadEl(who){ return $("t-" + who); }
+function scrollDown(who){ const t = threadEl(who || S.active); requestAnimationFrame(() => { t.scrollTop = t.scrollHeight; }); }
+function setOwner(who){
+  $("ownerPill").dataset.who = who;
+  $("ownerText").textContent = who === "booker" ? "Dre's phone · Booker" : "Courtney's phone · Press stop";
+}
+function showThread(who, animate){
+  const other = who === "booker" ? "stop" : "booker";
+  threadEl(who).dataset.pos = "center";
+  threadEl(other).dataset.pos = who === "booker" ? "right" : "left";
+  S.active = who; setOwner(who);
+  if (animate) toast(who === "booker" ? "Over to Dre's phone" : "Over to Courtney's phone");
+  scrollDown(who);
+}
+let toastT;
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; $("stage").appendChild(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 1700);
+}
+
+/* ---------- Rendering messages ---------- */
+function lastRow(who){ const t = threadEl(who); const rows = t.querySelectorAll(".row"); return rows[rows.length-1]; }
+function addRow(who, side, inner, opts = {}){
+  const t = threadEl(who);
+  const prev = lastRow(who);
+  if (prev && prev.classList.contains(side) && prev === t.lastElementChild) prev.classList.remove("tail");
+  t.querySelectorAll(".status").forEach(s => s.remove());
+  const row = document.createElement("div");
+  row.className = `row ${side} tail appear` + (prev && !prev.classList.contains(side) ? " gap" : "");
+  row.innerHTML = inner;
+  if (opts.stop) row.dataset.stop = opts.stop;
+  if (opts.kind) row.dataset.kind = opts.kind;
+  t.appendChild(row);
+  if (side === "out") { const st = document.createElement("div"); st.className = "status"; st.textContent = "Delivered"; row.appendChild(st); }
+  scrollDown(who);
+  return row;
+}
+function linkify(s){ return esc(s).replace(/((?:instagram|tiktok|youtube)\.com\/\S+)/g, '<span class="lnk">$1</span>'); }
+function textBubble(s){ return `<div class="b">${linkify(s)}</div>`; }
+function cardHTML(n, opts = {}){
+  const st = STOPS[n];
+  const price = opts.preview && n === 1 ? stopPreviewPrice : st.price;
+  return `<div tabindex="0" class="card${S.dropped.has(+n) && !opts.preview ? " dropped" : ""}" role="img" aria-label="Card ${opts.preview ? "" : n + " "}${esc(st.name)}, ${esc(st.fmt)}, audience ${st.aud}, price ${esc(price)}, open ${esc(st.open)}" style="--c1:${st.c1};--c2:${st.c2}">
+    <div class="cover"><div class="num">${opts.preview ? "#" : n}</div><div class="glyph">${esc(st.glyph)}</div><div class="title">${st.lines.map(esc).join("<br>")}</div><div class="stripes"><i></i><i></i><i></i><i></i></div></div>
+    <div class="info"><h3>${esc(st.name)}</h3><div class="fmt">${esc(st.fmt)}</div>
+      <div class="stats"><div><span class="k">Audience</span><span class="v">${st.aud}</span></div><div><span class="k">Price</span><span class="v">${esc(price)}</span></div>
+      <div class="wide"><span class="k">Open dates</span><span class="v">${esc(st.open)}</span></div></div>
+      <div class="cta">${opts.preview ? "Preview · number added when sent" : `Reply ${n} or ❤️ to save`}</div></div></div>`;
+}
+function clipHTML(n){
+  const st = STOPS[n];
+  return `<div tabindex="0" role="button" class="clip" style="--c1:${st.c1}" aria-label="Sample clip for ${esc(st.name)}, 18 seconds. Tap to play."><div class="rec"></div><div class="cap">${st.lines.map(esc).join(" ")}</div><div class="playbtn"><span><svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg></span></div><div class="dur">0:18</div></div>`;
+}
+const vcardHTML = () => `<div class="vcard"><div class="avatar" style="background-image:url(${LOGO})"></div><div><b>Press Run</b><span>Contact card</span></div><em>Save</em></div>`;
+function sheetHTML(){
+  const p = S.picks.length ? S.picks : [1,3];
+  const rows = p.map(n => { const s = STOPS[n];
+    return `<li><div class="day">${s.day}<small>${s.date}<br>${s.time}</small></div><div><b>${esc(s.name)}</b><span>${esc(s.talent)} · ${esc(s.place)}</span><span>On site: Courtney · arrive 15 min early</span></div></li>`; }).join("");
+  const dates = p.map(n => STOPS[n].date).sort();
+  return `<div class="sheet" role="img" aria-label="Run Sheet"><div class="top"><span class="k">PRESS RUN · RUN SHEET</span><h3>Nova Reign<br>&amp; Jay Mo</h3><span>New York · ${p.length} stop${p.length>1?"s":""} · Nov 12–15</span></div><ol>${rows}</ol><div class="foot">Reminders: night before 8 PM · 1 hour before<br>Reply “change” or “late” anytime</div></div>`;
+}
+
+/* ---------- Press Run "typing" ---------- */
+async function typing(who, ms){
+  const t = threadEl(who);
+  const el = document.createElement("div"); el.className = "typing"; el.innerHTML = "<i></i><i></i><i></i>"; el.setAttribute("aria-label","Press Run is typing");
+  t.appendChild(el); scrollDown(who);
+  await new Promise(r => { const id = setTimeout(r, ms); S.skip = () => { clearTimeout(id); r(); }; });
+  S.skip = null; el.remove();
+}
+function delayFor(step){
+  if (step.card || step.clip || step.sheet) return 900;
+  const len = (step.pr || "").length;
+  return Math.max(650, Math.min(1700, 380 + len * 9));
+}
+async function prSay(who, step, run){
+  await typing(who, delayFor(step));
+  if (run !== S.run) return;
+  if (step.card) addRow(who, "in", cardHTML(step.card, step), {stop: step.card, kind:"card"});
+  else if (step.clip) addRow(who, "in", clipHTML(step.clip), {stop: step.clip, kind:"clip"});
+  else if (step.vcard) addRow(who, "in", vcardHTML());
+  else if (step.sheet) addRow(who, "in", sheetHTML(), {kind:"sheet"});
+  else addRow(who, "in", textBubble(step.pr));
+}
+function say(text, extra = {}){ const run = S.run, who = S.active; S.chain = S.chain.then(() => run === S.run ? prSay(who, Object.assign({pr:text}, extra), run) : null); return S.chain; }
+
+/* ---------- Composer ---------- */
+function waitForSend(text){
+  return new Promise(res => {
+    $("fieldText").textContent = text; $("field").classList.add("ready"); $("field").disabled = false;
+    $("field").setAttribute("aria-label", "Send: " + text);
+    S.waitResolve = () => { S.waitResolve = null; $("field").classList.remove("ready"); $("field").disabled = true; $("fieldText").textContent = "iMessage"; $("field").removeAttribute("aria-label"); res(); };
+  });
+}
+$("field").addEventListener("click", () => { if (S.waitResolve) S.waitResolve(); });
+function sendMine(text){ addRow(S.active, "out", textBubble(text)); }
+function setChips(list, hint){
+  const c = $("chips");
+  if (!list || !list.length) { c.hidden = true; c.innerHTML = ""; } else {
+    c.hidden = false;
+    c.innerHTML = list.map((x,i) => `<button type="button" class="chip${x.go ? " go" : ""}" data-i="${i}">${esc(x.label)}</button>`).join("");
+    c.querySelectorAll("button").forEach(b => b.onclick = () => list[+b.dataset.i].act());
+  }
+  $("hint").hidden = !hint; $("hint").textContent = hint || "";
+}
+$("stage").addEventListener("click", e => { if (S.skip && !e.target.closest(".card,.clip")) S.skip(); });
+
+/* ---------- Chapters ---------- */
+const N = (s) => ({note:s});
+const CHAPTERS = [
+  {title:"Booker signs up", sub:"Dre, a manager, onboards by text", who:"booker", build:() => [
+    {sys:"<b>Today</b> 7:02 PM"},
+    N("Dre tapped “Text Press Run” on the website. Messages opened with this already typed, sign-up code included, so Dre texts first."),
+    {me:"Hey Press Run 👋 Sign me up. Code PR-7Q4K"},
+    {pr:"Welcome to Press Run, Dre. You're Founding Member #0042 🎟️ Booking is free while we're in beta, and Founding Members keep $0 fees on free stops for 12 months after payments start."},
+    {pr:"A few quick questions so I send you the right stops. Takes about 2 minutes."},
+    {pr:"First: who are you booking for?\n1 Yourself (artist, actor, creator)\n2 Artists or talent you manage\n3 A label, agency or PR firm\n4 A brand"},
+    {me:"2"},
+    {pr:"Who's on your roster? Send each artist's name and main handle, one per line. You can add more later."},
+    {me:"Nova Reign @novareign\nJay Mo @jaymo.nyc"},
+    {pr:"What genre or niche? A few words is perfect. If it's different per artist, put it next to each name."},
+    {me:"Nova is R&B, Jay is drill"},
+    {pr:"What do you usually want a press run to do?\n1 Push a new release\n2 Promote a show, tour or screening\n3 Grow followers\n4 Press for a film or series\n5 Something else"},
+    {me:"1, Nova's single drops Nov 14"},
+    N("The release date is saved. Press Run brings it back at the end of onboarding."),
+    {pr:"What do you usually spend on a full run? (Booking through Press Run is free right now. This just helps me match you.)\n1 Free stops only\n2 Under $1k\n3 $1k–$5k\n4 $5k+\n5 Depends on the run"},
+    {me:"depends lol"},
+    N("Unclear answer. Press Run asks once more with simpler choices. If it's still unclear, it saves the answer as written and moves on."),
+    {pr:"Ballpark is fine. Closer to free, under $1k, or more?"},
+    {me:"1-5k usually"},
+    {pr:"Any stops you'd never do? e.g. “no prank shows”, “nothing explicit”, “no mornings”. Or reply “none”."},
+    {me:"no prank shows. nothing before 11"},
+    {pr:"Last one: where are you based? We're live in New York first, with more cities soon."},
+    {me:"Brooklyn"},
+    {pr:"NYC 🗽 perfect."},
+    {pr:"You're set, Dre ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Runs are usually for: new releases\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
+    {vcard:true},
+    {pr:"Save me so my texts show up as Press Run."},
+    {pr:"Quick one: do you also run a show, series or podcast people could book? Reply YES to list it too. Same thread, same account."},
+    {me:"not yet"},
+    {pr:"Here's how it works. Text me a run anytime, like:\n“NYC Nov 12–15, 2 artists, $5k budget, give me my options”"},
+    {pr:"I'll send numbered stops, each with a card and a short clip. Pick by replying (“1 and 3”) or by reacting:\n❤️ 👍 🔥 💯 save it\n👎 drop it and show fewer like it\n❓ tell me more"},
+    {pr:"You mentioned Nova's single on Nov 14. Want me to pull options for that week? Reply YES."},
+    {end:true}
+  ]},
+  {title:"Press stop signs up", sub:"Courtney lists Music for a Minute", who:"stop", build:() => { stopPreviewPrice = "Free"; return [
+    {sys:"<b>Today</b> 9:15 AM"},
+    N("Courtney lists her own series from her own phone. One account can be a stop and a booker."),
+    {me:"Hey Press Run 👋 List my show. Code PR-2M8D"},
+    {pr:"Welcome to Press Run, Courtney. You're Founding Member #0001 🎟️ Listing is free."},
+    {pr:"I'll ask a few questions, then I'll make your Press Run card and a short sample clip. That's what bookers see. Takes about 5 minutes."},
+    {pr:"What's your show called, and what's the format?\n1 Street interview / street series\n2 Podcast\n3 Radio\n4 Livestream\n5 YouTube show\n6 Photo or video shoot\n7 Something else"},
+    {me:"I have 4 series lol. Music for a Minute is the main one, street interviews"},
+    {pr:"Let's do one at a time, starting with Music for a Minute. Text “add another show” when we're done to list the next one."},
+    {pr:"Where does Music for a Minute post, and roughly how many followers on each? e.g. “IG 85k, TikTok 210k, YouTube 12k”"},
+    {me:"IG 48k, TikTok 112k, YouTube 9k"},
+    N("Follower counts are self-reported and saved as unverified. Courtney spot-checks the profiles before a stop goes live. The card shows the rounded total."),
+    {pr:"Where do you film, and when? e.g. “Manhattan, mostly SoHo, Thu–Sat afternoons”"},
+    {pr:"And which dates are open in the next 4 weeks? e.g. “Nov 12, 14, 15” or “any Thu or Sat”"},
+    {me:"Washington Sq + SoHo, Thu–Sat afternoons. Open Nov 12, 13, 15"},
+    {pr:"What does a booker get from one appearance? e.g. “60-sec street interview, posted on IG + TikTok, raw clip shared after”"},
+    {pr:"And what do you charge? Reply “free”, a price, or a range like “$300–500”."},
+    {me:"60 sec street interview on IG + TikTok, raw clip after. Free for now"},
+    {pr:"How much notice do you need before a shoot? e.g. “48 hours” or “1 week”"},
+    {pr:"When a booking request comes in, should I text you here, or someone on your team? (Bookers never see your number either way.)"},
+    {me:"48 hours. Text me here"},
+    {pr:"Last step: send 3 links to episodes you're proud of (IG, TikTok, YouTube, anywhere). I'll cut a 15–20 sec sample clip from them."},
+    {pr:"Or attach the videos right here if that's easier."},
+    {me:"instagram.com/reel/mfm-ep41\ntiktok.com/@musicforaminute/video/ep38\nyoutube.com/shorts/mfm-ep35"},
+    {pr:"Just confirming: you own these, or have permission to share them? Reply YES."},
+    {me:"YES"},
+    {pr:"For your card's cover, send a photo or logo. Or reply “use a frame” and I'll grab one from your episodes."},
+    {me:"use a frame"},
+    {pr:"Perfect. Making your card and sample clip now 🎬 This takes a few minutes. I'll text you when they're ready."},
+    N("Press Run downloads the 3 episodes, picks the strongest 18 seconds, adds captions and the Press Run end tag, then renders the card from Courtney's answers."),
+    {sys:"<b>4 minutes later</b>"},
+    {pr:"Here's how bookers will see Music for a Minute 👇"},
+    {card:1, preview:true},
+    {clip:1},
+    {pr:"Reply “looks good” (or ❤️ either one) to go live. Or tell me what to change, e.g. “price 300–500”, “use the 2nd episode”, “new cover”."},
+    {wait:"approve"}
+  ];}},
+  {title:"Ask for a run and pick", sub:"Numbered cards, clips, reply or react", who:"booker", build:() => [
+    {sys:"<b>Mon, Nov 3</b> 11:20 AM"},
+    {me:"NYC Nov 12–15, 2 artists, $5k budget, give me my options"},
+    {pr:"On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling stops now…"},
+    N("The request is read into city, dates, artists and budget. Press Run matches live stops with open dates in that window and skips Dre's hard no's (no prank shows, nothing before 11)."),
+    {card:1},{clip:1},{card:2},{clip:2},{card:3},{clip:3},{card:4},{clip:4},
+    {pr:"That's 4 stops, $0–$800 total. Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
+    {wait:"pick"}
+  ]},
+  {title:"Messages passed between both sides", sub:"Press Run relays, numbers stay private", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null;
+    const names = p.map(n => STOPS[n].name); const list = names.length > 1 ? names.slice(0,-1).join(", ") + " and " + names[names.length-1] : names[0];
+    return [
+    {sys:"<b>Mon, Nov 3</b> 11:26 AM"},
+    {me:"ask them"},
+    {pr:`Sent 🙌 I asked ${list} about Nov 12–15. I'll pass their replies here, usually within a few hours.`},
+    {to:"stop"},
+    {sys:"<b>Mon, Nov 3</b> 11:27 AM"},
+    {pr:`📩 New booking request #PR-1042\n${s1.talent} (${s1.talent === "Nova Reign" ? "R&B, @novareign" : "drill, @jaymo.nyc"}) for ${s1.name}\nDates: Nov 12–15, NYC · Budget: within your range\nReply YES with a day and time, NO to pass, or type a question and I'll pass it on.`},
+    {me:`YES ${s1.day} ${s1.date}, ${s1.time.toLowerCase()}, ${s1.place.split(" (")[0]}. Can ${s1.talent.split(" ")[0]} do a quick a cappella bit?`},
+    {pr:`Sent to ${s1.talent}'s team ✅`},
+    {to:"booker"},
+    {pr:`💬 ${s1.name}: ${s1.day} ${s1.date}, ${s1.time} at ${s1.place.split(" (")[0]} works. Can ${s1.talent.split(" ")[0]} do a quick a cappella bit?`},
+    {pr:"Reply to answer, or “lock it” to book that time."},
+    {me:"Yes! Lock it. Or just call me 917-555-0142"},
+    N("Phone numbers, emails and handles typed into a relayed message are hidden until after the shoot."),
+    {pr:`Locked ✅ ${s1.name} · ${s1.day} ${s1.date}, ${s1.time} · ${s1.place}`},
+    {pr:"I left your number out of what I passed on. Numbers stay private until after the shoot so nobody gets spammed. Swap away once you've shot together."},
+    {to:"stop"},
+    {pr:`💬 ${s1.talent}'s team: Yes! Lock it. [number hidden by Press Run]`},
+    {pr:`Booked ✅ ${s1.talent} · ${s1.day} ${s1.date}, ${s1.time} · ${s1.place}. I'll send reminders.`},
+    ...(s2 ? [N(`The same back-and-forth runs for ${s2.name}: ${s2.talent}, ${s2.day} ${s2.date} at ${s2.time}.`)] : []),
+    {end:true}
+  ];}},
+  {title:"Run Sheet and reminders", sub:"Itinerary, day-of texts, rating, recap", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null; return [
+    {sys:"<b>Mon, Nov 3</b> 4:05 PM"},
+    ...(s2 ? [{pr:`${s2.name} confirmed too ✅ ${s2.day} ${s2.date}, ${s2.time}.`}] : []),
+    {pr:"Here's your Run Sheet 👇"},
+    {sheet:true},
+    {pr:`Your run: ${p.length} stop${p.length>1?"s":""}. I'll text call times the night before and 1 hour before each stop. Reply “change” if anything moves.`},
+    {sys:`<b>Night before</b> 8:00 PM`},
+    {pr:`Tomorrow: ${s1.name} at ${s1.time}, ${s1.place}. Contact on site: Courtney. Reply “late” if you're running behind.`},
+    {sys:`<b>${s1.day}, ${s1.date}</b> ${s1.pre}`},
+    {pr:`${s1.name} in 1 hour 📍 ${s1.place}`},
+    {me:"running 15 late 😅"},
+    {pr:"Told Courtney. You're good 👍"},
+    {to:"stop"},
+    {pr:`💬 ${s1.talent}'s team: running about 15 min late.`},
+    {to:"booker"},
+    {sys:"<b>2 days later</b>"},
+    {pr:`How was ${s1.name}? Reply 1–5. (Ratings only count Press Run bookings.)`},
+    {me:"5"},
+    {pr:`${s1.name} posted 🎬 12.4K views so far. I'll send your full recap when every stop is live.`},
+    {end:true}
+  ];}}
+];
+
+/* ---------- Engine ---------- */
+async function play(steps, run){
+  for (const step of steps) {
+    if (run !== S.run) return;
+    const who = S.active;
+    if (step.sys) { const d = document.createElement("div"); d.className = "sys"; d.innerHTML = step.sys; threadEl(who).appendChild(d); scrollDown(); continue; }
+    if (step.note) { const d = document.createElement("div"); d.className = "note appear"; d.textContent = step.note; threadEl(who).appendChild(d); scrollDown(); await sleep(250); continue; }
+    if (step.to) { if (step.to !== S.active) { await sleep(400); showThread(step.to, true); await sleep(650); } continue; }
+    if (step.me) { await waitForSend(step.me); if (run !== S.run) return; sendMine(step.me); await sleep(350); continue; }
+    if (step.wait === "approve") { await approveMode(run); continue; }
+    if (step.wait === "pick") { pickMode(run); return; }
+    if (step.end) { endCap(); return; }
+    await prSay(who, step, run);
+    await sleep(120);
+  }
+}
+function endCap(){
+  const next = S.chap + 1 < CHAPTERS.length ? CHAPTERS[S.chap + 1] : null;
+  const d = document.createElement("div"); d.className = "endcap appear";
+  d.innerHTML = `<span>End of chapter ${S.chap + 1}</span><div class="row2"><button class="btn" type="button" data-a="again">Replay</button>${next ? `<button class="btn primary" type="button" data-a="next">Next: ${esc(next.title)} →</button>` : `<button class="btn primary" type="button" data-a="first">Start over</button>`}</div>`;
+  d.querySelector('[data-a="again"]').onclick = () => go(S.chap);
+  const n = d.querySelector('[data-a="next"],[data-a="first"]'); n.onclick = () => go(next ? S.chap + 1 : 0);
+  threadEl(S.active).appendChild(d); scrollDown();
+}
+function go(i){
+  S.run++; S.chap = i; S.mode = null; S.waitResolve = null; S.skip = null; S.chain = Promise.resolve();
+  if (i === 2) { S.shortlist = new Set(); S.dropped = new Set(); S.reactions = {}; }
+  $("field").classList.remove("ready"); $("field").disabled = true; $("fieldText").textContent = "iMessage";
+  setChips(null); closeOverlay();
+  ["booker","stop"].forEach(w => threadEl(w).innerHTML = "");
+  const ch = CHAPTERS[i];
+  showThread(ch.who, false);
+  $("chapNo").textContent = `${i + 1} / ${CHAPTERS.length}`;
+  renderChapterLists();
+  try { location.hash = "ch" + (i + 1); } catch (e) {}
+  play(ch.build(), S.run);
+}
+
+/* ---------- Approval (stop) ---------- */
+function approveMode(run){
+  return new Promise(res => {
+    S.mode = "approve";
+    let changed = false;
+    const finish = async (viaReact) => {
+      if (S.mode !== "approve") return;
+      S.mode = null; setChips(null);
+      if (!viaReact) { sendMine("Looks good"); await sleep(300); }
+      await prSay(S.active, {pr:"You're live on Press Run ✅ Bookers in NYC can now find Music for a Minute."}, run);
+      await prSay(S.active, {pr:"When a request comes in, I'll text you here with who, when and the budget. Reply YES with a time, NO to pass, or ask a question and I'll pass it on."}, run);
+      await prSay(S.active, {pr:"Want to list Motivation for a Minute next? Text “add another show”."}, run);
+      if (run === S.run) endCap();
+      res();
+    };
+    const chips = () => setChips([
+      ...(changed ? [] : [{label:"Price free–$500", act: async () => {
+        changed = true; setChips(null);
+        sendMine("Make the price free–$500. Paid is for labels");
+        await sleep(300);
+        stopPreviewPrice = "Free–$500";
+        await prSay(S.active, {pr:"Got it. I'll show “Free–$500” and send you each request to decide."}, run);
+        await prSay(S.active, {pr:"Updated 👇"}, run);
+        await prSay(S.active, {card:1, preview:true}, run);
+        if (S.mode === "approve") chips();
+      }}]),
+      {label:"Looks good", go:true, act: () => finish(false)}
+    ], "Try it: ask for a change, reply “Looks good”, or tap the card and react ❤️");
+    S.onApproveReact = (emo) => { if (["❤️","👍","🔥","💯"].includes(emo)) setTimeout(() => finish(true), 500);
+      else if (emo === "👎") say("What should I change about it?"); else if (emo === "❓") say("The card is what bookers see in a list. The clip plays right under it. Want to change anything?"); };
+    chips();
+  });
+}
+
+/* ---------- Picking (booker) ---------- */
+let shortT;
+function pickMode(run){
+  S.mode = "pick";
+  setChips([
+    {label:"1 and 3", act: () => { sendMine("1 and 3"); [1,3].forEach(n => { S.shortlist.add(n); S.dropped.delete(n); refreshCard(n); }); clearTimeout(shortT);
+      say(`Shortlisted 1 ${STOPS[1].name} and 3 ${STOPS[3].name}. Want me to ask them about dates? Reply “ask them”.`); }},
+    {label:"Ask them →", go:true, act: () => {
+      const picks = [...S.shortlist].filter(n => !S.dropped.has(n)).sort();
+      if (!picks.length) { sendMine("ask them"); say("Who should I ask? Reply with numbers (“1 and 3”) or ❤️ a card first."); return; }
+      S.picks = picks; go(3);
+    }},
+    {label:"cheaper", act: () => { sendMine("cheaper"); say("All of these are free except 4 (Movies for a Minute, $150–$300). Want me to drop 4 and look for more free stops?"); }},
+    {label:"who's free Thursday?", act: () => { sendMine("who's free Thursday?"); say("Thursday Nov 13: 1 Music for a Minute and 3 Motivation for a Minute."); }},
+  ], "Try it: tap a card (or long-press a clip) to react, or tap a reply");
+}
+function refreshCard(n){
+  document.querySelectorAll(`#t-booker .row[data-stop="${n}"] .card`).forEach(c => c.classList.toggle("dropped", S.dropped.has(n)));
+}
+function onPickReact(n, emo, removed){
+  n = +n;
+  if (removed) { if (["❤️","👍","🔥","💯"].includes(emo)) S.shortlist.delete(n); if (emo === "👎") { S.dropped.delete(n); refreshCard(n); } return; }
+  if (["❤️","👍","🔥","💯"].includes(emo)) {
+    S.shortlist.add(n); S.dropped.delete(n); refreshCard(n);
+    clearTimeout(shortT);
+    shortT = setTimeout(() => { if (S.mode !== "pick") return; const l = [...S.shortlist].sort();
+      if (l.length) say(`Shortlist: ${l.join(", ")} ✅ Keep reacting, or reply “ask them” when you're ready.`); }, 1500);
+  } else if (emo === "👎") {
+    S.shortlist.delete(n); S.dropped.add(n); refreshCard(n);
+    say(`Dropped ${n}. I'll show fewer like it.`);
+  } else if (emo === "❓") {
+    say(STOPS[n].more);
+  }
+}
+
+/* ---------- Reaction picker ---------- */
+const EMOJI = ["❤️","👍","🔥","💯","👎","❓"];
+const LABEL = {"❤️":"save","👍":"save","🔥":"save","💯":"save","👎":"drop it","❓":"more info"};
+function closeOverlay(){ document.querySelectorAll(".scrim,.picker,.pick-label,.lift").forEach(e => e.remove()); stopClip(); }
+function openPicker(row){
+  closeOverlay();
+  const stage = $("stage"), sr = stage.getBoundingClientRect(), rr = row.getBoundingClientRect();
+  const scrim = document.createElement("div"); scrim.className = "scrim"; scrim.onclick = closeOverlay; stage.appendChild(scrim);
+  const src = row.querySelector(".card,.clip");
+  if (src) { const sb = src.getBoundingClientRect(); const lift = src.cloneNode(true); lift.classList.add("lift"); lift.removeAttribute("tabindex");
+    Object.assign(lift.style, {top:(sb.top - sr.top) + "px", left:(sb.left - sr.left) + "px", width:sb.width + "px"}); stage.appendChild(lift); }
+  const id = row.dataset.rid || (row.dataset.rid = "r" + Math.random().toString(36).slice(2,8));
+  const cur = S.reactions[id];
+  const p = document.createElement("div"); p.className = "picker"; p.setAttribute("role","toolbar"); p.setAttribute("aria-label","React");
+  p.innerHTML = EMOJI.map(e => `<button type="button" aria-label="${e} ${LABEL[e]}" aria-pressed="${cur === e}">${e}</button>`).join("");
+  stage.appendChild(p);
+  const top = Math.max(8, rr.top - sr.top - 58), left = Math.max(8, Math.min(sr.width - 290, rr.left - sr.left));
+  p.style.top = top + "px"; p.style.left = left + "px";
+  const lab = document.createElement("div"); lab.className = "pick-label";
+  lab.textContent = "❤️ 👍 🔥 💯 save · 👎 drop · ❓ more info";
+  lab.style.top = (top - 22 < 0 ? top + 56 : top - 20) + "px"; lab.style.left = left + "px"; stage.appendChild(lab);
+  p.querySelectorAll("button").forEach((b, i) => b.onclick = ev => { ev.stopPropagation(); react(row, EMOJI[i]); closeOverlay(); });
+}
+function react(row, emo){
+  const id = row.dataset.rid; const prev = S.reactions[id];
+  row.querySelectorAll(".tb").forEach(t => t.remove());
+  const removed = prev === emo;
+  if (removed) delete S.reactions[id]; else {
+    S.reactions[id] = emo;
+    const tb = document.createElement("div"); tb.className = "tb pop"; tb.textContent = emo; tb.setAttribute("aria-label","Your reaction " + emo);
+    (row.querySelector(".card,.clip") || row).after(tb);
+  }
+  if (S.mode === "pick") { if (prev && !removed) onPickReact(row.dataset.stop, prev, true); onPickReact(row.dataset.stop, emo, removed); }
+  else if (S.mode === "approve" && !removed && S.onApproveReact) S.onApproveReact(emo);
+}
+
+/* ---------- Clip player (simulated) ---------- */
+let clipTimer = null;
+function stopClip(){ if (clipTimer) { clearInterval(clipTimer); clipTimer = null; } }
+function playClip(n){
+  closeOverlay();
+  const st = STOPS[n], stage = $("stage");
+  const scrim = document.createElement("div"); scrim.className = "scrim"; stage.appendChild(scrim);
+  scrim.innerHTML = `<div class="player" style="--c1:${st.c1}" role="dialog" aria-label="Sample clip for ${esc(st.name)}"><div class="bar"><i></i></div><div class="tag">Sample clip · simulated in this mockup</div><button class="x" type="button" aria-label="Close clip">✕</button><div class="scene"></div><div class="stripes"><i></i><i></i><i></i><i></i></div><div class="time">0:00 / 0:18</div></div>`;
+  const pl = scrim.querySelector(".player"), sc = pl.querySelector(".scene"), bar = pl.querySelector(".bar i"), tm = pl.querySelector(".time");
+  scrim.onclick = e => { if (e.target === scrim || e.target.closest(".x")) closeOverlay(); };
+  const scenes = [...st.clip, "Booked through Press Run"];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let t = 0; const total = 18;
+  const show = () => { const i = Math.min(scenes.length - 1, Math.floor(t / (total / scenes.length)));
+    if (sc.dataset.i !== String(i)) { sc.dataset.i = i; sc.style.opacity = 0; setTimeout(() => { sc.textContent = scenes[i]; sc.className = "scene" + (scenes[i].startsWith("“") ? " q" : ""); sc.style.opacity = 1; }, reduce ? 0 : 180); } };
+  show();
+  clipTimer = setInterval(() => { t += 0.25; bar.style.width = Math.min(100, t / total * 100) + "%"; tm.textContent = `0:${String(Math.floor(t)).padStart(2,"0")} / 0:18`; show(); if (t >= total) { stopClip(); setTimeout(closeOverlay, 700); } }, 250);
+}
+
+/* Taps on cards and clips: tap a card to react; tap a clip to play, long-press a clip to react */
+let lp = null, lpFired = false;
+$("stage").addEventListener("pointerdown", e => {
+  const clip = e.target.closest(".clip"); if (!clip) return;
+  lpFired = false; clearTimeout(lp);
+  lp = setTimeout(() => { lpFired = true; const row = clip.closest(".row"); if (S.mode) openPicker(row); }, 450);
+});
+["pointerup","pointerleave","pointercancel"].forEach(ev => $("stage").addEventListener(ev, () => clearTimeout(lp)));
+$("stage").addEventListener("contextmenu", e => { if (e.target.closest(".clip,.card")) e.preventDefault(); });
+$("stage").addEventListener("click", e => {
+  const card = e.target.closest(".card"), clip = e.target.closest(".clip");
+  if (clip) { if (lpFired) { lpFired = false; return; } playClip(+clip.closest(".row").dataset.stop); return; }
+  if (card) { const row = card.closest(".row"); if (S.mode && row.dataset.kind === "card") openPicker(row); else toast(S.mode ? "Tap a card to react" : "Reactions open when picking"); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeOverlay();
+  if (e.key === "Enter") { const el = document.activeElement; if (el && el.classList.contains("clip")) { e.preventDefault(); if (S.mode && e.shiftKey) openPicker(el.closest(".row")); else playClip(+el.closest(".row").dataset.stop); } else if (el && el.classList.contains("card") && S.mode) { e.preventDefault(); openPicker(el.closest(".row")); } } });
+
+/* ---------- Chapter menu ---------- */
+function chapterButtons(){
+  return CHAPTERS.map((c,i) => `<button type="button" class="chap" data-go="${i}" aria-current="${i === S.chap}"><span class="n">${i+1}</span><span><b>${esc(c.title)}</b><span class="sub">${esc(c.sub)}</span></span></button>`).join("");
+}
+function renderChapterLists(){
+  $("railChapters").innerHTML = chapterButtons();
+  $("railChapters").querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(+b.dataset.go));
+}
+$("menuBtn").onclick = () => {
+  closeOverlay();
+  const scrim = document.createElement("div"); scrim.className = "scrim";
+  scrim.innerHTML = `<div class="menu" role="dialog" aria-label="Chapters"><div class="eyebrow">Press Run · clickable mockup</div><h2>Chapters</h2><p>Tap the blue send button to reply. When cards show up, tap a card (or long-press a clip) to react. Red dashed notes explain what happens behind the scenes. Names, numbers and clips are examples.</p><div class="chapters">${chapterButtons()}</div></div>`;
+  scrim.onclick = e => { if (e.target === scrim) closeOverlay(); };
+  scrim.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(+b.dataset.go));
+  $("stage").appendChild(scrim);
+};
+
+/* Start */
+let start = 0;
+try { const m = location.hash.match(/^#ch([1-5])$/); if (m) start = +m[1] - 1; } catch (e) {}
+go(start);
+</script>

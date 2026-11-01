@@ -33,6 +33,7 @@ describe("website", () => {
     const html = await r.text();
     expect(html).toContain('<button class="btn" id="start" type="button">Start here</button>');
     expect(html).toContain('class="runner"');
+    expect(html).toContain('<h1 class="line">Book your next press run</h1>');
     expect(html).toContain('const NUMBER = "+15550001234"');
     expect((await app.request("/logo-256.png")).headers.get("content-type")).toContain("image/png");
   });

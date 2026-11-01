@@ -24,7 +24,7 @@ The texting engine behind Press Run. It runs the booker and Press Stop onboardin
 - **Rating**: 48 hours after the shoot the booker rates it 1–5. Ratings of 1–2 are flagged.
 - **Posted link and views**: the creator's live link goes to the booker with a preview. A week later Press Run asks the creator for the view count (a number, or a screenshot that Courtney types in on the admin page). Reading views straight from TikTok/YouTube links comes later.
 - **Recap**: once every booked stop has posted with views (or 14 days after the last shoot), the booker gets the recap image with each post's views and the total.
-- **Website** (`/`): the Press Run character running on the red crosswalk tiles, and one **Start here** button. It opens the sign-up (name, email, book / list / both), which ends in the **Text Press Run** button: Messages opens with the code typed. Set `PRESS_RUN_NUMBER` once there's a number.
+- **Website** (`/`): "BOOK YOUR NEXT PRESS RUN" in one line, the Press Run character running on the red crosswalk tiles under it, and one **Start here** button. The line uses Inter Tight Bold (free) as a stand-in for Neue Haas Grotesk Display 75 Bold (paid). It opens the sign-up (name, email, book / list / both), which ends in the **Text Press Run** button: Messages opens with the code typed. Set `PRESS_RUN_NUMBER` once there's a number.
 - **Admin page** (`/admin`, needs `ADMIN_PASSWORD`, username `courtney`): threads that asked for a person, replies saved for review, every conversation and its stage. Take a thread over (the bot goes quiet), text as Press Run, hand it back, clear review items, and type in view counts from screenshots.
 
 ## Next slices

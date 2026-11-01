@@ -45,18 +45,20 @@ export function landingPage(opts: { number?: string }): string {
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&family=Figtree:wght@400;600&family=Inter+Tight:wght@700&display=swap" rel="stylesheet">
 <style>
   :root { --ink:#0A0A0B; --char:#19191B; --line:#2E2E33; --fg:#F4F4F5; --muted:#9A9AA2; --red:#F0413A; --blue:#0A84FF; --stride:.62s; --tile:clamp(66px, 19vw, 96px); }
   * { box-sizing:border-box; }
   html, body { height:100%; }
   body { margin:0; background:var(--ink); color:var(--fg); font:17px/1.45 Figtree, system-ui, -apple-system, sans-serif; overflow:hidden; }
+  /* One line above the runner. Inter Tight Bold stands in for Neue Haas Grotesk Display 75 Bold (a paid font). */
+  .line { margin:0; font:700 clamp(20px, 6.3vw, 60px)/1 "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing:-.02em; text-transform:uppercase; white-space:nowrap; text-align:center; color:var(--fg); }
   .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   main { width:100%; overflow:hidden; height:100%; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(28px, 6vh, 56px); padding:24px 16px; }
 
   /* The scene: the runner stays in the middle while the tiles slide past underneath. */
   .scene { position:relative; width:min(92vw, 560px); height:clamp(240px, 46vh, 400px); }
-  .glow { position:absolute; left:50%; bottom:-6%; width:120%; height:60%; transform:translateX(-50%); background:radial-gradient(closest-side, rgba(240,65,58,.42), rgba(240,65,58,.12) 55%, transparent); filter:blur(8px); pointer-events:none; }
+  .glow { position:absolute; left:50%; bottom:-6%; width:120%; height:60%; transform:translateX(-50%); background:radial-gradient(closest-side, rgba(240,65,58,.42), rgba(240,65,58,.2) 32%, rgba(240,65,58,.08) 60%, rgba(240,65,58,.025) 82%, rgba(240,65,58,0)); filter:blur(20px); pointer-events:none; }
   .road { position:absolute; left:0; right:0; bottom:3%; height:27%; overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image:linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
   .tiles { position:absolute; inset:0 calc(var(--tile) * -2) 0 0; display:flex; align-items:center; gap:calc(var(--tile) * .34); padding-left:calc(var(--tile) * .2); animation:slide calc(var(--stride) * .9) linear infinite; }
   .tiles i { flex:0 0 calc(var(--tile) * .66); height:30%; background:var(--red); border-radius:6px; transform:skewX(-32deg); box-shadow:0 0 14px rgba(240,65,58,.95), 0 0 34px rgba(240,65,58,.55); }
@@ -119,7 +121,7 @@ export function landingPage(opts: { number?: string }): string {
 </head>
 <body>
 <main>
-  <h1 class="sr">Press Run: book your press run by text</h1>
+  <h1 class="line">Book your next press run</h1>
   <div class="scene" role="img" aria-label="The Press Run character running across red crosswalk tiles">
     <div class="glow"></div>
     <div class="road"><div class="tiles">${"<i></i>".repeat(14)}</div></div>

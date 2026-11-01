@@ -90,6 +90,9 @@ If feedback conflicts with an earlier decision (here, the fees promise in the we
 2. **Build in slices the founder can check.** Slice 1 is the texting engine with both onboarding scripts word for word, a pretend-phone page (`/dev/phone`) and tests that replay the mockup's conversations. No accounts are needed yet.
 3. **Keep every message in one copy file**, so wording changes from feedback never touch the logic.
 4. **Run the tests many times.** A test that passes once can still be flaky; running them 10 times found a real ordering bug.
+5. **Build the two-sided part as one thread per person** (slice 4). Each side only ever texts Press Run. Every passed-on message starts with who it's from, and numbers are hidden until the owner replies SHARE. Work out how a reply finds its conversation before writing code: the bubble it replies to, a booking code, a name, the only open one, the one that just wrote, and only then ask "which one?".
+6. **Test with a clock you control.** Reminders, nudges and expiry are jobs with a run time. Tests move the clock forward (12 hours, the night before, 1 hour before) instead of waiting, and every text in a test advances it a minute, like a real thread.
+7. **Make the "shareable" outputs as images early** (cards, master list, Run Sheet). They're what users screenshot, and they double as build-in-public posts.
 
 ## Rules that kept this session safe
 
@@ -105,5 +108,6 @@ If feedback conflicts with an earlier decision (here, the fees promise in the we
 - [ ] Built and tested the clickable mockup, then published it
 - [ ] Researched vendors and wrote a pass/fail test for the must-have feature
 - [ ] Wrote the build plan doc with diagrams and a decisions list
+- [ ] Built in slices: onboarding → media → matching/picking → two-sided relay and booking → follow-ups, landing page, admin, deploy
 - [ ] Checked off tracker tasks, added Content Log entries, updated process notes
 - [ ] Committed and pushed the files

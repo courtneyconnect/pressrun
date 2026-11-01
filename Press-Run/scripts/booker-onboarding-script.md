@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 3 · 2026-11-01 · Milestone M1
+Version 4 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -169,20 +169,26 @@ PR: What genre or niche? A few words is perfect, e.g. "drill and R&B", "stand-up
 - **If unclear** (`everything`, `idk`): `PR: Totally fine. What would someone hear or see first? e.g. "rap", "romcoms", "makeup tutorials".`
 - → B4
 
-### B4 · Goal of a run
+### B4 · What kind of Press Stops
 
 ```
-PR: What do you usually want a press run to do?
-1 Push a new release
-2 Promote a show, tour or screening
-3 Grow followers
-4 Press for a film or series
-5 Something else
+PR: What kind of Press Stops are you looking for? Pick as many as you want.
+1 Street interviews and street series
+2 Features on content series (YouTube, IG, TikTok shows)
+3 Podcasts
+4 Radio
+5 Livestreams
+6 Shoots and collabs with content creators
+7 Open to anything
 ```
 
-- **Accept:** a number, several numbers, or words (`new single`, `album drop` → 1; `concert`, `tour` → 2…). `5` or free text is saved as written.
-- **Optional:** `skip` is allowed.
-- **Bonus:** if they mention a date (`single drops Nov 14`), save it as an upcoming release. Press Run will offer a run around it at the end (B8).
+- **Wording by role:** managers and labels see `PR: What kind of Press Stops do you want for your artists? Pick as many as you want.` Brands see `PR: What kind of Press Stops fit your brand?` with the same list.
+- **Accept:** one or more numbers, or words (`street stuff` → 1; `YouTube shows`, `series` → 2; `pods` → 3; `IG live`, `Twitch` → 5; `collabs`, `shoot` → 6; `all`, `whatever works` → 7). Anything else is saved as written and tagged `needs_review`.
+- **If unclear:** `PR: Just pick the numbers that sound right, like "1 and 3". You can change it anytime.`
+- **How it's used:** matching puts these Press Stop types first. Other types only fill in when fewer than 3 match. A run request can override it ("podcasts only this time").
+- **Optional:** `skip` saves "open to anything".
+- **Bonus:** if they mention a date (`Nova's single drops Nov 14`), save it as an upcoming release. Press Run offers a run around it at the end (B9).
+- **Later:** concert venues and live show bookings become a Press Stop type in a future version. They're not on this list yet.
 - → B5
 
 ### B5 · Usual budget
@@ -226,7 +232,7 @@ PR: Last one: where are you based? We're live in New York first, with more citie
 PR: You're set, {first_name} ✅
 • Booking for: {role_summary}
 • Niche: {niche}
-• Runs are usually for: {goal}
+• Looking for: {press_stop_types}
 • Budget: {budget}
 • Never: {hard_nos}
 Reply "edit" to change anything.
@@ -266,7 +272,7 @@ If B4 found an upcoming release date:
 PR: You mentioned {release} on {date}. Want me to pull options for that week? Reply YES.
 ```
 
-**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k", "add artist Jay Mo @jaymo" or "add artist Jay Mo tiktok.com/@jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, goal, budget, hard no's or city?`
+**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k", "add artist Jay Mo @jaymo" or "add artist Jay Mo tiktok.com/@jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, Press Stop types, budget, hard no's or city?`
 
 ---
 
@@ -375,7 +381,7 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 ## 5. Data saved per booker
 
-`phone`, `first_name`, `email`, `member_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche), `brand_goal`, `niche_tags[]`, `goal[]`, `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
+`phone`, `first_name`, `email`, `member_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche), `brand_goal`, `niche_tags[]`, `wanted_stop_types[]`, `upcoming_release` (what, date), `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
 
 ---
 

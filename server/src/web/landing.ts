@@ -52,7 +52,7 @@ export function landingPage(opts: { number?: string }): string {
   html, body { height:100%; }
   body { margin:0; background:var(--ink); color:var(--fg); font:17px/1.45 Figtree, system-ui, -apple-system, sans-serif; overflow:hidden; }
   /* One line above the runner. Inter Tight Bold stands in for Neue Haas Grotesk Display 75 Bold (a paid font). */
-  .line { margin:0; font:700 clamp(20px, 6.3vw, 60px)/1 "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing:-.02em; text-transform:uppercase; white-space:nowrap; text-align:center; color:var(--fg); }
+  .line { margin:0; font:700 clamp(23px, 7.4vw, 68px)/1 "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing:-.02em; white-space:nowrap; text-align:center; color:var(--fg); }
   .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   main { width:100%; overflow:hidden; height:100%; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(28px, 6vh, 56px); padding:24px 16px; }
 
@@ -121,7 +121,7 @@ export function landingPage(opts: { number?: string }): string {
 </head>
 <body>
 <main>
-  <h1 class="line">Book your next press run</h1>
+  <h1 class="line">Book Your Next Press Run.</h1>
   <div class="scene" role="img" aria-label="The Press Run character running across red crosswalk tiles">
     <div class="glow"></div>
     <div class="road"><div class="tiles">${"<i></i>".repeat(14)}</div></div>

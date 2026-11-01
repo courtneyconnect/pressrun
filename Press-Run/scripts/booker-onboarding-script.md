@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 1 · 2026-10-28 · Milestone M1
+Version 2 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -11,6 +11,7 @@ This is every message Press Run sends a new booker in iMessage, in order. That c
 - **Accept** lists answers Press Run understands. **If unclear** is what it sends when it can't tell.
 - `{name}` and similar are filled in from earlier answers.
 - Keep every bubble under about 300 characters. Each step asks at most 2–3 questions.
+- **Naming:** every message Press Run sends says **Press Stop** / **Press Stops**, never just "stop". The notes in this file say "stop" only as shorthand.
 
 ---
 
@@ -22,7 +23,7 @@ This is every message Press Run sends a new booker in iMessage, in order. That c
 | `HELP` or `?` on its own | `PR: I'm Press Run. I book press runs by text. Text "menu" to see what I can do, or "human" to reach Courtney.` Then repeats the current question. |
 | `human`, `real person`, `talk to someone` | `PR: Got it. Courtney from Press Run will text you in this thread soon (usually within a few hours, 10am–7pm ET).` Flags the thread for a human. The script pauses until a human hands it back. |
 | `back` | Asks the previous question again. |
-| `skip` | Skips the question if it's optional (marked *optional*). On a required question: `PR: I need this one to match you with the right stops. A rough answer is fine.` |
+| `skip` | Skips the question if it's optional (marked *optional*). On a required question: `PR: I need this one to match you with the right Press Stops. A rough answer is fine.` |
 | `start over` | `PR: Starting over. Your earlier answers are cleared.` Then goes to B1. |
 | A question mid-flow ("how much is this?", "who are you?") | Answers from the FAQ (section 6), then: `PR: Back to where we were:` plus the current question. |
 | A voice note | `PR: I can't listen to voice notes yet. Mind typing that?` *(Later: transcribe it and continue.)* |
@@ -30,6 +31,18 @@ This is every message Press Run sends a new booker in iMessage, in order. That c
 | A tapback on a question (👍 ❤️) | Counts as "yes" on yes/no questions. On other questions it's ignored and the question is not repeated. |
 | No reply | After 24 hours: `PR: Still want to set up Press Run? Just answer the last question when you're ready.` After 72 hours: `PR: I'll stop nudging. Text me anytime and we'll pick up where we left off.` No more nudges after that. |
 | Rude or abusive message | No change in tone. The question is asked again once. After 3 abusive messages in a row, flag the thread for a human. |
+
+**Handles and profile links** (used by B2-self, B2-roster, "add artist" and the Press Stop script's S2). People can type a handle or paste a link, in any mix:
+
+| They send | Press Run saves |
+| --- | --- |
+| `@novareign`, `ig: novareign`, `novareign on TikTok` | The handle, plus the platform if they named one |
+| A profile link: `instagram.com/novareign`, `tiktok.com/@jaymo.nyc`, `youtube.com/@name`, `x.com/name`, `twitch.tv/name`, `soundcloud.com/name`, `open.spotify.com/artist/…`, `music.apple.com/…/artist/…`, `linktr.ee/name` | The platform and handle read from the link, plus the link itself |
+| Any other link (a personal website) | The link as written, saved as "website" |
+
+- **A handle with no platform** (`@novareign` alone): `PR: Is @novareign on Instagram, TikTok, or somewhere else?` If there's no clear answer, save the handle with the platform left blank.
+- **A link to a post or video instead of a profile:** `PR: That looks like a post. Can you send the link to the profile, or just the @handle?`
+- **A shortened or private link Press Run can't read:** `PR: I couldn't open that link. Mind typing the @handle instead?`
 
 **Unclear answers, the general rule:** ask again once with examples. If the second answer is still unclear, save it as written, tag it `needs_review`, and move on. Never ask the same question a third time.
 
@@ -54,7 +67,7 @@ User: Hey Press Run 👋 Sign me up. Code PR-7Q4K
 
 | Case | What happens |
 | --- | --- |
-| Code matches a booker sign-up | Go to B1 with `{first_name}` filled in. Founding Member number is assigned. |
+| Code matches a booker sign-up | Go to B1 with `{first_name}` filled in. Member number is assigned. |
 | Code matches a "both" sign-up | Go to B1, then the stop script after B8 (see B8). |
 | Code matches a stop sign-up | Go to the press stop script, S1. |
 | Code is missing or wrong (someone typed their own message) | Go to B0. |
@@ -79,7 +92,7 @@ PR: Nice. What's your name and email? (Email is only for receipts and your Run S
 
 - **Accept:** a name plus anything with `@`. Name only → `PR: And your email?` Email only → `PR: And what should I call you?`
 - **If the email is invalid:** `PR: That email doesn't look right. Mind checking it?`
-- Assign the Founding Member number here, then go to B1.
+- Assign the Member number here, then go to B1.
 
 ---
 
@@ -88,9 +101,9 @@ PR: Nice. What's your name and email? (Email is only for receipts and your Run S
 ### B1 · Welcome and role
 
 ```
-PR: Welcome to Press Run, {first_name}. You're Founding Member #{founding_no} 🎟️ Booking is free while we're in beta, and Founding Members keep $0 booking fees on free stops for 12 months after payments start.
+PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform.
 
-PR: A few quick questions so I send you the right stops. Takes about 2 minutes.
+PR: A few quick questions so I send you the right Press Stops. Takes about 2 minutes.
 
 PR: First: who are you booking for?
 1 Yourself (artist, actor, creator)
@@ -99,6 +112,7 @@ PR: First: who are you booking for?
 4 A brand
 ```
 
+- Member #1,001 and later get the first bubble without the fees line: `PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️`
 - **Accept:** a number, or words like `me`, `myself`, `I'm the artist` (1); `manager`, `my artists`, `clients` (2); `label`, `agency`, `publicist`, `PR`, `firm` (3); `brand`, `company`, `product` (4). Several numbers (`1 and 2`) → save the main role as the first one and also mark the others.
 - **If unclear:** see the example in section 0.
 - **Branch:** 1 → B2-self · 2 or 3 → B2-roster · 4 → B2-brand
@@ -106,20 +120,24 @@ PR: First: who are you booking for?
 ### B2-self · Your name on posts
 
 ```
-PR: What name do you go by on posts, and what's your main handle? (e.g. "Nova Reign, @novareign on IG")
+PR: What name do you go by on posts? Add your @handle or paste a link to your profile, e.g. "Nova Reign @novareign" or "Nova Reign instagram.com/novareign"
 ```
 
-- **Accept:** a name, plus handles in any format (`@x`, `ig: x`, a profile link). Save each handle with its platform if one is mentioned.
-- **No handle given:** `PR: And your main handle? Or reply "none" if you're just starting.`
+- **Accept:** a name plus one or more handles **or** profile links, mixed any way. See **Handles and profile links** in section 0.
+- **No handle or link given:** `PR: And your @handle or a link to your profile? Or reply "none" if you're just starting.`
 - → B3
 
 ### B2-roster · Your roster
 
 ```
-PR: Who's on your roster? Send each artist's name and main handle, one per line. You can add more later.
+PR: Who's on your roster? Send each artist's name with their @handle or a link to their profile, one per line. You can add more later.
+e.g.
+Nova Reign @novareign
+Jay Mo tiktok.com/@jaymo.nyc
 ```
 
-- **Accept:** one or more lines. Names without handles are fine. They're saved, and handles get asked for later when a run is planned for that artist.
+- **Accept:** one or more lines, each a name plus handles **or** profile links (see **Handles and profile links** in section 0). Names without either are fine. They're saved, and Press Run asks for a handle or link later, when a run is planned for that artist.
+- **Pasted links with no names** (a list of profile links only): Press Run reads the handle from each link and confirms it: `PR: Got @novareign and @jaymo.nyc. What names do they go by?`
 - **More than 10 names:** `PR: Got {n} artists 🙌 I'll keep them all. When you book, just say who it's for.`
 - **"too many" or "a lot":** `PR: Send me the 3–5 you book most. You can add the rest anytime by texting "add artist".`
 - **Company name:** for role 3 only, `PR: And what's the label, agency or firm called?` Then → B3
@@ -170,7 +188,7 @@ PR: What do you usually want a press run to do?
 
 ```
 PR: What do you usually spend on a full run? (Booking through Press Run is free right now. This just helps me match you.)
-1 Free stops only
+1 Free Press Stops only
 2 Under $1k
 3 $1k–$5k
 4 $5k+
@@ -185,7 +203,7 @@ PR: What do you usually spend on a full run? (Booking through Press Run is free 
 ### B6 · Hard no's
 
 ```
-PR: Any stops you'd never do? e.g. "no prank shows", "nothing explicit", "no mornings". Or reply "none".
+PR: Any Press Stops you'd never do? e.g. "no prank shows", "nothing explicit", "no mornings". Or reply "none".
 ```
 
 - **Accept:** any text. `none`, `nah` or `no` saves an empty list. Common items map to filter tags: `explicit`, `prank`, `political`, `alcohol/cannabis brands`, `live call-ins`, `before 10am`. The rest is saved as notes Press Run checks when matching.
@@ -198,7 +216,7 @@ PR: Any stops you'd never do? e.g. "no prank shows", "nothing explicit", "no mor
 PR: Last one: where are you based? We're live in New York first, with more cities soon.
 ```
 
-- **Accept:** a city, borough or ZIP. Anything in NYC → `PR: NYC 🗽 perfect.` Anywhere else → `PR: Got it. Right now I only have New York stops, so I'm best for runs in NYC. I'll text you when {city} opens up.` The user is added to that city's waitlist.
+- **Accept:** a city, borough or ZIP. Anything in NYC → `PR: NYC 🗽 perfect.` Anywhere else → `PR: Got it. Right now I only have New York Press Stops, so I'm best for runs in NYC. I'll text you when {city} opens up.` The user is added to that city's waitlist.
 - → B8
 
 ### B8 · Summary, save the contact, "both" check
@@ -223,7 +241,7 @@ PR: Save me so my texts show up as Press Run.
 Then the **both check**, which is skipped if they already said "both":
 
 ```
-PR: Quick one: do you also run a show, series or podcast people could book? Reply YES to list it too. Same thread, same account.
+PR: Quick one: do you also run a show, series or podcast people could book? Reply YES to list it as a Press Stop too. Same thread, same account.
 ```
 
 - `yes` or 👍 → stop script S1, skipping name and email.
@@ -235,7 +253,7 @@ PR: Quick one: do you also run a show, series or podcast people could book? Repl
 PR: Here's how it works. Text me a run anytime, like:
 "NYC Nov 12–15, 2 artists, $5k budget, give me my options"
 
-PR: I'll send numbered stops, each with a card and a short clip. Pick by replying ("1 and 3") or by reacting:
+PR: I'll send numbered Press Stops, each with a card and a short clip. Pick by replying ("1 and 3") or by reacting:
 ❤️ 👍 🔥 💯 save it
 👎 drop it and show fewer like it
 ❓ tell me more
@@ -247,7 +265,7 @@ If B4 found an upcoming release date:
 PR: You mentioned {release} on {date}. Want me to pull options for that week? Reply YES.
 ```
 
-**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k" or "add artist Jay Mo @jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, goal, budget, hard no's or city?`
+**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k", "add artist Jay Mo @jaymo" or "add artist Jay Mo tiktok.com/@jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, goal, budget, hard no's or city?`
 
 ---
 
@@ -271,12 +289,12 @@ Press Run pulls out **city, dates, who it's for, budget, and anything else they 
 | Budget | Not asked. It uses their onboarding budget and says so: `PR: Using your usual {budget} budget.` |
 
 Dates in the past: `PR: Nov 12 has already passed. Did you mean next year, or another date?`
-City not live yet: `PR: I don't have stops in {city} yet, but I'll text you when it opens. Want options in NYC instead?`
+City not live yet: `PR: I don't have Press Stops in {city} yet, but I'll text you when it opens. Want options in NYC instead?`
 
 ### R2 · Confirm and send options
 
 ```
-PR: On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling stops now…
+PR: On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling Press Stops now…
 ```
 
 Then 3–5 options. Each option is **two bubbles**, the card image followed by the clip:
@@ -287,11 +305,11 @@ PR: [clip: 0:20]
 PR: [card image: 2 · Penny for Your Thoughts]
 PR: [clip: 0:18]
 … (up to 5)
-PR: That's 5 stops, about $1,150 total if you book all of them. Reply with numbers ("1 and 3"), react to a card, or ask "cheaper", "more like 2", or "who's free Thursday?"
+PR: That's 5 Press Stops, about $1,150 total if you book all of them. Reply with numbers ("1 and 3"), react to a card, or ask "cheaper", "more like 2", or "who's free Thursday?"
 ```
 
-If fewer than 3 stops fit:
-`PR: Only 2 stops fit those dates and budget. Want me to widen the dates or include paid stops up to $X?`
+If fewer than 3 Press Stops fit:
+`PR: Only 2 Press Stops fit those dates and budget. Want me to widen the dates or include paid Press Stops up to $X?`
 
 ### R3 · Picking
 
@@ -307,7 +325,7 @@ If fewer than 3 stops fit:
 | `book them` or `ask them` | Starts the relay (R4). |
 | Number that doesn't exist (`7`) | `PR: I only sent 1–5. Which ones?` |
 
-### R4 · Relay to the stop (numbers stay private)
+### R4 · Relay to the Press Stop (numbers stay private)
 
 ```
 PR: Sent 🙌 I asked Music for a Minute and Motivation for a Minute about Nov 12–15. I'll pass their replies here, usually within a few hours.
@@ -330,14 +348,14 @@ When both sides say yes to a time:
 
 ```
 PR: Booked ✅ Music for a Minute · Thu Nov 13, 2:30pm · Washington Square Park (arch side)
-PR: I'll send your full Run Sheet once the other stops confirm.
+PR: I'll send your full Run Sheet once the other Press Stops confirm.
 ```
 
 Run Sheet (sent as an image so it's easy to screenshot, plus a short text version):
 
 ```
 PR: [image: Run Sheet · Nova Reign · NYC Nov 12–15]
-PR: Your run: 3 stops, Nov 12–14. I'll text call times the night before and 1 hour before each stop. Reply "change" if anything moves.
+PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before and 1 hour before each one. Reply "change" if anything moves.
 ```
 
 ---
@@ -350,13 +368,13 @@ PR: Your run: 3 stops, Nov 12–14. I'll text call times the night before and 1 
 | 1 hour before | `PR: {stop} in 1 hour 📍 {place}` |
 | Booker texts "late" | Passes it to the stop: `💬 Nova Reign's team: running about 15 min late.` |
 | 48 hours after the shoot | `PR: How was {stop}? Reply 1–5. (Ratings only count Press Run bookings.)` |
-| When the stop posts | `PR: {stop} posted 🎬 {views} views so far. I'll send your full recap when every stop is live.` |
+| When the stop posts | `PR: {stop} posted 🎬 {views} views so far. I'll send your full recap when every Press Stop has posted.` |
 
 ---
 
 ## 5. Data saved per booker
 
-`phone`, `first_name`, `email`, `founding_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche), `brand_goal`, `niche_tags[]`, `goal[]`, `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
+`phone`, `first_name`, `email`, `member_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche), `brand_goal`, `niche_tags[]`, `goal[]`, `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
 
 ---
 
@@ -364,10 +382,10 @@ PR: Your run: 3 stops, Nov 12–14. I'll text call times the night before and 1 
 
 | Question | Answer |
 | --- | --- |
-| How much does it cost? | `PR: Free while we're in beta. Later it's 10% on paid bookings and $15 on free stops, and Founding Members pay $0 on free stops for 12 months.` |
+| How much does it cost? | `PR: Free while we're in beta. After that it's 10% on paid bookings and $15 on free Press Stops. As one of the first 1,000 members, you'll pay NO fees on any booking.` |
 | Who are you / is this a bot? | `PR: I'm Press Run's booking assistant. A real person (Courtney) checks in on every booking. Text "human" anytime.` |
 | Can I just get their number? | `PR: I keep numbers private until you're booked. It keeps everyone safe from spam. Once you've shot together, swap away.` |
-| Is my info shared? | `PR: Stops only see what's on your request: name, niche, handles and dates. Never your number or email.` |
+| Is my info shared? | `PR: Press Stops only see what's on your request: name, niche, handles and dates. Never your number or email.` |
 | What cities? | `PR: New York right now. More soon, and I'll text you when your city opens.` |
 | Android friend? | `PR: They can text this same number. It works over regular SMS too.` |
 
@@ -375,6 +393,6 @@ PR: Your run: 3 stops, Nov 12–14. I'll text call times the night before and 1 
 
 ## 7. Open items for Courtney
 
-- Founding Member perks wording in B1. Check it matches the final offer (task M3 · "Write the Founding Member offer").
+- The B1 welcome says the first 1,000 members pay NO fees on any booking. The business plan says Founding Members pay $0 on free Press Stops for 12 months, and 10% on paid bookings. Pick one and update the other (task M3 · "Write the Founding Member offer").
 - Human hours (10am–7pm ET) are a placeholder. Set the real hours.
 - The reminder times (8pm the night before, and 1 hour before) are placeholders.

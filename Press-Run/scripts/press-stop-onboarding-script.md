@@ -1,8 +1,8 @@
-# Press Run · Press stop onboarding text script
+# Press Run · Press Stop onboarding text script
 
-Version 1 · 2026-10-28 · Milestone M1
+Version 2 · 2026-11-01 · Milestone M1
 
-This is every message Press Run sends a new **press stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the stop its **card and clip** to approve. The step IDs (S1, S2…) match the build plan and the mockup.
+This is every message Press Run sends a new **Press Stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the Press Stop its **card and clip** to approve. Every message Press Run sends says **Press Stop**. The notes here say "stop" only as shorthand. The step IDs (S1, S2…) match the build plan and the mockup.
 
 The format and the global rules are the same as the booker script. **Section 0 of `booker-onboarding-script.md` applies here too** (STOP, HELP, human, back, skip, start over, mid-flow questions, voice notes, nudges, "ask again once, then save as `needs_review`").
 
@@ -15,7 +15,7 @@ The stop answers **10 things in 6 short rounds**: series name, format, audience 
 | Case | Starts at |
 | --- | --- |
 | Website sign-up code for a stop: `Hey Press Run 👋 List my show. Code PR-2M8D` | S1 |
-| Booker answered YES to "do you also run a show?" (booker B8) | S1, skipping the welcome and Founding number (already given) |
+| Booker answered YES to "do you also run a show?" (booker B8) | S1, skipping the welcome and Member number (already given) |
 | No code, picked "2" at booker B0 | S0a |
 
 ### S0a · Name and email (no website sign-up only)
@@ -33,9 +33,9 @@ Same rules as booker B0a. → S1
 ### S1 · Welcome, series name and format
 
 ```
-PR: Welcome to Press Run, {first_name}. You're Founding Member #{founding_no} 🎟️ Listing is free.
+PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform.
 
-PR: I'll ask a few questions, then I'll make your Press Run card and a short sample clip. That's what bookers see. Takes about 5 minutes.
+PR: I'll ask a few questions, then I'll make your Press Stop card and a short sample clip. That's what bookers see. Takes about 5 minutes.
 
 PR: What's your show called, and what's the format?
 1 Street interview / street series
@@ -56,11 +56,12 @@ PR: What's your show called, and what's the format?
 ### S2 · Audience and platforms
 
 ```
-PR: Where does {series} post, and roughly how many followers on each? e.g. "IG 85k, TikTok 210k, YouTube 12k"
+PR: Where does {series} post, and roughly how many followers on each? Type the @handle or paste the profile link, e.g. "IG @musicforaminute 85k" or "tiktok.com/@musicforaminute 210k"
 ```
 
-- **Accept:** platform + number pairs in any format (`85k`, `85,000`, `1.2M`). Profile links are saved too.
+- **Accept:** each platform as a handle **or** a profile link, plus a follower count in any format (`85k`, `85,000`, `1.2M`). Handles and links follow **Handles and profile links** in section 0 of the booker script.
 - **Platforms with no numbers:** `PR: Roughly how many followers on {platform}? A ballpark is fine.`
+- **Numbers with no handle or link:** `PR: What's the @handle or profile link for {platform}? I use it to check the numbers.`
 - **Vague answer** (`big`, `growing`): `PR: Ballpark per platform is perfect, e.g. "IG ~10k". Bookers filter by it.`
 - **Accuracy:** numbers are self-reported. They're saved with `audience_verified = false`, and Courtney spot-checks the profile links before the stop goes live. The card shows the **total, rounded** (e.g. "Audience 307K").
 - → S3
@@ -188,7 +189,7 @@ The card shows these fields, top to bottom:
 ### S11 · Live
 
 ```
-PR: You're live on Press Run ✅ Bookers in NYC can now find {series}.
+PR: You're live as a Press Stop ✅ Bookers in NYC can now find {series}.
 
 PR: When a request comes in, I'll text you here with who, when and the budget. Just reply YES with a time, NO to pass, or ask a question and I'll pass it on.
 
@@ -206,28 +207,28 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 
 ---
 
-## 4. Messages Press Run sends a live stop
+## 4. Messages Press Run sends a live Press Stop
 
 | When | Message |
 | --- | --- |
 | New request | `PR: 📩 New booking request #{id}` + booker name, niche, handles, dates, budget. `Reply YES with a day and time, NO to pass, or type a question and I'll pass it on.` |
 | No reply in 12 hours | `PR: Nova Reign's team is waiting on #{id}. YES with a time, or NO?` |
-| No reply in 24 hours | The request is marked expired. The booker is told and offered a different stop. |
+| No reply in 24 hours | The request is marked expired. The booker is told and offered a different Press Stop. |
 | Booking confirmed | `PR: Booked ✅ {booker} · {date} {time} · {place}. I'll send reminders.` |
 | Night before / 1 hour before | Same as for bookers, with the talent's name. |
 | After the shoot | `PR: Once it's posted, send me the link and I'll pass it to {booker} for their recap.` |
 
 ---
 
-## 5. Data saved per stop
+## 5. Data saved per Press Stop
 
-`series_name`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `founding_no`, `owner_account_id`.
+`series_name`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
 
 ---
 
 ## 6. Courtney's own series (pilot, M2)
 
-The four pilot stops go through this exact script from Courtney's phone, one show at a time ("add another show"): Music for a Minute, Motivation for a Minute, Movies for a Minute, Penny for Your Thoughts. Doing it for real is the M2 task "List my series as the first press stops".
+The four pilot Press Stops go through this exact script from Courtney's phone, one show at a time ("add another show"): Music for a Minute, Motivation for a Minute, Movies for a Minute, Penny for Your Thoughts. Doing it for real is the M2 task "List my series as the first Press Stops".
 
 ## 7. Open items for Courtney
 

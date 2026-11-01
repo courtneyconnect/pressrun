@@ -67,6 +67,20 @@ Doc: https://claude.ai/artifact/TyNQ9MsuUGzFaS7RRq1w6c
 - Log each milestone moment in the Content Log: date, title, where the screenshots are, and a post angle. Save screenshots in `content-log/<date>-<session>/`.
 - Add each new step to the process notes, which is this file.
 
+## Step 6 · Apply feedback everywhere at once (2026-11-01)
+
+Founder feedback usually touches every deliverable. Change all of them in one pass so they never disagree:
+- **Scripts** (the source of truth): bump the version line.
+- **Mockup:** re-run the click-through test, then republish to the same link.
+- **Build plan doc:** update the text and the diagram labels.
+
+Feedback in this round:
+- **Shorter welcome text.**
+- **Always say "Press Stop(s)" in user-facing copy** (branding). Internal notes and table names can keep the short "stop".
+- **Accept typed @handles or pasted profile links** wherever a handle is asked for. One shared rule in the script covers every question that asks for a handle.
+
+If feedback conflicts with an earlier decision (here, the fees promise in the welcome vs. the business plan's pricing), make the requested change and flag the conflict. Don't quietly rewrite the plan.
+
 ## Rules that kept this session safe
 
 - **Draft only.** Nothing signed up for, paid for or sent. Questions for vendors are written as drafts for the founder to send.

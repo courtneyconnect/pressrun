@@ -256,7 +256,7 @@ function threadEl(who){ return $("t-" + who); }
 function scrollDown(who){ const t = threadEl(who || S.active); requestAnimationFrame(() => { t.scrollTop = t.scrollHeight; }); }
 function setOwner(who){
   $("ownerPill").dataset.who = who;
-  $("ownerText").textContent = who === "booker" ? "Dre's phone · Booker" : "Courtney's phone · Press stop";
+  $("ownerText").textContent = who === "booker" ? "Dre's phone · Booker" : "Courtney's phone · Press Stop";
 }
 function showThread(who, animate){
   const other = who === "booker" ? "stop" : "booker";
@@ -312,7 +312,7 @@ function sheetHTML(){
   const rows = p.map(n => { const s = STOPS[n];
     return `<li><div class="day">${s.day}<small>${s.date}<br>${s.time}</small></div><div><b>${esc(s.name)}</b><span>${esc(s.talent)} · ${esc(s.place)}</span><span>On site: Courtney · arrive 15 min early</span></div></li>`; }).join("");
   const dates = p.map(n => STOPS[n].date).sort();
-  return `<div class="sheet" role="img" aria-label="Run Sheet"><div class="top"><span class="k">PRESS RUN · RUN SHEET</span><h3>Nova Reign<br>&amp; Jay Mo</h3><span>New York · ${p.length} stop${p.length>1?"s":""} · Nov 12–15</span></div><ol>${rows}</ol><div class="foot">Reminders: night before 8 PM · 1 hour before<br>Reply “change” or “late” anytime</div></div>`;
+  return `<div class="sheet" role="img" aria-label="Run Sheet"><div class="top"><span class="k">PRESS RUN · RUN SHEET</span><h3>Nova Reign<br>&amp; Jay Mo</h3><span>New York · ${p.length} Press Stop${p.length>1?"s":""} · Nov 12–15</span></div><ol>${rows}</ol><div class="foot">Reminders: night before 8 PM · 1 hour before<br>Reply “change” or “late” anytime</div></div>`;
 }
 
 /* ---------- Press Run "typing" ---------- */
@@ -367,23 +367,24 @@ const CHAPTERS = [
     {sys:"<b>Today</b> 7:02 PM"},
     N("Dre tapped “Text Press Run” on the website. Messages opened with this already typed, sign-up code included, so Dre texts first."),
     {me:"Hey Press Run 👋 Sign me up. Code PR-7Q4K"},
-    {pr:"Welcome to Press Run, Dre. You're Founding Member #0042 🎟️ Booking is free while we're in beta, and Founding Members keep $0 fees on free stops for 12 months after payments start."},
-    {pr:"A few quick questions so I send you the right stops. Takes about 2 minutes."},
+    {pr:"Welcome to Press Run, Dre. You're Member #0042 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform."},
+    {pr:"A few quick questions so I send you the right Press Stops. Takes about 2 minutes."},
     {pr:"First: who are you booking for?\n1 Yourself (artist, actor, creator)\n2 Artists or talent you manage\n3 A label, agency or PR firm\n4 A brand"},
     {me:"2"},
-    {pr:"Who's on your roster? Send each artist's name and main handle, one per line. You can add more later."},
-    {me:"Nova Reign @novareign\nJay Mo @jaymo.nyc"},
+    {pr:"Who's on your roster? Send each artist's name with their @handle or a link to their profile, one per line. You can add more later."},
+    {me:"Nova Reign @novareign\nJay Mo tiktok.com/@jaymo.nyc"},
+    N("Handles can be typed or pasted as profile links. Press Run reads the platform and handle from a link (here: TikTok, @jaymo.nyc) and keeps the link too."),
     {pr:"What genre or niche? A few words is perfect. If it's different per artist, put it next to each name."},
     {me:"Nova is R&B, Jay is drill"},
     {pr:"What do you usually want a press run to do?\n1 Push a new release\n2 Promote a show, tour or screening\n3 Grow followers\n4 Press for a film or series\n5 Something else"},
     {me:"1, Nova's single drops Nov 14"},
     N("The release date is saved. Press Run brings it back at the end of onboarding."),
-    {pr:"What do you usually spend on a full run? (Booking through Press Run is free right now. This just helps me match you.)\n1 Free stops only\n2 Under $1k\n3 $1k–$5k\n4 $5k+\n5 Depends on the run"},
+    {pr:"What do you usually spend on a full run? (Booking through Press Run is free right now. This just helps me match you.)\n1 Free Press Stops only\n2 Under $1k\n3 $1k–$5k\n4 $5k+\n5 Depends on the run"},
     {me:"depends lol"},
     N("Unclear answer. Press Run asks once more with simpler choices. If it's still unclear, it saves the answer as written and moves on."),
     {pr:"Ballpark is fine. Closer to free, under $1k, or more?"},
     {me:"1-5k usually"},
-    {pr:"Any stops you'd never do? e.g. “no prank shows”, “nothing explicit”, “no mornings”. Or reply “none”."},
+    {pr:"Any Press Stops you'd never do? e.g. “no prank shows”, “nothing explicit”, “no mornings”. Or reply “none”."},
     {me:"no prank shows. nothing before 11"},
     {pr:"Last one: where are you based? We're live in New York first, with more cities soon."},
     {me:"Brooklyn"},
@@ -391,25 +392,25 @@ const CHAPTERS = [
     {pr:"You're set, Dre ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Runs are usually for: new releases\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
     {vcard:true},
     {pr:"Save me so my texts show up as Press Run."},
-    {pr:"Quick one: do you also run a show, series or podcast people could book? Reply YES to list it too. Same thread, same account."},
+    {pr:"Quick one: do you also run a show, series or podcast people could book? Reply YES to list it as a Press Stop too. Same thread, same account."},
     {me:"not yet"},
     {pr:"Here's how it works. Text me a run anytime, like:\n“NYC Nov 12–15, 2 artists, $5k budget, give me my options”"},
-    {pr:"I'll send numbered stops, each with a card and a short clip. Pick by replying (“1 and 3”) or by reacting:\n❤️ 👍 🔥 💯 save it\n👎 drop it and show fewer like it\n❓ tell me more"},
+    {pr:"I'll send numbered Press Stops, each with a card and a short clip. Pick by replying (“1 and 3”) or by reacting:\n❤️ 👍 🔥 💯 save it\n👎 drop it and show fewer like it\n❓ tell me more"},
     {pr:"You mentioned Nova's single on Nov 14. Want me to pull options for that week? Reply YES."},
     {end:true}
   ]},
-  {title:"Press stop signs up", sub:"Courtney lists Music for a Minute", who:"stop", build:() => { stopPreviewPrice = "Free"; return [
+  {title:"Press Stop signs up", sub:"Courtney lists Music for a Minute", who:"stop", build:() => { stopPreviewPrice = "Free"; return [
     {sys:"<b>Today</b> 9:15 AM"},
-    N("Courtney lists her own series from her own phone. One account can be a stop and a booker."),
+    N("Courtney lists her own series from her own phone. One account can be a Press Stop and a booker."),
     {me:"Hey Press Run 👋 List my show. Code PR-2M8D"},
-    {pr:"Welcome to Press Run, Courtney. You're Founding Member #0001 🎟️ Listing is free."},
-    {pr:"I'll ask a few questions, then I'll make your Press Run card and a short sample clip. That's what bookers see. Takes about 5 minutes."},
+    {pr:"Welcome to Press Run, Courtney. You're Member #0001 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform."},
+    {pr:"I'll ask a few questions, then I'll make your Press Stop card and a short sample clip. That's what bookers see. Takes about 5 minutes."},
     {pr:"What's your show called, and what's the format?\n1 Street interview / street series\n2 Podcast\n3 Radio\n4 Livestream\n5 YouTube show\n6 Photo or video shoot\n7 Something else"},
     {me:"I have 4 series lol. Music for a Minute is the main one, street interviews"},
     {pr:"Let's do one at a time, starting with Music for a Minute. Text “add another show” when we're done to list the next one."},
-    {pr:"Where does Music for a Minute post, and roughly how many followers on each? e.g. “IG 85k, TikTok 210k, YouTube 12k”"},
-    {me:"IG 48k, TikTok 112k, YouTube 9k"},
-    N("Follower counts are self-reported and saved as unverified. Courtney spot-checks the profiles before a stop goes live. The card shows the rounded total."),
+    {pr:"Where does Music for a Minute post, and roughly how many followers on each? Type the @handle or paste the profile link, e.g. “IG @musicforaminute 85k” or “tiktok.com/@musicforaminute 210k”"},
+    {me:"IG @musicforaminute 48k\ntiktok.com/@musicforaminute 112k\nYouTube @musicforaminute 9k"},
+    N("Follower counts are self-reported and saved as unverified. Courtney spot-checks the profiles before a Press Stop goes live. The card shows the rounded total."),
     {pr:"Where do you film, and when? e.g. “Manhattan, mostly SoHo, Thu–Sat afternoons”"},
     {pr:"And which dates are open in the next 4 weeks? e.g. “Nov 12, 14, 15” or “any Thu or Sat”"},
     {me:"Washington Sq + SoHo, Thu–Sat afternoons. Open Nov 12, 13, 15"},
@@ -438,10 +439,10 @@ const CHAPTERS = [
   {title:"Ask for a run and pick", sub:"Numbered cards, clips, reply or react", who:"booker", build:() => [
     {sys:"<b>Mon, Nov 3</b> 11:20 AM"},
     {me:"NYC Nov 12–15, 2 artists, $5k budget, give me my options"},
-    {pr:"On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling stops now…"},
-    N("The request is read into city, dates, artists and budget. Press Run matches live stops with open dates in that window and skips Dre's hard no's (no prank shows, nothing before 11)."),
+    {pr:"On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling Press Stops now…"},
+    N("The request is read into city, dates, artists and budget. Press Run matches live Press Stops with open dates in that window and skips Dre's hard no's (no prank shows, nothing before 11)."),
     {card:1},{clip:1},{card:2},{clip:2},{card:3},{clip:3},{card:4},{clip:4},
-    {pr:"That's 4 stops, $0–$800 total. Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
+    {pr:"That's 4 Press Stops, $0–$800 total. Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
     {wait:"pick"}
   ]},
   {title:"Messages passed between both sides", sub:"Press Run relays, numbers stay private", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null;
@@ -473,7 +474,7 @@ const CHAPTERS = [
     ...(s2 ? [{pr:`${s2.name} confirmed too ✅ ${s2.day} ${s2.date}, ${s2.time}.`}] : []),
     {pr:"Here's your Run Sheet 👇"},
     {sheet:true},
-    {pr:`Your run: ${p.length} stop${p.length>1?"s":""}. I'll text call times the night before and 1 hour before each stop. Reply “change” if anything moves.`},
+    {pr:`Your run: ${p.length} Press Stop${p.length>1?"s":""}. I'll text call times the night before and 1 hour before each one. Reply “change” if anything moves.`},
     {sys:`<b>Night before</b> 8:00 PM`},
     {pr:`Tomorrow: ${s1.name} at ${s1.time}, ${s1.place}. Contact on site: Courtney. Reply “late” if you're running behind.`},
     {sys:`<b>${s1.day}, ${s1.date}</b> ${s1.pre}`},
@@ -486,7 +487,7 @@ const CHAPTERS = [
     {sys:"<b>2 days later</b>"},
     {pr:`How was ${s1.name}? Reply 1–5. (Ratings only count Press Run bookings.)`},
     {me:"5"},
-    {pr:`${s1.name} posted 🎬 12.4K views so far. I'll send your full recap when every stop is live.`},
+    {pr:`${s1.name} posted 🎬 12.4K views so far. I'll send your full recap when every Press Stop has posted.`},
     {end:true}
   ];}}
 ];
@@ -538,7 +539,7 @@ function approveMode(run){
       if (S.mode !== "approve") return;
       S.mode = null; setChips(null);
       if (!viaReact) { sendMine("Looks good"); await sleep(300); }
-      await prSay(S.active, {pr:"You're live on Press Run ✅ Bookers in NYC can now find Music for a Minute."}, run);
+      await prSay(S.active, {pr:"You're live as a Press Stop ✅ Bookers in NYC can now find Music for a Minute."}, run);
       await prSay(S.active, {pr:"When a request comes in, I'll text you here with who, when and the budget. Reply YES with a time, NO to pass, or ask a question and I'll pass it on."}, run);
       await prSay(S.active, {pr:"Want to list Motivation for a Minute next? Text “add another show”."}, run);
       if (run === S.run) endCap();
@@ -575,7 +576,7 @@ function pickMode(run){
       if (!picks.length) { sendMine("ask them"); say("Who should I ask? Reply with numbers (“1 and 3”) or ❤️ a card first."); return; }
       S.picks = picks; go(3);
     }},
-    {label:"cheaper", act: () => { sendMine("cheaper"); say("All of these are free except 4 (Movies for a Minute, $150–$300). Want me to drop 4 and look for more free stops?"); }},
+    {label:"cheaper", act: () => { sendMine("cheaper"); say("All of these are free except 4 (Movies for a Minute, $150–$300). Want me to drop 4 and look for more free Press Stops?"); }},
     {label:"who's free Thursday?", act: () => { sendMine("who's free Thursday?"); say("Thursday Nov 13: 1 Music for a Minute and 3 Motivation for a Minute."); }},
   ], "Try it: tap a card (or long-press a clip) to react, or tap a reply");
 }

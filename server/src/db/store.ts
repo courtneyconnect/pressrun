@@ -23,6 +23,7 @@ export interface Job {
   kind: string;
   payload: Record<string, unknown>;
   attempts: number;
+  runAfter: string;
 }
 
 export interface StoredMessage {
@@ -267,11 +268,11 @@ export class Store {
 
   /** Takes up to `limit` due jobs and marks them running. */
   async claimJobs(now: Date, limit = 5): Promise<Job[]> {
-    const rows = await this.db`SELECT id, kind, payload, attempts FROM jobs WHERE status = ${"queued"} AND run_after <= ${now.toISOString()} ORDER BY created_at LIMIT ${limit}`;
+    const rows = await this.db`SELECT id, kind, payload, attempts, run_after FROM jobs WHERE status = ${"queued"} AND run_after <= ${now.toISOString()} ORDER BY run_after, created_at LIMIT ${limit}`;
     const jobs: Job[] = [];
     for (const r of rows) {
       const claimed = await this.db`UPDATE jobs SET status = ${"running"}, attempts = attempts + 1 WHERE id = ${r.id} AND status = ${"queued"} RETURNING id`;
-      if (claimed.length) jobs.push({ id: r.id, kind: r.kind, payload: JSON.parse(r.payload), attempts: Number(r.attempts) + 1 });
+      if (claimed.length) jobs.push({ id: r.id, kind: r.kind, payload: JSON.parse(r.payload), attempts: Number(r.attempts) + 1, runAfter: r.run_after });
     }
     return jobs;
   }

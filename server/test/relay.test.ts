@@ -70,7 +70,8 @@ async function outCount(phone: string) {
   const a = (await store.accountByPhone(phone))!;
   return (await store.messagesFor(a.id)).filter(m => m.direction === "out").length;
 }
-const jobs = () => runJobs({ store, provider, files, clock: () => now });
+/** Runs every due job, however many there are. */
+const jobs = async () => { while (await runJobs({ store, provider, files, clock: () => now })); };
 
 /** Everything Press Run sent a phone since the last call (or since the start). */
 const seen = new Map<string, number>();
@@ -252,5 +253,85 @@ describe("R5: Run Sheet and reminders", () => {
     now = new Date("2026-11-14T17:00:30Z"); // 1 hour before 1pm
     await jobs();
     expect(await inbox(BOOKER)).toEqual(["Courtney from Penny for Your Thoughts in 1 hour 📍 our studio in Bed-Stuy"]);
+  });
+});
+
+describe("After the shoot: edit review, rating, posted link, views, recap", () => {
+  test("the whole loop for one Press Stop", async () => {
+    mfm.collab = "yes";
+    await store.saveStop(mfm);
+    await askTwo();
+    await say(COURTNEY, "YES Fri Nov 13, 2:30pm, Washington Square Park");
+    await say(BOOKER, "lock it");
+    await say(TEAMMATE, "no, sorry");
+    await jobs();
+    await inbox(BOOKER); await inbox(COURTNEY);
+
+    // 6pm New York on the shoot day.
+    now = new Date("2026-11-13T23:00:30Z");
+    await jobs();
+    expect(await inbox(COURTNEY)).toEqual(["Great shoot today 🎬 When the edit's ready, send the video here. I'll get Nova Reign's team to OK it before it goes live."]);
+
+    // The edit, a 👎, the change, a second version, ❤️.
+    now = new Date("2026-11-14T16:00:00Z");
+    expect(await say(COURTNEY, "", { media: [{ kind: "video", url: "https://files.test/edit-v1.mp4" }] })).toBe("Got it ✅ Sending it to Nova Reign's team for their OK.");
+    expect(await inbox(BOOKER)).toEqual(["Courtney from Music for a Minute sent the edit for your OK 👇", "[video]", "❤️ it to approve, or reply with changes and I'll pass them on."]);
+    const edit = async () => (await store.messagesFor(bookerId)).filter(m => m.kind === "video").pop()!.id;
+    expect(await say(BOOKER, "", { reaction: { emoji: "👎", targetProviderId: await edit(), removed: false } })).toBe("What should Courtney change?");
+    expect(await say(BOOKER, "Can you trim the first 5 seconds?")).toBe("Sent to Courtney from Music for a Minute ✅");
+    expect(await inbox(COURTNEY)).toEqual(["💬 Nova Reign's team: Can you trim the first 5 seconds?", "Send the new version here when it's ready."]);
+    await say(COURTNEY, "", { media: [{ kind: "video", url: "https://files.test/edit-v2.mp4" }] });
+    await inbox(BOOKER);
+    expect(await say(BOOKER, "", { reaction: { emoji: "❤️", targetProviderId: await edit(), removed: false } })).toBe("Approved ✅ I'll let Courtney know they can post.");
+    expect(await inbox(COURTNEY)).toEqual([
+      "Approved ✅ Nova Reign's team loves it. Post when you're ready, then drop the live link here.",
+      "Remember to add Nova Reign (@novareign) as a collaborator so it lands on their page too 🙌",
+      "And feel free to tag @pressrun too if you'd like.",
+    ]);
+
+    // 48 hours after the shoot: the rating.
+    now = new Date("2026-11-15T19:31:00Z");
+    await jobs();
+    expect(await inbox(BOOKER)).toEqual(["How was your shoot with Courtney from Music for a Minute? Reply 1–5. (Ratings only count Press Run bookings.)"]);
+    expect(await say(BOOKER, "5")).toBe("Thanks 🙏 Saved.");
+    expect((await store.conversationsFor(bookerId))[0]!.rating).toBe(5);
+
+    // The live link, then views a week later, then the recap.
+    now = new Date("2026-11-16T15:00:00Z");
+    expect(await say(COURTNEY, "it's up! https://www.instagram.com/reel/abc123/")).toBe("Got it ✅ Passing it on. I'll check the views again in 7 days.\nInstagram keeps views private. Mind sending a screenshot of the insights in 7 days?");
+    expect(await inbox(BOOKER)).toEqual(["Courtney from Music for a Minute posted 🎬", "[link https://www.instagram.com/reel/abc123/]"]);
+    now = new Date("2026-11-23T15:01:00Z");
+    await jobs();
+    expect(await inbox(COURTNEY)).toEqual(["It's been a week since the Nova Reign post went up 📈 How many views is it at? A number or a screenshot of the insights works."]);
+    expect(await say(COURTNEY, "48.2k")).toBe("Thanks ✅ Added to the recap.");
+    await jobs();
+    expect(await inbox(BOOKER)).toEqual([
+      "Every Press Stop has posted 🎉 Here's your recap 👇",
+      "[image Recap · Nova Reign · NYC Nov 13]",
+      "48.2K views across 1 post. Want to plan the next run? Text me dates anytime.",
+    ]);
+    // Once posted, the conversation is closed: a new text is a normal booker text again.
+    expect(await say(BOOKER, "thanks!")).toContain("");
+    expect(await inbox(COURTNEY)).toEqual([]);
+  });
+
+  test("no edit: nudges at 3 and 7 days, then flagged; recap waits for 14 days", async () => {
+    await askTwo();
+    await say(COURTNEY, "YES Fri Nov 13, 2:30pm, Washington Square Park");
+    await say(BOOKER, "lock it");
+    await say(TEAMMATE, "no");
+    now = new Date("2026-11-13T23:00:30Z");
+    await jobs();
+    await inbox(COURTNEY);
+    now = new Date("2026-11-16T23:01:00Z");
+    await jobs();
+    expect(await inbox(COURTNEY)).toEqual(["How's the Nova Reign edit coming? Send it here when it's ready."]);
+    now = new Date("2026-11-20T23:01:00Z");
+    await jobs();
+    expect(await inbox(COURTNEY)).toEqual(["Last check-in on the Nova Reign edit 🙏 Send it here when it's ready, or tell me if something came up."]);
+    expect((await store.accountByPhone(COURTNEY))!.needsReview.map(r => r.text)).toContain("No edit 7 days after the shoot");
+    now = new Date("2026-11-27T20:00:00Z");
+    await jobs();
+    expect((await store.accountById(bookerId))!.needsReview.map(r => r.text)).toContain("Nothing posted 14 days after the last shoot");
   });
 });

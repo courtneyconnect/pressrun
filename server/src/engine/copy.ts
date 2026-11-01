@@ -262,3 +262,37 @@ export const REMIND_NIGHT_STOP = (talent: string, time: string, place: string) =
 export const REMIND_HOUR_BOOKER = (who: string, place: string) => t(`${who} in 1 hour 📍 ${place}`);
 export const REMIND_HOUR_STOP = (talent: string, place: string) => t(`${talent} in 1 hour 📍 ${place}`);
 export const LATE_TOLD = (who: string) => t(`Told ${who}. You're good 👍`);
+
+// ---------- After the shoot (booker script section 4, Press Stop script section 4) ----------
+
+export const WRAP_STOP = (talent: string) => t(`Great shoot today 🎬 When the edit's ready, send the video here. I'll get ${talent}'s team to OK it before it goes live.`);
+export const EDIT_NUDGE_3D = (talent: string) => t(`How's the ${talent} edit coming? Send it here when it's ready.`);
+export const EDIT_NUDGE_7D = (talent: string) => t(`Last check-in on the ${talent} edit 🙏 Send it here when it's ready, or tell me if something came up.`);
+export const EDIT_GOT = (talent: string) => t(`Got it ✅ Sending it to ${talent}'s team for their OK.`);
+export const EDIT_TO_BOOKER = (who: string) => t(`${who} sent the edit for your OK 👇`);
+export const EDIT_HOW = t("❤️ it to approve, or reply with changes and I'll pass them on.");
+export const EDIT_APPROVED_BOOKER = (creator: string) => t(`Approved ✅ I'll let ${creator} know they can post.`);
+export const EDIT_APPROVED_STOP = (talent: string) => t(`Approved ✅ ${talent}'s team loves it. Post when you're ready, then drop the live link here.`);
+export const COLLAB_REMIND = (talent: string, handle?: string) => t(`Remember to add ${talent}${handle ? ` (${handle})` : ""} as a collaborator so it lands on their page too 🙌`);
+export const COLLAB_YES = t("And feel free to tag @pressrun too if you'd like.");
+export const COLLAB_ASK = t("Want to add @pressrun as a collaborator too? Totally optional.");
+export const EDIT_WHAT_CHANGE = (creator: string) => t(`What should ${creator} change?`);
+export const EDIT_SEND_NEW = t("Send the new version here when it's ready.");
+export const EDIT_NUDGE_BOOKER = (creator: string) => t(`${creator} is waiting on your OK for the edit 👆 ❤️ it to approve, or reply with changes.`);
+export const POST_GOT = t("Got it ✅ Passing it on. I'll check the views again in 7 days.");
+export const POST_IG = t("Instagram keeps views private. Mind sending a screenshot of the insights in 7 days?");
+export const POSTED_BOOKER = (who: string, views?: number) => t(views ? `${who} posted 🎬 ${fmtViews(views)} views so far.` : `${who} posted 🎬`);
+export const VIEWS_ASK = (talent: string) => t(`It's been a week since the ${talent} post went up 📈 How many views is it at? A number or a screenshot of the insights works.`);
+export const VIEWS_THANKS = t("Thanks ✅ Added to the recap.");
+export const RATE_ASK = (who: string) => t(`How was your shoot with ${who}? Reply 1–5. (Ratings only count Press Run bookings.)`);
+export const RATE_THANKS = t("Thanks 🙏 Saved.");
+export const RECAP_INTRO = t("Every Press Stop has posted 🎉 Here's your recap 👇");
+export const RECAP_INTRO_SO_FAR = t("Here's your recap so far 👇");
+export const RECAP_TOTAL = (total: number, n: number) => t(`${fmtViews(total)} views across ${n} post${n === 1 ? "" : "s"}. Want to plan the next run? Text me dates anytime.`);
+
+/** 1234 → "1,234"; 48200 → "48.2K"; 1250000 → "1.25M" */
+export function fmtViews(n: number): string {
+  if (n >= 1e6) return `${+(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e4) return `${+(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString("en-US");
+}

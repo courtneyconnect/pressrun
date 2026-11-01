@@ -10,6 +10,7 @@ import type { Account, Conversation, Out, PressStop, RunRequest, Talent } from "
 import { andList } from "./match";
 import { answersShortlist, whoText } from "./picking";
 import { dateInWindow, fmtWhen, nyToUtc, parseTime, placeFrom } from "./time";
+import { bookerOnEdit, editFromStop, postedFromStop, postLinkIn, queueAfterShoot, ratingFromBooker, shootDone, viewsFromStop, type Labels } from "./followup";
 
 type Side = "booker" | "stop";
 type Store = Ctx["store"];
@@ -103,7 +104,22 @@ export async function askShortlisted(ctx: Ctx, req: RunRequest): Promise<Out[]> 
 /** Booker texts that are about options (numbers, "cheaper"…), which picking handles. */
 const OPTION_COMMAND = /^\s*(\d+(\s*(,|and|&)\s*\d+)*|ask them|book them|cheaper|show (me )?all|more|full episode.*|watch \d+|more like.*|who'?s free.*|only .*|under .*)\s*$/i;
 
-const isLive = (c: Conversation) => c.status === "asked" || c.status === "talking" || c.status === "booked";
+/** Labels the after-shoot messages use. */
+const labels = (store: Store): Labels => ({
+  stop: c => stopLabel(store, c),
+  booker: c => bookerLabel(store, c),
+  talent: c => talentNames(store, c),
+  creator: async c => (await store.stop(c.stopId))?.creatorNames.join(" & ") || "the creator",
+  handle: async c => {
+    const h = (await store.talentFor(c.bookerId)).find(t => c.talentIds.includes(t.id))?.handles.find(x => x.handle)?.handle;
+    return h && (h.startsWith("@") ? h : `@${h}`);
+  },
+});
+
+/** Booked conversations stay open for messages until the post goes live. */
+const isOpen = (c: Conversation) => c.status === "asked" || c.status === "talking" || (c.status === "booked" && c.post?.stage !== "posted");
+
+const NEW_RUN = /\b(give me (my )?options|plan a (press )?run|book a (press )?run|new run|press run for)\b/i;
 
 /** Texts about an ongoing conversation. Returns null when it isn't one. */
 export async function handleRelay(ctx: Ctx): Promise<Out[] | null> {
@@ -111,16 +127,45 @@ export async function handleRelay(ctx: Ctx): Promise<Out[] | null> {
   const all = await ctx.store.conversationsFor(a.id);
   if (!all.length) return null;
   if (/^share$/.test(norm(ctx.text))) return share(ctx, all);
-  const open = all.filter(isLive);
-  if (!open.length || ctx.input.reaction || !ctx.text) return null;
-
   const sideOf = (c: Conversation): Side => (c.contactId === a.id ? "stop" : "booker");
-  // Booker commands about options (numbers, "cheaper"…) belong to picking.
-  if (open.every(c => sideOf(c) === "booker") && (OPTION_COMMAND.test(ctx.text) || (isYes(ctx.text) && (await answersShortlist(ctx))))) return null;
+  const L = labels(ctx.store);
+
+  // After the shoot: ratings, the edit, the live link and views.
+  if (!ctx.input.reaction) {
+    const rated = await ratingFromBooker(ctx, all);
+    if (rated) return rated;
+  }
+  if (ctx.input.reaction) {
+    const target = await ctx.store.messageById(ctx.input.reaction.targetProviderId);
+    const ref = String((target?.data as { ref?: string } | null)?.ref ?? "").match(/^edit:([^:]+):(\d+)$/);
+    const c = ref && all.find(x => x.id === ref[1] && sideOf(x) === "booker");
+    return c ? bookerOnEdit(ctx, c, L, w => pass(ctx, c, "booker", w)) : null;
+  }
+  const shot = all.filter(c => sideOf(c) === "stop" && shootDone(c, ctx.now));
+  if (shot.length) {
+    const views = shot.filter(c => c.post?.viewsAskedAt && c.post.views === undefined).sort((x, y) => y.post!.viewsAskedAt!.localeCompare(x.post!.viewsAskedAt!))[0];
+    const v = views && (await viewsFromStop(ctx, views));
+    if (v) return v;
+    const notPosted = shot.filter(c => c.post?.stage !== "posted");
+    const video = ctx.input.media?.find(m => m.kind === "video");
+    const link = postLinkIn(ctx.text);
+    if ((video || link) && notPosted.length) {
+      const picked = notPosted.length === 1 ? { c: notPosted[0]! } : await pickConversation(ctx, notPosted, sideOf);
+      if ("ask" in picked) return [picked.ask];
+      return video ? editFromStop(ctx, picked.c, video.url, L) : postedFromStop(ctx, picked.c, link!, L);
+    }
+  }
+
+  const open = all.filter(isOpen);
+  if (!open.length || !ctx.text) return null;
+  // Booker commands about options (numbers, "cheaper"…) and new runs belong to picking.
+  if (open.every(c => sideOf(c) === "booker") && (OPTION_COMMAND.test(ctx.text) || NEW_RUN.test(ctx.text) || (isYes(ctx.text) && (await answersShortlist(ctx))))) return null;
 
   const picked = await pickConversation(ctx, open, sideOf);
   if ("ask" in picked) return [picked.ask];
-  return sideOf(picked.c) === "stop" ? fromStop(ctx, picked.c) : fromBooker(ctx, picked.c);
+  const c = picked.c;
+  if (sideOf(c) === "stop") return fromStop(ctx, c);
+  return (await bookerOnEdit(ctx, c, L, w => pass(ctx, c, "booker", w))) ?? fromBooker(ctx, c);
 }
 
 /** Which conversation a text is about: the bubble it replies to, a #PR code, a name, the only one, or the latest. */
@@ -251,6 +296,7 @@ async function book(ctx: Ctx, c: Conversation): Promise<Out[]> {
   const nightBefore = nyToUtc(dayBefore, "20:00");
   if (nightBefore.getTime() > ctx.now.getTime()) await ctx.store.enqueue("reminder", { convId: c.id, kind: "night", shootAt: c.shootAt }, nightBefore);
   if (shoot - 36e5 > ctx.now.getTime()) await ctx.store.enqueue("reminder", { convId: c.id, kind: "hour", shootAt: c.shootAt }, new Date(shoot - 36e5));
+  await queueAfterShoot(ctx.store, c);
   const req = (await ctx.store.request(c.requestId))!;
   const waiting = (await ctx.store.conversationsForRequest(req.id)).some(x => x.id !== c.id && (x.status === "asked" || x.status === "talking"));
   const out: Out[] = [C.BOOKED_BOOKER(await stopLabel(ctx.store, c), when, place), ...(waiting && !rebook ? [C.RUNSHEET_SOON] : []), ...hiddenNote];

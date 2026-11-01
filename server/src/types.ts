@@ -139,6 +139,7 @@ export interface RunRequest {
   lastReactionAt?: string;
   /** When the Run Sheet went out (it goes again if a time changes). */
   runSheetSentAt?: string;
+  recapSentAt?: string;
   createdAt: string;
 }
 
@@ -160,6 +161,21 @@ export interface Conversation {
   hidden: { booker: string[]; stop: string[] };
   lastToBookerAt?: string;
   lastToStopAt?: string;
+  /** After the shoot: the edit for review, the live link and its views (section 4 of both scripts). */
+  post?: {
+    stage: "waiting_edit" | "in_review" | "approved" | "posted";
+    edits: string[];
+    /** The booker 👎'd the edit; their next text is the change. */
+    awaitingChange?: boolean;
+    reviewSentAt?: string;
+    postUrl?: string;
+    postedAt?: string;
+    views?: number;
+    viewsAskedAt?: string;
+    viewsScreenshot?: string;
+  };
+  rating?: number;
+  ratingAskedAt?: string;
   createdAt: string;
 }
 

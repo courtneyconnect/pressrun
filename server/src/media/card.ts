@@ -162,3 +162,33 @@ export async function renderRunSheet(title: string, subtitle: string, rows: RunS
       h("div", { height: 110, alignItems: "center", padding: "0 48px", borderTop: `3px dashed ${rule}`, fontFamily: "Mono", fontSize: 24, color: inkSoft, letterSpacing: 1 }, "REMINDERS COME THE NIGHT BEFORE AND 1 HOUR BEFORE")),
     W, H);
 }
+
+export interface RecapRow { series: string; creator: string; talent: string; platform: string; views?: number }
+
+const views = (n?: number) => n === undefined ? "—" : n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M` : n >= 1e4 ? `${+(n / 1e3).toFixed(1)}K` : n.toLocaleString("en-US");
+
+/** The recap: every post from the run with its views, and the total. Same look as the Run Sheet. */
+export async function renderRecap(title: string, subtitle: string, rows: RecapRow[], total: number): Promise<Uint8Array> {
+  const W = 1080, rowH = 132, headH = 260, totalH = 170;
+  const H = headH + rows.length * rowH + totalH;
+  const paper = "#F4F4F5", inkSoft = "#444", rule = "#DADADF";
+  const row = (r: RecapRow) =>
+    h("div", { height: rowH, alignItems: "center", gap: 32, padding: "0 48px", borderTop: `2px solid ${rule}` },
+      h("div", { flexDirection: "column", flexGrow: 1, gap: 4, minWidth: 0 },
+        h("div", { fontFamily: "Body", fontWeight: 600, fontSize: 36, color: COLORS.ink }, r.series),
+        h("div", { fontFamily: "Body", fontSize: 26, color: inkSoft }, `with ${r.creator} · ${r.talent}`)),
+      h("div", { flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0 },
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: 52, color: COLORS.ink }, views(r.views)),
+        h("div", { fontFamily: "Mono", fontSize: 22, color: COLORS.red, letterSpacing: 2 }, `${r.platform.toUpperCase()} VIEWS`)));
+  return toPng(
+    h("div", { width: W, height: H, flexDirection: "column", backgroundColor: paper },
+      h("div", { height: headH, flexDirection: "column", justifyContent: "center", gap: 10, padding: "0 48px", backgroundColor: COLORS.ink },
+        h("div", { fontFamily: "Mono", fontSize: 26, letterSpacing: 6, color: COLORS.red }, "PRESS RUN · RECAP"),
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: title.length > 22 ? 64 : 92, color: "#fff" }, title.toUpperCase()),
+        h("div", { fontFamily: "Body", fontSize: 30, color: "#BBB" }, subtitle)),
+      h("div", { flexDirection: "column" }, ...rows.map(row)),
+      h("div", { height: totalH, alignItems: "center", justifyContent: "space-between", padding: "0 48px", backgroundColor: COLORS.red },
+        h("div", { fontFamily: "Mono", fontSize: 28, letterSpacing: 4, color: "#fff" }, "TOTAL VIEWS"),
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: 96, color: "#fff" }, views(total)))),
+    W, H);
+}

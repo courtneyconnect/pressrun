@@ -6,7 +6,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Job, Store } from "./db/store";
 import * as C from "./engine/copy";
-import { renderCard, renderEndCard, renderList, renderRunSheet } from "./media/card";
+import { renderCard, renderEndCard, renderList, renderRecap, renderRunSheet } from "./media/card";
+import { platformOf } from "./run/followup";
 import { fetchSample, grabFrame, makeClip, SampleUnavailable } from "./media/clip";
 import type { FileStore } from "./media/files";
 import { logOut } from "./outbox";
@@ -42,6 +43,14 @@ export async function runJobs(deps: WorkerDeps): Promise<number> {
       else if (job.kind === "stop_calendar") await stopCalendar(deps, job);
       else if (job.kind === "reminder") await reminder(deps, job);
       else if (job.kind === "runsheet") await runSheet(deps, job, now);
+      else if (job.kind === "shoot_wrap") await shootWrap(deps, job, now);
+      else if (job.kind === "edit_nudge_stop") await editNudgeStop(deps, job);
+      else if (job.kind === "edit_nudge_booker") await editNudgeBooker(deps, job);
+      else if (job.kind === "edit_flag") await editFlag(deps, job, now);
+      else if (job.kind === "rate_ask") await rateAsk(deps, job, now);
+      else if (job.kind === "views_ask") await viewsAsk(deps, job, now);
+      else if (job.kind === "recap_due") await recapDue(deps, job, now);
+      else if (job.kind === "recap") await recap(deps, job, now);
       await deps.store.finishJob(job.id, "done");
     } catch (err) {
       await onFailure(deps, job, err, now);
@@ -292,6 +301,8 @@ async function stopCalendar(deps: WorkerDeps, job: Job): Promise<void> {
 /** The night before (8pm) and 1 hour before, to both sides. Skipped if the time changed since. */
 async function reminder(deps: WorkerDeps, job: Job): Promise<void> {
   const p = job.payload as { convId: string; kind: "night" | "hour"; shootAt: string };
+  // A reminder more than 30 minutes late (the server was down) would only confuse people.
+  if ((deps.clock?.() ?? new Date()).getTime() - Date.parse(job.runAfter) > 30 * 60_000) return;
   const x = await convAndPeople(deps, p.convId);
   if (!x || x.c.status !== "booked" || x.c.shootAt !== p.shootAt) return;
   const who = await stopLabel(deps.store, x.c);
@@ -337,5 +348,114 @@ async function runSheet(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
     C.RUNSHEET_TEXT(booked.length, range),
     { type: "file", url: icsUrl, name, mime: "text/calendar", ref: `runsheet:${req.id}` },
     C.RUNSHEET_CAL,
+  ]);
+}
+
+// ---------- After the shoot ----------
+
+const sameShoot = (c: Conversation, shootAt: string) => c.status === "booked" && c.shootAt === shootAt;
+
+/** 6pm on the shoot day: ask the Press Stop for the edit. */
+async function shootWrap(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const p = job.payload as { convId: string; shootAt: string };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || !sameShoot(x.c, p.shootAt)) return;
+  x.c.post ??= { stage: "waiting_edit", edits: [] };
+  await deps.store.saveConversation(x.c);
+  await deliver(deps, x.contact, [{ ...C.WRAP_STOP(await talentNames(deps.store, x.c)), ref: `conv:${x.c.id}` }]);
+  await deps.store.enqueue("edit_nudge_stop", { convId: x.c.id, day: 3 }, new Date(now.getTime() + 3 * 864e5));
+  await deps.store.enqueue("edit_nudge_stop", { convId: x.c.id, day: 7 }, new Date(now.getTime() + 7 * 864e5));
+  await deps.store.enqueue("recap_due", { requestId: x.c.requestId }, new Date(Date.parse(p.shootAt) + 14 * 864e5));
+}
+
+/** No edit 3 days and 7 days after the shoot. After the last nudge the thread is flagged for Courtney. */
+async function editNudgeStop(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { convId: string; day: 3 | 7 };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || x.c.status !== "booked" || x.c.post?.stage !== "waiting_edit") return;
+  const talent = await talentNames(deps.store, x.c);
+  await deliver(deps, x.contact, [{ ...(p.day === 3 ? C.EDIT_NUDGE_3D(talent) : C.EDIT_NUDGE_7D(talent)), ref: `conv:${x.c.id}` }]);
+  if (p.day === 7) {
+    x.contact.needsReview.push({ step: `edit:${x.c.code}`, text: "No edit 7 days after the shoot", at: new Date().toISOString() });
+    await deps.store.saveAccount(x.contact);
+  }
+}
+
+/** The booker hasn't OK'd the edit in 48 hours. */
+async function editNudgeBooker(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { convId: string; version: number };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || x.c.post?.stage !== "in_review" || x.c.post.edits.length !== p.version) return;
+  await deliver(deps, x.booker, [{ ...C.EDIT_NUDGE_BOOKER(x.stop.creatorNames.join(" & ") || "The creator"), ref: `conv:${x.c.id}` }]);
+}
+
+/** Still no answer at 72 hours: Courtney takes a look (silence doesn't count as approval yet). */
+async function editFlag(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const p = job.payload as { convId: string; version: number };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || x.c.post?.stage !== "in_review" || x.c.post.edits.length !== p.version) return;
+  x.booker.needsReview.push({ step: `edit:${x.c.code}`, text: "Edit not reviewed in 72 hours", at: now.toISOString() });
+  await deps.store.saveAccount(x.booker);
+}
+
+/** 48 hours after the shoot: the booker rates it 1–5. */
+async function rateAsk(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const p = job.payload as { convId: string; shootAt: string };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || !sameShoot(x.c, p.shootAt) || x.c.rating !== undefined) return;
+  x.c.ratingAskedAt = now.toISOString();
+  await deps.store.saveConversation(x.c);
+  await deliver(deps, x.booker, [C.RATE_ASK(await stopLabel(deps.store, x.c))]);
+}
+
+/** A week after posting: ask the creator for the view count. */
+async function viewsAsk(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const x = await convAndPeople(deps, (job.payload as { convId: string }).convId);
+  if (!x || x.c.post?.stage !== "posted" || x.c.post.views !== undefined) return;
+  x.c.post.viewsAskedAt = now.toISOString();
+  await deps.store.saveConversation(x.c);
+  await deliver(deps, x.contact, [{ ...C.VIEWS_ASK(await talentNames(deps.store, x.c)), ref: `conv:${x.c.id}` }]);
+}
+
+/** 14 days after the last shoot: send the recap with whatever has posted. */
+async function recapDue(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const req = await deps.store.request((job.payload as { requestId: string }).requestId);
+  if (!req || req.recapSentAt) return;
+  const booked = (await deps.store.conversationsForRequest(req.id)).filter(c => c.status === "booked" && c.shootAt);
+  const last = Math.max(...booked.map(c => Date.parse(c.shootAt!)));
+  if (!booked.length || last + 14 * 864e5 > now.getTime() + 60_000) return; // a later shoot has its own job
+  await recap(deps, { ...job, payload: { requestId: req.id, partial: true } }, now);
+}
+
+/** The recap image: each stop, its creator, the artist, the platform and views, plus the total. */
+async function recap(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const p = job.payload as { requestId: string; partial?: boolean };
+  const ctx = await requestAndBooker(deps, p.requestId);
+  if (!ctx || ctx.req.recapSentAt) return;
+  const { req, account } = ctx;
+  const all = (await deps.store.conversationsForRequest(req.id)).filter(c => c.status === "booked");
+  const posted = all.filter(c => c.post?.stage === "posted" && c.post.postUrl).sort((a, b) => a.shootAt!.localeCompare(b.shootAt!));
+  if (!posted.length) {
+    account.needsReview.push({ step: `recap:${req.id}`, text: "Nothing posted 14 days after the last shoot", at: now.toISOString() });
+    await deps.store.saveAccount(account);
+    return;
+  }
+  const rows = [];
+  for (const c of posted) {
+    const stop = (await deps.store.stop(c.stopId))!;
+    rows.push({ series: stop.seriesName ?? "Press Stop", creator: stop.creatorNames.join(" & ") || "the team", talent: await talentNames(deps.store, c), platform: platformOf(c.post!.postUrl!), views: c.post!.views });
+  }
+  const total = rows.reduce((sum, r) => sum + (r.views ?? 0), 0);
+  const forWho = andList([...new Set(rows.map(r => r.talent))]);
+  const range = dateRange(posted[0]!.proposal?.date, posted[posted.length - 1]!.proposal?.date);
+  const png = await renderRecap(forWho || "Your run", `NYC · ${range} · ${rows.length} post${rows.length === 1 ? "" : "s"}`, rows, total);
+  const url = await deps.files.put(`requests/${req.id}/recap-${now.getTime()}.png`, png, "image/png");
+  req.recapSentAt = now.toISOString();
+  await deps.store.saveRequest(req);
+  const everyone = posted.length === all.length;
+  await deliver(deps, account, [
+    everyone ? C.RECAP_INTRO : C.RECAP_INTRO_SO_FAR,
+    { type: "image", url, alt: `Recap · ${forWho} · NYC ${range}`, ref: `recap:${req.id}` },
+    C.RECAP_TOTAL(total, rows.length),
   ]);
 }

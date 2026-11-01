@@ -141,7 +141,7 @@ export class Store {
   async createStop(ownerId: string): Promise<PressStop> {
     const stop: PressStop = {
       id: id(), ownerId, status: "draft", creatorNames: [], formatsExtra: [], platforms: [], audienceVerified: false,
-      interests: [], general: false, remoteOk: false, openDates: [], flexible: false, samples: [], rightsConfirmed: false,
+      interests: [], general: false, remoteOk: false, openDates: [], flexible: false, samples: [], fullEpisodeLinks: [], rightsConfirmed: false,
     };
     const t = ordered();
     await this.db`INSERT INTO stops (id, owner_id, status, data, created_at, updated_at) VALUES (${stop.id}, ${ownerId}, ${stop.status}, ${JSON.stringify(stop)}, ${t}, ${t})`;

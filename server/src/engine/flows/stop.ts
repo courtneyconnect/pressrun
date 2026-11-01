@@ -237,12 +237,19 @@ export const stopSteps: Record<string, Step> = {
       }
       const parsed = parseHandles(ctx.text);
       const videos = (ctx.input.media ?? []).filter(m => m.kind === "video").map(m => ({ mediaUrl: m.url }));
-      const samples = [...parsed.posts.map(url => ({ url })), ...videos];
-      if (!samples.length && parsed.handles.length) return { stay: [C.S6_PROFILE_LINK] };
-      if (!samples.length) return { unclear: C.S6, giveUp: async () => ({ next: "S7" }) };
-      await edit(ctx, s => { s.samples = [...s.samples, ...samples].slice(0, 5); });
+      const skipLink = st.pending === "link" && /^(skip|no|none|nah|later|don'?t have one)\b/i.test(norm(ctx.text));
+      const s = await edit(ctx, s => {
+        s.samples = [...s.samples, ...videos].slice(0, 3);
+        s.fullEpisodeLinks = [...s.fullEpisodeLinks, ...parsed.posts].slice(0, 3);
+      });
+      if (!videos.length && !parsed.posts.length && !skipLink) {
+        if (parsed.handles.some(h => h.platform !== "website")) return { stay: [C.S6_PROFILE_LINK] };
+        return { unclear: C.S6, giveUp: async () => ({ next: "S7" }) };
+      }
+      if (!s.samples.length) return { stay: [C.S6_LINK_ONLY] };
+      if (!s.fullEpisodeLinks.length && !skipLink) { st.pending = "link"; return { stay: [C.S6_VIDEO_ONLY] }; }
       st.pending = "rights";
-      return { stay: [...(samples.length < 3 ? [C.S6_ONE_IS_ENOUGH] : []), C.S6_RIGHTS] };
+      return { stay: [C.S6_RIGHTS] };
     },
   },
 

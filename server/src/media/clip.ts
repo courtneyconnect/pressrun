@@ -20,32 +20,11 @@ export async function probe(path: string): Promise<{ duration: number; hasAudio:
   return { duration: Number(j.format?.duration ?? 0), hasAudio: (j.streams ?? []).some((s: { codec_type: string }) => s.codec_type === "audio") };
 }
 
-/** Loudness per second of audio (dB RMS), used to find the liveliest stretch. */
-async function loudnessPerSecond(path: string): Promise<number[]> {
-  const out = await run(["ffmpeg", "-hide_banner", "-nostats", "-i", path, "-vn", "-af",
-    "aresample=8000,asetnsamples=8000,astats=metadata=1:reset=1,ametadata=print:key=lavfi.astats.Overall.RMS_level", "-f", "null", "-"]);
-  return [...out.matchAll(/RMS_level=(-?[\d.]+|-inf)/g)].map(m => (m[1] === "-inf" ? -120 : Number(m[1])));
-}
-
-/** Skips the first 2 seconds, then takes the loudest 18-second window. */
-export async function pickStart(path: string, seconds = CLIP_SECONDS): Promise<number> {
-  const { duration, hasAudio } = await probe(path);
-  if (duration <= seconds + 2) return Math.max(0, Math.min(2, duration - seconds));
-  if (!hasAudio) return Math.round(duration * 0.2);
-  const loud = await loudnessPerSecond(path);
-  let best = 2, bestScore = -Infinity;
-  for (let s = 2; s + seconds <= Math.min(loud.length, Math.floor(duration)); s++) {
-    const score = loud.slice(s, s + seconds).reduce((a, b) => a + b, 0);
-    if (score > bestScore) { bestScore = score; best = s; }
-  }
-  return best;
-}
-
-/** Cuts, crops to 720×1280, evens out loudness, adds the end card. Returns MP4 bytes (H.264 + AAC). */
+/** The preview is the first 18 seconds unless the Press Stop asks for another start ("start at 0:40"). Crops to 720×1280, evens out loudness, adds the end card. Returns MP4 bytes (H.264 + AAC). */
 export async function makeClip(samplePath: string, endCardPng: Uint8Array, opts: { start?: number; seconds?: number } = {}): Promise<{ data: Uint8Array; start: number }> {
   const seconds = opts.seconds ?? CLIP_SECONDS;
   const { duration, hasAudio } = await probe(samplePath);
-  const start = Math.max(0, Math.min(opts.start ?? (await pickStart(samplePath, seconds)), Math.max(0, duration - 1)));
+  const start = Math.max(0, Math.min(opts.start ?? 0, Math.max(0, duration - 1)));
   const len = Math.min(seconds, Math.max(1, duration - start));
   const dir = await mkdtemp(join(tmpdir(), "pressrun-clip-"));
   try {
@@ -88,25 +67,18 @@ export class SampleUnavailable extends Error {
   constructor(public link: string) { super(`Couldn't open ${link}`); }
 }
 
-/** Gets a sample onto disk: an attached video (URL or local path), or a link via yt-dlp when it's installed. */
+/** Gets an attached video onto disk (a URL from the iMessage provider, or a local path in tests). */
 export async function fetchSample(sample: { url?: string; mediaUrl?: string }, dir: string): Promise<string> {
   const src = sample.mediaUrl ?? sample.url ?? "";
-  if (sample.mediaUrl) {
-    if (src.startsWith("file://") || src.startsWith("/")) return src.replace(/^file:\/\//, "");
-    const res = await fetch(src);
-    if (!res.ok) throw new SampleUnavailable(src);
-    const path = join(dir, `sample-${crypto.randomUUID()}.mp4`);
-    await Bun.write(path, await res.arrayBuffer());
+  if (!sample.mediaUrl) throw new SampleUnavailable(src); // Downloading from links isn't built yet.
+  if (src.startsWith("file://") || src.startsWith("/")) {
+    const path = src.replace(/^file:\/\//, "");
+    if (!(await Bun.file(path).exists())) throw new SampleUnavailable(src);
     return path;
   }
-  if (!Bun.which("yt-dlp")) throw new SampleUnavailable(src);
-  const template = join(dir, `sample-${crypto.randomUUID()}.%(ext)s`);
-  try {
-    await run(["yt-dlp", "-q", "--no-playlist", "-f", "mp4/bestvideo*+bestaudio/best", "--merge-output-format", "mp4", "-o", template, src]);
-  } catch {
-    throw new SampleUnavailable(src);
-  }
-  const path = template.replace("%(ext)s", "mp4");
-  if (!(await Bun.file(path).exists())) throw new SampleUnavailable(src);
+  const res = await fetch(src).catch(() => null);
+  if (!res?.ok) throw new SampleUnavailable(src);
+  const path = join(dir, `sample-${crypto.randomUUID()}.mp4`);
+  await Bun.write(path, await res.arrayBuffer());
   return path;
 }

@@ -132,7 +132,10 @@ export interface PressStop {
   noticeHours?: number;
   bookingContact?: { self: true } | { self: false; name?: string; phone: string };
   collab?: "yes" | "no" | "ask";
+  /** Videos attached from the camera roll; the preview is the first 18 seconds of one. */
   samples: { url?: string; mediaUrl?: string }[];
+  /** Links to the full episodes, for bookers who ask to watch the whole thing. */
+  fullEpisodeLinks: string[];
   rightsConfirmed: boolean;
   cover?: "frame" | string;
   /** The two files Press Run makes, and how the clip was cut. */

@@ -250,19 +250,19 @@ document.querySelectorAll(".avatar").forEach(a => a.style.backgroundImage = `url
 const STOPS = {
   1:{key:"mfm", creator:"Courtney", name:"Music for a Minute", lines:["Music","for a","Minute"], glyph:"♪ 60s", fmt:"Street interview · Manhattan", tags:"🎵 Music · 🌎 General", aud:"169K", price:"Free", open:"Nov 12 · 13 · 15", c1:"#6b1512", c2:"#19191B",
      place:"Washington Square Park (arch side)", day:"Thu", date:"Nov 13", time:"2:30 PM", pre:"1:30 PM", talent:"Nova Reign",
-     more:"Music for a Minute, hosted by Courtney: 60-sec street interview, posted on IG + TikTok, raw clip shared after.\nIG 48K · TikTok 112K · YouTube 9K\nFilms Thu–Sat afternoons around Washington Sq and SoHo. Needs 48 hours' notice.",
+     more:"Music for a Minute, hosted by Courtney: 60-sec street interview, posted on IG + TikTok, raw clip shared after.\nIG 48K · TikTok 112K · YouTube 9K\nFilms Thu–Sat afternoons around Washington Sq and SoHo. Needs 48 hours' notice.\nReply “full episode 1” to watch the whole thing.",
      clip:["Music for a Minute","“What song got you through this year?”","“Okay, this one. Every single morning.” 🎧","60 seconds. One artist. One street."]},
   2:{key:"pfyt", creator:"Courtney", name:"Penny for Your Thoughts", lines:["Penny","for Your","Thoughts"], glyph:"1¢", fmt:"Street series · Manhattan", tags:"🌎 General", aud:"74K", price:"Free", open:"Nov 12 · 14", c1:"#3a3a40", c2:"#0A0A0B",
      place:"Union Square (south steps)", day:"Wed", date:"Nov 12", time:"4:00 PM", pre:"3:00 PM", talent:"Jay Mo",
-     more:"Penny for Your Thoughts, hosted by Courtney: one question, one penny, one honest answer. Posted on IG + TikTok.\nIG 30K · TikTok 44K\nFilms weekday afternoons around Union Square. Needs 24 hours' notice.",
+     more:"Penny for Your Thoughts, hosted by Courtney: one question, one penny, one honest answer. Posted on IG + TikTok.\nIG 30K · TikTok 44K\nFilms weekday afternoons around Union Square. Needs 24 hours' notice.\nReply “full episode 2” to watch the whole thing.",
      clip:["Penny for Your Thoughts","“Penny for your thoughts?”","“Honestly? I think everybody's scared to start.”","One question. One penny."]},
   3:{key:"motfm", creator:"Courtney", name:"Motivation for a Minute", lines:["Motivation","for a","Minute"], glyph:"⚡ 60s", fmt:"Street series · Brooklyn", tags:"🧠 Motivation · 💪 Fitness", aud:"58K", price:"Free", open:"Nov 13 · 14", c1:"#8a2a12", c2:"#141416",
      place:"Domino Park, Williamsburg", day:"Fri", date:"Nov 14", time:"1:00 PM", pre:"12:00 PM", talent:"Jay Mo",
-     more:"Motivation for a Minute, hosted by Courtney: 60 seconds of advice from the guest, cut for Reels and TikTok.\nIG 21K · TikTok 37K\nFilms Thu–Fri around Williamsburg. Needs 48 hours' notice.",
+     more:"Motivation for a Minute, hosted by Courtney: 60 seconds of advice from the guest, cut for Reels and TikTok.\nIG 21K · TikTok 37K\nFilms Thu–Fri around Williamsburg. Needs 48 hours' notice.\nReply “full episode 3” to watch the whole thing.",
      clip:["Motivation for a Minute","“What would you tell yourself at 17?”","“Stop waiting for permission.”","60 seconds of real talk."]},
   4:{key:"movfm", creator:"Courtney", name:"Movies for a Minute", lines:["Movies","for a","Minute"], glyph:"🎬 60s", fmt:"Street interview · Midtown", tags:"🎬 Movies & TV · 😂 Comedy", aud:"41K", price:"$150–$300", open:"Nov 15", c1:"#2b2b55", c2:"#0A0A0B",
      place:"Bryant Park (fountain side)", day:"Sat", date:"Nov 15", time:"12:00 PM", pre:"11:00 AM", talent:"Nova Reign",
-     more:"Movies for a Minute, hosted by Courtney: film and TV talk, best for actors and soundtrack moments.\nIG 18K · TikTok 23K\nFilms Saturdays in Midtown. Needs 1 week's notice.",
+     more:"Movies for a Minute, hosted by Courtney: film and TV talk, best for actors and soundtrack moments.\nIG 18K · TikTok 23K\nFilms Saturdays in Midtown. Needs 1 week's notice.\nReply “full episode 4” to watch the whole thing.",
      clip:["Movies for a Minute","“Last movie that made you cry?”","“Don't laugh. It was a cartoon.”","Film talk in 60 seconds."]}
 };
 let stopPreviewPrice = "Free";
@@ -468,15 +468,17 @@ const CHAPTERS = [
     {pr:"Got it. I'll text that number once to confirm. Bookers never see it."},
     {pr:"Would you post bookings as an Instagram collab with @pressrun? It helps both of you get seen. Reply YES, NO, or ASK (I'll check with you each time)."},
     {me:"YES"},
-    {pr:"Last step: send 3 links to episodes you're proud of (IG, TikTok, YouTube, anywhere). I'll cut a 15–20 sec sample clip from them."},
-    {pr:"Or attach the videos right here if that's easier."},
-    {me:"instagram.com/reel/mfm-ep41\ntiktok.com/@musicforaminute/video/ep38\nyoutube.com/shorts/mfm-ep35"},
+    {pr:"Last step: send an episode you're proud of, straight from your camera roll. I'll use the first 18 seconds as your preview clip. (Tip: trim it in Photos first if you want a different 18 seconds.)"},
+    {pr:"Then send the link to the full episode on your channel, so bookers can watch the whole thing."},
+    {meclip:1, dur:"1:12", label:"🎬 Attach an episode from your camera roll (1:12)"},
+    {pr:'Got it 🎬 And the link to the full episode? Or reply "skip".'},
+    {me:"instagram.com/reel/mfm-ep41"},
     {pr:"Just confirming: you own these, or have permission to share them? Reply YES."},
     {me:"YES"},
     {pr:"For your card's cover, send a photo or logo. Or reply “use a frame” and I'll grab one from your episodes."},
     {me:"use a frame"},
     {pr:"Perfect. Making your card and sample clip now 🎬 This takes a few minutes. I'll text you when they're ready."},
-    N("Press Run downloads the 3 episodes, picks the strongest 18 seconds, adds captions and the Press Run end tag, then renders the card from Courtney's answers."),
+    N("Press Run takes the first 18 seconds of the video Courtney attached, crops it to vertical, adds the Press Run end tag, then renders the card from her answers. The link is saved for bookers who want the full episode. Nothing is downloaded from links."),
     {sys:"<b>4 minutes later</b>"},
     {pr:"Here's how bookers will see Music for a Minute 👇"},
     {card:1, preview:true},
@@ -694,6 +696,7 @@ function pickMode(run){
       if (!picks.length) { sendMine("ask them"); say("Who should I ask? Reply with numbers (“1 and 3”) or ❤️ a card first."); return; }
       S.picks = picks; go(3);
     }},
+    {label:"full episode of 1", act: () => { sendMine("full episode of 1"); say(`Here's the full episode from ${cr(STOPS[1])} 👇`); S.chain = S.chain.then(() => prSay("booker", {link:{title:"Music for a Minute on Instagram: “Ep 41”", site:"instagram.com", initials:"MFM"}}, S.run)); }},
     {label:"cheaper", act: () => { sendMine("cheaper"); say("All of these are free except 4 (Courtney from Movies for a Minute, $150–$300). Want me to drop 4 and look for more free Press Stops?"); }},
     {label:"who's free Thursday?", act: () => { sendMine("who's free Thursday?"); say("Thursday Nov 13: Courtney from 1 Music for a Minute and 3 Motivation for a Minute."); }},
   ], "Try it: tap a card (or long-press a clip) to react, or tap a reply");

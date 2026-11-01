@@ -209,9 +209,12 @@ describe("Press Stop onboarding (mockup chapter 2)", () => {
     expect(r).toContain("Instagram collab with @pressrun");
 
     r = await text("YES");
-    expect(r).toContain("send 3 links to episodes");
+    expect(r).toContain("send an episode you're proud of, straight from your camera roll");
 
-    r = await text("instagram.com/reel/mfm-ep41\ntiktok.com/@musicforaminute/video/ep38\nyoutube.com/shorts/mfm-ep35");
+    r = await text("", PHONE, { media: [{ kind: "video", url: "https://example.com/mfm-ep41.mp4" }] });
+    expect(r).toBe('Got it 🎬 And the link to the full episode? Or reply "skip".');
+
+    r = await text("instagram.com/reel/mfm-ep41");
     expect(r).toBe("Just confirming: you own these, or have permission to share them? Reply YES.");
 
     r = await text("YES");
@@ -229,7 +232,8 @@ describe("Press Stop onboarding (mockup chapter 2)", () => {
       rateLow: 0, rateHigh: 0, rateText: "Free", noticeHours: 48, collab: "yes", rightsConfirmed: true, cover: "frame",
       bookingContact: { self: false, phone: "+19175550199" },
     });
-    expect(s!.samples).toHaveLength(3);
+    expect(s!.samples).toEqual([{ mediaUrl: "https://example.com/mfm-ep41.mp4" }]);
+    expect(s!.fullEpisodeLinks).toEqual(["https://instagram.com/reel/mfm-ep41"]);
     expect(s!.platforms.map(p => p.platform)).toEqual(["instagram", "tiktok", "youtube"]);
   });
 

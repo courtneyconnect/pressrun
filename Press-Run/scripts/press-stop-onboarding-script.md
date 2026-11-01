@@ -1,12 +1,12 @@
 # Press Run · Press Stop onboarding text script
 
-Version 6 · 2026-11-01 · Milestone M1
+Version 7 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new **Press Stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the Press Stop its **card and clip** to approve. Every message Press Run sends says **Press Stop**. The notes here say "stop" only as shorthand. The step IDs (S1, S2…) match the build plan and the mockup.
 
 The format and the global rules are the same as the booker script. **Section 0 of `booker-onboarding-script.md` applies here too** (STOP, HELP, human, back, skip, start over, mid-flow questions, voice notes, nudges, "ask again once, then save as `needs_review`").
 
-The stop answers **11 things in 7 short rounds**: series name, format, audience and platforms, interests it covers, cities, filming schedule and open dates, what a booker gets, rate, notice needed, who handles bookings, and 3 sample links. Then comes a cover photo and approval.
+The stop answers **11 things in 7 short rounds**: series name, format, audience and platforms, interests it covers, cities, filming schedule and open dates, what a booker gets, rate, notice needed, who handles bookings, and a preview video plus the full-episode link. Then comes a cover photo and approval.
 
 ---
 
@@ -154,18 +154,20 @@ PR: Would you post bookings as an Instagram collab with @pressrun? It helps both
 - **How it's used:** at the review step (section 4), the first reminder is always to add the artist as a collaborator. Only after that do collab-on Press Stops get a light follow-up inviting them to tag @pressrun. It's never required to get booked.
 - → S6
 
-### S6 · Three sample links
+### S6 · Preview video and full-episode link
 
 ```
-PR: Last step: send 3 links to episodes you're proud of (IG, TikTok, YouTube, anywhere). I'll cut a 15–20 sec sample clip from them.
+PR: Last step: send an episode you're proud of, straight from your camera roll. I'll use the first 18 seconds as your preview clip. (Tip: trim it in Photos first if you want a different 18 seconds.)
 
-PR: Or attach the videos right here if that's easier.
+PR: Then send the link to the full episode on your channel, so bookers can watch the whole thing.
 ```
 
-- **Accept:** up to 5 links or video attachments. Fewer than 3 is fine: `PR: 1 is enough to start. Send more anytime to improve your clip.`
-- **Link can't be read** (private, deleted, or the platform blocks downloads): `PR: I couldn't open that one ({link}). Is it private? You can also attach the video here.`
-- **Not a video** (a profile link): `PR: That's your profile. Can you send links to 1–3 specific episodes?`
-- **Rights check:** `PR: Just confirming: you own these, or have permission to share them? Reply YES.` Tapbacks 👍 or ❤️ count as yes. **No** → `PR: No problem. Send ones you own, or attach your own video.`
+- **Accept:** a video attachment (the preview) and a link to that episode (the full episode), in either order or in one message. Up to 3 videos are kept, so "use the 2nd episode" works at approval. Each link is matched to the video sent in the same order.
+- **Video only:** `PR: Got it 🎬 And the link to the full episode? Or reply "skip".` Skipping is fine. Bookers just won't get a "full episode" option.
+- **Link only:** `PR: Got the link 👍 Now attach the video from your camera roll for the 18-second preview.` Press Run doesn't download from links yet, so the preview always comes from an attached video.
+- **A profile link instead of an episode:** `PR: That's your profile. Can you send the link to that episode?`
+- **Video won't open** (corrupt or too large): `PR: I couldn't open that video. Mind sending it again?`
+- **Rights check:** `PR: Just confirming: you own these, or have permission to share them? Reply YES.` Tapbacks 👍 or ❤️ count as yes. **No** → `PR: No problem. Send one you own.`
 - → S7
 
 ### S7 · Cover image
@@ -184,7 +186,7 @@ PR: For your card's cover, send a photo or logo. Or reply "use a frame" and I'll
 PR: Perfect. Making your card and sample clip now 🎬 This takes a few minutes. I'll text you when they're ready.
 ```
 
-Behind the scenes: download the samples, pick the clip, render the card, render the clip (see the build plan). If it takes longer than 10 minutes: `PR: Still working on your clip. Almost there.` If it fails: `PR: I hit a snag making your clip. Courtney will finish it by hand and text you today.` The thread is flagged for a human.
+Behind the scenes: take the **first 18 seconds** of the attached video, crop it to vertical, add the end card, and render the card (see the build plan). Nothing is downloaded from links. If it takes longer than 10 minutes: `PR: Still working on your clip. Almost there.` If it fails: `PR: I hit a snag making your clip. Courtney will finish it by hand and text you today.` The thread is flagged for a human.
 
 ---
 
@@ -271,7 +273,7 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 
 ## 5. Data saved per Press Stop
 
-`series_name`, `creator_names[]`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `interests[]`, `general`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `collab_opt_in` (yes / no / ask), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
+`series_name`, `creator_names[]`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `interests[]`, `general`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `collab_opt_in` (yes / no / ask), `preview_videos[]`, `full_episode_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
 
 ---
 

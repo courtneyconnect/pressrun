@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 7 · 2026-11-01 · Milestone M1
+Version 8 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -374,7 +374,8 @@ If fewer than 3 Press Stops fit:
 | Replies `1 and 3`, `1,3`, `first and third`, `the Music for a Minute one` | `PR: Shortlisted 1 and 3, Courtney from Music for a Minute and Motivation for a Minute. Want me to ask about dates?` |
 | ❤️ 👍 🔥 or 💯 on a card or clip | Adds that stop to the shortlist quietly. Sends one confirmation after the booker has gone 30 seconds without reacting: `PR: Shortlist: 1, 3 ✅` |
 | 👎 on a card | Removes it. Notes "fewer like this" for that format and price. `PR: Dropped 2. I'll show fewer like it.` If fewer than 3 options are left, a new one is sent with the next number (6). |
-| ❓ on a card | Sends that stop's details: format, what you get, platforms, audience by platform, notice needed, typical filming spot. |
+| ❓ on a card | Sends that stop's details: format, what you get, platforms, audience by platform, notice needed, typical filming spot. Ends with `Reply "full episode 2" to watch the whole thing.` when the Press Stop added a link. |
+| `full episode 2`, `show me the full episode of 2`, `watch 2` | `PR: Here's the full episode from Courtney from Music for a Minute 👇` + the episode link in its own bubble, so it shows a preview card. One tap opens it on their channel, and a swipe back returns here to pick. No link on file: `PR: Courtney from Music for a Minute hasn't added a full episode yet. Want me to ask?` |
 | Removes a reaction | Undoes the action without saying anything. |
 | Reacts to a clip instead of the card | Treated the same as reacting to that stop's card. |
 | `cheaper` / `more like 2` / `who's free Thursday?` | Sends a fresh set numbered from 6 onward. Old numbers keep working. |
@@ -397,7 +398,7 @@ PR: instagram.com/novareign
 PR: Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on.
 ```
 
-The artist's profile link goes in its **own bubble**, so iMessage shows a preview card (photo, name, follower line) right in the thread. One tap opens the profile in Instagram, and a swipe back returns to the thread to answer. Instagram comes first if the booker gave one. Otherwise it's the first profile link on file (TikTok, YouTube…). With no link on file, the bubble is skipped. This is a deliberate exception to "users never leave the thread": a quick look at who's asking, and nothing to fill in.
+The artist's profile link goes in its **own bubble**, so iMessage shows a preview card (photo, name, follower line) right in the thread. One tap opens the profile in Instagram, and a swipe back returns to the thread to answer. Instagram comes first if the booker gave one. Otherwise it's the first profile link on file (TikTok, YouTube…). With no link on file, the bubble is skipped. This is a deliberate exception to "users never leave the thread": a quick look at who's asking, and nothing to fill in. The full-episode link a booker asks for (R3) works the same way.
 
 Every message between the two sides starts with who it's from, like `💬 Courtney from Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are **hidden by default**. Press Run replaces them with `[number hidden by Press Run]` and tells the sender how to share it anyway:
 

@@ -159,19 +159,20 @@ export const S5_TEAMMATE_OK = t("Got it. I'll text that number once to confirm. 
 export const S5B = t("Would you post bookings as an Instagram collab with @pressrun? It helps both of you get seen. Reply YES, NO, or ASK (I'll check with you each time).");
 
 export const S6 = [
-  t("Last step: send 3 links to episodes you're proud of (IG, TikTok, YouTube, anywhere). I'll cut a 15–20 sec sample clip from them."),
-  t("Or attach the videos right here if that's easier."),
+  t("Last step: send an episode you're proud of, straight from your camera roll. I'll use the first 18 seconds as your preview clip. (Tip: trim it in Photos first if you want a different 18 seconds.)"),
+  t("Then send the link to the full episode on your channel, so bookers can watch the whole thing."),
 ];
-export const S6_PROFILE_LINK = t("That's your profile. Can you send links to 1–3 specific episodes?");
-export const S6_ONE_IS_ENOUGH = t("1 is enough to start. Send more anytime to improve your clip.");
+export const S6_VIDEO_ONLY = t('Got it 🎬 And the link to the full episode? Or reply "skip".');
+export const S6_LINK_ONLY = t("Got the link 👍 Now attach the video from your camera roll for the 18-second preview.");
+export const S6_PROFILE_LINK = t("That's your profile. Can you send the link to that episode?");
+export const S6_RESEND = t("I couldn't open that video. Mind sending it again?");
 export const S6_RIGHTS = t("Just confirming: you own these, or have permission to share them? Reply YES.");
-export const S6_RIGHTS_NO = t("No problem. Send ones you own, or attach your own video.");
+export const S6_RIGHTS_NO = t("No problem. Send one you own.");
 
 export const S7 = t('For your card\'s cover, send a photo or logo. Or reply "use a frame" and I\'ll grab one from your episodes.');
 export const S8 = t("Perfect. Making your card and sample clip now 🎬 This takes a few minutes. I'll text you when they're ready.");
 export const S8_STILL = t("Still working on your clip. Almost there.");
 export const S8_SNAG = t("I hit a snag making your clip. Courtney will finish it by hand and text you today.");
-export const S6_CANT_OPEN = (link: string) => t(`I couldn't open that one (${link}). Is it private? You can also attach the video here.`);
 
 // ---------- Approval (S9–S11) ----------
 

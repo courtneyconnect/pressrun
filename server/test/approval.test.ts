@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Store } from "../src/db/store";
 import { Engine } from "../src/engine/engine";
-import { makeClip, pickStart, probe } from "../src/media/clip";
+import { makeClip, probe } from "../src/media/clip";
 import { renderEndCard } from "../src/media/card";
 import { LocalFiles } from "../src/media/files";
 import type { Provider } from "../src/providers/provider";
@@ -22,7 +22,7 @@ let filesDir = "";
 beforeAll(async () => {
   const dir = await mkdtemp(join(tmpdir(), "pressrun-test-"));
   fixture = join(dir, "episode.mp4");
-  // 60 seconds of test video; the audio is quiet except 0:30–0:50, so that's the stretch to pick.
+  // 60 seconds of test video with a tone (quiet except 0:30–0:50) so loudness evening-out has something to work on.
   const p = Bun.spawn(["ffmpeg", "-y", "-loglevel", "error",
     "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=30:duration=60",
     "-f", "lavfi", "-i", "sine=frequency=440:duration=60",
@@ -66,16 +66,15 @@ async function onboardStop(name = "Penny for Your Thoughts") {
   await say("One question, one penny, one honest answer. Free");
   await say("24 hours, text me here");
   await say("ask");
-  await say("", { media: [{ kind: "video", url: fixture }, { kind: "video", url: fixture }] });
+  expect(await say("", { media: [{ kind: "video", url: fixture }, { kind: "video", url: fixture }] })).toBe('Got it 🎬 And the link to the full episode? Or reply "skip".');
+  expect(await say("youtube.com/watch?v=penny41")).toContain("you own these");
   await say("yes");
   return say("use a frame");
 }
 
 describe("clip maker", () => {
-  test("picks the liveliest 18 seconds, skipping the intro", async () => {
-    const start = await pickStart(fixture);
-    expect(start).toBeGreaterThanOrEqual(30);
-    expect(start).toBeLessThanOrEqual(32);
+  test("the preview is the first 18 seconds unless a start is given", async () => {
+    expect((await makeClip(fixture, await renderEndCard())).start).toBe(0);
   });
 
   test("makes an 18-second vertical clip plus the 1-second end card", async () => {
@@ -158,15 +157,18 @@ describe("approval (S8 → S11)", () => {
     expect((await store.accountByPhone(PHONE))!.needsHuman).toBe(true);
   });
 
-  test("a sample link that can't be opened sends them back to attach the video", async () => {
+  test("a link alone asks for the video; a video that won't open is asked for again", async () => {
     const code = await store.createSignupCode({ name: "Courtney", intent: "stop" });
     for (const m of [`List my show ${code.code}`, "Movies for a Minute, 1", "yes", "IG @movies 18k", "2", "Bryant Park, Saturdays. Open Nov 15", "Film talk, $150-300", "1 week, here", "no"]) await say(m);
-    await say("instagram.com/reel/abc123");
+    expect(await say("instagram.com/reel/abc123")).toBe("Got the link 👍 Now attach the video from your camera roll for the 18-second preview.");
+    expect(await say("", { media: [{ kind: "video", url: "/nonexistent/episode.mp4" }] })).toContain("you own these");
     await say("yes");
     await say("use a frame");
     await jobs();
-    expect(texts(lastSent())).toEqual(["I couldn't open that one (https://instagram.com/reel/abc123). Is it private? You can also attach the video here."]);
+    expect(texts(lastSent())).toEqual(["I couldn't open that video. Mind sending it again?"]);
     expect((await store.accountByPhone(PHONE))!.step).toBe("S6");
     expect(await say("", { media: [{ kind: "video", url: fixture }] })).toContain("you own these");
+    const [stop] = await store.stopsByOwner((await store.accountByPhone(PHONE))!.id);
+    expect(stop!.fullEpisodeLinks).toEqual(["https://instagram.com/reel/abc123"]);
   });
 });

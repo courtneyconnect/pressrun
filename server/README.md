@@ -9,8 +9,8 @@ The texting engine behind Press Run. It runs the booker and Press Stop onboardin
 - **Rules at every step**: STOP/START, HELP, "human" (pauses the bot), back, skip on optional questions, start over, voice notes, photos sent mid-question, questions asked mid-flow (FAQ), one retry on unclear answers then saved for review, and 24h/72h nudges.
 - **Website sign-up codes**: `POST /api/signup` returns the code and the pre-typed text for the Text Press Run button.
 - **Test phone**: `/dev/phone` is a pretend iPhone for trying the scripts in a browser. It shows cards and clips, and has a ❤️ button for the latest one.
-- **Card and clip maker** (slice 2): a background job renders the card (1080×1350 PNG with the number badge, creator, interests, audience, rate and open dates), and cuts an 18-second vertical clip from the liveliest part of a sample, with a "Booked through Press Run" end card. "Use a frame" covers come from the clip.
-- **Approval** (S9–S12): the card and clip are sent for approval. ❤️ 👍 🔥 💯 or "looks good" makes the Press Stop live. "rate 300–500", audience, open dates, "new cover", "use the 2nd episode", "start at 0:40" and "different part" remake just what changed. 👎 asks what to change, and the fourth round goes to Courtney. A sample link that can't be opened sends them back to attach the video.
+- **Card and clip maker** (slice 2): a background job renders the card (1080×1350 PNG with the number badge, creator, interests, audience, rate and open dates), and cuts the first 18 seconds of the episode the Press Stop attached from their camera roll into a vertical clip, with a "Booked through Press Run" end card. The full-episode link they send is saved for bookers who ask to watch the whole thing. "Use a frame" covers come from the clip.
+- **Approval** (S9–S12): the card and clip are sent for approval. ❤️ 👍 🔥 💯 or "looks good" makes the Press Stop live. "rate 300–500", audience, open dates, "new cover", "use the 2nd episode", "start at 0:40" and "different part" remake just what changed. 👎 asks what to change, and the fourth round goes to Courtney. A video that won't open sends them back to attach it again.
 
 ## Next slices
 
@@ -40,7 +40,7 @@ Settings (environment variables):
 | `FILES_DIR`, `PUBLIC_URL` | Local file storage for cards and clips (served at `/files`). Defaults to `./files` and `http://localhost:PORT`. |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` | When `R2_BUCKET` is set, cards and clips go to Cloudflare R2 instead. |
 
-Needs `ffmpeg` installed. Pulling samples from Instagram, TikTok or YouTube links also needs `yt-dlp` on the server; without it, Press Stops are asked to attach the video.
+Needs `ffmpeg` installed. Nothing is downloaded from Instagram, TikTok or YouTube links: previews come from attached videos, and links are only passed on.
 
 ## How it's laid out
 

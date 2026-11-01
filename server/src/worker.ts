@@ -78,7 +78,7 @@ async function buildStopMedia(deps: WorkerDeps, job: Job): Promise<void> {
   const dir = await mkdtemp(join(tmpdir(), "pressrun-build-"));
   try {
     if (part !== "card") {
-      // Try the chosen episode first, then the others.
+      // Try the chosen video first, then the others.
       const start = media.episode ?? 0;
       const order = [start, ...stop.samples.map((_, i) => i).filter(i => i !== start)];
       let samplePath: string | undefined;
@@ -132,14 +132,14 @@ async function onFailure(deps: WorkerDeps, job: Job, err: unknown, now: Date): P
   const account = accountId ? await deps.store.accountById(accountId) : null;
 
   if (err instanceof NoReadableSamples && account && stopId) {
-    // Back to S6: ask for the video itself.
+    // Back to S6: ask them to send the video again.
     const stop = await deps.store.stop(stopId);
     if (stop) { stop.samples = []; stop.status = "draft"; await deps.store.saveStop(stop); }
     account.flow = "stop";
     account.step = "S6";
     account.state.pending = null;
     await deps.store.saveAccount(account);
-    await deliver(deps, account, [C.S6_CANT_OPEN(err.link)]);
+    await deliver(deps, account, [C.S6_RESEND]);
     await deps.store.finishJob(job.id, "failed", message);
     return;
   }

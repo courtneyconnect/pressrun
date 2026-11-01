@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 5 · 2026-11-01 · Milestone M1
+Version 7 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -12,6 +12,7 @@ This is every message Press Run sends a new booker in iMessage, in order. That c
 - `{name}` and similar are filled in from earlier answers.
 - Keep every bubble under about 300 characters. Each step asks at most 2–3 questions.
 - **Naming:** every message Press Run sends says **Press Stop** / **Press Stops**, never just "stop". The notes in this file say "stop" only as shorthand.
+- **Always credit the creator:** whenever Press Run names a Press Stop to a booker, it names the person behind it too: "Courtney from Music for a Minute". Creators get credit, and bookers get to know the human behind the series. If one creator runs several series in the same message, name them once: "Courtney from Music for a Minute and Motivation for a Minute". This applies everywhere: cards, shortlists, relays, bookings, the Run Sheet, reminders and recaps.
 - **Money words:** **service fee** is what Press Run charges. **Rate** is what a Press Stop charges for an appearance, and Press Stops always set their own. Never call a Press Stop's rate a "fee", and never call Press Run's cut a "booking fee".
 
 ---
@@ -349,6 +350,20 @@ PR: [clip: 0:18]
 PR: That's 5 Press Stops, about $1,150 total if you book all of them. Reply with numbers ("1 and 3"), react to a card, or ask "cheaper", "more like 2", or "who's free Thursday?"
 ```
 
+**Lots of matches: master list first.** If more than 5 Press Stops fit, Press Run doesn't send a wall of cards. It sends one **master list image** (same look as the Run Sheet) with up to 20 numbered rows. Each row has the series, its creator, format, rate, open dates and any interest match:
+
+```
+PR: 14 Press Stops fit 🔥 Here's the full list 👇
+PR: [image: master list · NYC Nov 12–15 · 14 Press Stops]
+PR: Reply with the numbers you want to see ("2, 5, 9"), or "show me all", and I'll send their cards and clips. You can also say "only podcasts", "under $300" or "Thursday only".
+```
+
+- **Numbers** → send the card + clip for just those, keeping the numbers from the list.
+- **"show me all"** → send every card + clip, 5 at a time: `PR: That's 1–5. Reply "more" for the next 5.`
+- **Feedback** ("only podcasts", "cheaper", "Thursday only") → a new, shorter master list (or straight cards if 5 or fewer fit).
+- **Reactions on the list image:** ❤️ = show all, ❓ = `PR: Reply with numbers to see cards, or "show me all".`
+- Over 20 matches: the list shows the top 20 by match, plus `Reply "more" for the rest.`
+
 If fewer than 3 Press Stops fit:
 `PR: Only 2 Press Stops fit those dates and budget. Want me to widen the dates or include paid Press Stops up to $X?`
 
@@ -356,7 +371,7 @@ If fewer than 3 Press Stops fit:
 
 | Booker does | Press Run does |
 | --- | --- |
-| Replies `1 and 3`, `1,3`, `first and third`, `the Music for a Minute one` | `PR: Shortlisted 1 Music for a Minute and 3 Motivation for a Minute. Want me to ask them about dates?` |
+| Replies `1 and 3`, `1,3`, `first and third`, `the Music for a Minute one` | `PR: Shortlisted 1 and 3, Courtney from Music for a Minute and Motivation for a Minute. Want me to ask about dates?` |
 | ❤️ 👍 🔥 or 💯 on a card or clip | Adds that stop to the shortlist quietly. Sends one confirmation after the booker has gone 30 seconds without reacting: `PR: Shortlist: 1, 3 ✅` |
 | 👎 on a card | Removes it. Notes "fewer like this" for that format and price. `PR: Dropped 2. I'll show fewer like it.` If fewer than 3 options are left, a new one is sent with the next number (6). |
 | ❓ on a card | Sends that stop's details: format, what you get, platforms, audience by platform, notice needed, typical filming spot. |
@@ -369,7 +384,7 @@ If fewer than 3 Press Stops fit:
 ### R4 · Relay to the Press Stop (numbers stay private)
 
 ```
-PR: Sent 🙌 I asked Music for a Minute and Motivation for a Minute about Nov 12–15. I'll pass their replies here, usually within a few hours.
+PR: Sent 🙌 I asked Courtney from Music for a Minute and Motivation for a Minute about Nov 12–15. I'll pass their replies here, usually within a few hours.
 ```
 
 What the stop sees in **its own** Press Run thread:
@@ -384,12 +399,12 @@ PR: Reply YES with a day/time/location, NO to pass, or type a question and I'll 
 
 The artist's profile link goes in its **own bubble**, so iMessage shows a preview card (photo, name, follower line) right in the thread. One tap opens the profile in Instagram, and a swipe back returns to the thread to answer. Instagram comes first if the booker gave one. Otherwise it's the first profile link on file (TikTok, YouTube…). With no link on file, the bubble is skipped. This is a deliberate exception to "users never leave the thread": a quick look at who's asking, and nothing to fill in.
 
-Every message between the two sides starts with who it's from, like `💬 Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are **hidden by default**. Press Run replaces them with `[number hidden by Press Run]` and tells the sender how to share it anyway:
+Every message between the two sides starts with who it's from, like `💬 Courtney from Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are **hidden by default**. Press Run replaces them with `[number hidden by Press Run]` and tells the sender how to share it anyway:
 
 ```
-PR: I hid your number in what I passed on. Reply SHARE if you want Music for a Minute to have it.
+PR: I hid your number in what I passed on. Reply SHARE if you want Courtney from Music for a Minute to have it.
 User: SHARE
-PR: Shared ✅ Music for a Minute can see your number now.
+PR: Shared ✅ Courtney from Music for a Minute can see your number now.
 ```
 
 The other side then gets `PR: 📞 Nova Reign's team shared their number: 917-555-0142`. Only the person whose number it is can share it. SHARE works anytime, and it only covers what that sender typed. If they don't reply, nothing is revealed and nobody is nudged about it. After the shoot, people swap numbers however they like.
@@ -399,7 +414,7 @@ The other side then gets `PR: 📞 Nova Reign's team shared their number: 917-55
 When both sides say yes to a time:
 
 ```
-PR: Booked ✅ Music for a Minute · Thu Nov 13, 2:30pm · Washington Square Park (arch side)
+PR: Booked ✅ Courtney from Music for a Minute · Thu Nov 13, 2:30pm · Washington Square Park (arch side)
 PR: I'll send your full Run Sheet once the other Press Stops confirm.
 ```
 
@@ -408,7 +423,11 @@ Run Sheet (sent as an image so it's easy to screenshot, plus a short text versio
 ```
 PR: [image: Run Sheet · Nova Reign · NYC Nov 12–15]
 PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before and 1 hour before each one. Reply "change" if anything moves.
+PR: [calendar file: Nova Reign & Jay Mo · NYC run · 3 events]
+PR: Tap the calendar file to add every stop to your calendar in one go.
 ```
+
+**Calendar file, not a calendar connection.** The Run Sheet comes with a standard calendar file (.ics) holding one event per stop: time, place and the creator's name. On iPhone, tapping it in Messages opens an "Add to Calendar" sheet over the thread. It goes into whichever calendar the phone uses (iCloud, Google, Outlook), and the person is back in the thread right after. There's no Google sign-in, no link to Safari and nothing to connect. If a time changes, Press Run sends an updated file. Check this on a real iPhone during the M2 test runs.
 
 ---
 
@@ -416,11 +435,17 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 | When | Message |
 | --- | --- |
-| Night before each stop, 8pm | `PR: Tomorrow: {stop} at {time}, {place}. Contact on site: {first name}. Reply "late" if you're running behind.` |
-| 1 hour before | `PR: {stop} in 1 hour 📍 {place}` |
+| Night before each stop, 8pm | `PR: Tomorrow: {creator} from {stop} at {time}, {place}. Reply "late" if you're running behind.` |
+| 1 hour before | `PR: {creator} from {stop} in 1 hour 📍 {place}` |
 | Booker texts "late" | Passes it to the stop: `💬 Nova Reign's team: running about 15 min late.` |
-| 48 hours after the shoot | `PR: How was {stop}? Reply 1–5. (Ratings only count Press Run bookings.)` |
-| When the stop posts | `PR: {stop} posted 🎬 {views} views so far. I'll send your full recap when every Press Stop has posted.` |
+| 48 hours after the shoot | `PR: How was your shoot with {creator} from {stop}? Reply 1–5. (Ratings only count Press Run bookings.)` |
+| The creator sends the edit | `PR: {creator} from {stop} sent the edit for your OK 👇` + the video + `PR: ❤️ it to approve, or reply with changes and I'll pass them on.` |
+| Booker ❤️ 👍 🔥 💯 the video, or replies "approved" | `PR: Approved ✅ I'll let {creator} know they can post.` |
+| Booker replies with changes, or 👎 | Changes are relayed to the creator. A 👎 alone gets `PR: What should {creator} change?` The next version comes back the same way. |
+| No answer on the edit in 48 hours | `PR: {creator} is waiting on your OK for the edit 👆 ❤️ it to approve, or reply with changes.` |
+| When the creator drops the live link | `PR: {creator} from {stop} posted 🎬 {views} views so far.` Then the post link in its own bubble, so it shows a preview card. |
+| Every Press Stop in the run has posted (or 14 days after the last shoot) | `PR: Every Press Stop has posted 🎉 Here's your recap 👇` + **Recap image** (same style as the Run Sheet): each stop, its creator, the artist, the platform and views, plus total views. Then `PR: {total} views across {n} posts. Want to plan the next run? Text me dates anytime.` |
+| 30 days after the recap | One refresh of the view counts: `PR: Your run is at {total} views now 📈` |
 
 ---
 

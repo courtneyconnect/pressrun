@@ -1,6 +1,6 @@
 # Press Run · Press Stop onboarding text script
 
-Version 4 · 2026-11-01 · Milestone M1
+Version 6 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new **Press Stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the Press Stop its **card and clip** to approve. Every message Press Run sends says **Press Stop**. The notes here say "stop" only as shorthand. The step IDs (S1, S2…) match the build plan and the mockup.
 
@@ -51,6 +51,7 @@ PR: What's your show called, and what's the format?
 - **Name only:** `PR: Great name. Which format is it? Reply 1–7.`
 - **Format only:** `PR: And what's it called?`
 - **Several shows** (`I have 3 series`): `PR: Let's do one at a time. Which first? Text "add another show" when we're done to list the next one.` Each show gets its own card.
+- **The creator:** then `PR: And you're the creator bookers will meet, {first_name}? Reply YES, or send the host's name.` Press Run always introduces a Press Stop as "{creator} from {series}" so the creator gets credit (see the booker script, section 0). Two hosts → `Courtney and Sam from …`.
 - → S2
 
 ### S2 · Audience and platforms
@@ -141,6 +142,16 @@ PR: When a booking request comes in, should I text you here, or someone on your 
   - **Notice:** hours, days or weeks (`2 days`, `a week`, `same day ok`).
   - **Contact:** `me` or `here` saves this thread. `my producer Dee 917…` saves a teammate. Press Run texts them once: `PR: Hi Dee, {first_name} added you to handle bookings for {series} on Press Run. Reply OK to confirm.` That message is only sent with the stop's okay in this step. If the teammate doesn't reply, requests keep going to the stop.
 - **If unclear about the contact:** `PR: Just reply "me", or a name and number.`
+- → S5b
+
+### S5b · Collab posts (optional)
+
+```
+PR: Would you post bookings as an Instagram collab with @pressrun? It helps both of you get seen. Reply YES, NO, or ASK (I'll check with you each time).
+```
+
+- **Accept:** `yes`, 👍 or ❤️ → always. `no` → never. `ask`, `depends`, `sometimes` → ask on each booking at the review step. Anything else → `ask`.
+- **How it's used:** at the review step (section 4), Press Run reminds collab-on Press Stops to add @pressrun as a collaborator before posting. It's never required to get booked.
 - → S6
 
 ### S6 · Three sample links
@@ -198,6 +209,7 @@ The card shows these fields, top to bottom:
 | Number badge | Filled in when the card is sent to a booker. Shows `#` in the preview | `1` |
 | Cover image | S7 | photo |
 | Series name | S1 | Music for a Minute |
+| Creator | S1 | with Courtney |
 | Format · area | S1, S3 | Street interview · Manhattan |
 | Interests | S2b, top 2 | 🎵 Music · 🌎 General |
 | Audience | S2 total, rounded | 307K followers |
@@ -245,15 +257,21 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 | New request | `PR: 📩 New booking request #{id}` + artist name, niche, handle, dates, budget. Then the artist's profile link in its own bubble (Instagram first) so it shows a preview card. Then `Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on.` |
 | No reply in 12 hours | `PR: Nova Reign's team is waiting on #{id}. YES with a day/time/location, or NO?` |
 | No reply in 24 hours | The request is marked expired. The booker is told and offered a different Press Stop. |
-| Booking confirmed | `PR: Booked ✅ {booker} · {date} {time} · {place}. I'll send reminders.` |
+| Booking confirmed | `PR: Booked ✅ {booker} · {date} {time} · {place}. I'll send reminders.` Then a calendar file (.ics) for the shoot: `PR: Tap the calendar file to add it to your calendar.` |
 | Night before / 1 hour before | Same as for bookers, with the talent's name. |
-| After the shoot | `PR: Once it's posted, send me the link and I'll pass it to {booker} for their recap.` |
+| Evening of the shoot, 6pm | `PR: Great shoot today 🎬 When the edit's ready, send the video here. I'll get {talent}'s team to OK it before it goes live.` |
+| No video after 3 days | `PR: How's the {talent} edit coming? Send it here when it's ready.` |
+| No video after 7 days | One last nudge. After that the thread is flagged for Courtney. |
+| Creator sends the edit | `PR: Got it ✅ Sending it to {talent}'s team for their OK.` |
+| Booker approves (❤️ 👍 🔥 💯, or "approved") | `PR: Approved ✅ {talent}'s team loves it. Post when you're ready, then drop the live link here.` Collab-on Press Stops also get `PR: Remember to add @pressrun as a collaborator 🙌` (ASK ones get `Post it as a collab with @pressrun? YES or NO`). |
+| Booker asks for changes | Relayed as `💬 {talent}'s team: …`, then `PR: Send the new version here when it's ready.` |
+| Creator drops the link | `PR: Got it ✅ Passing it on. I'll check the views again in 7 days.` Press Run reads the view count from the link where the platform shows it publicly (TikTok, YouTube). For Instagram, where views are private to the account, it asks once: `PR: Instagram keeps views private. Mind sending a screenshot of the insights in 7 days?` |
 
 ---
 
 ## 5. Data saved per Press Stop
 
-`series_name`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `interests[]`, `general`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
+`series_name`, `creator_names[]`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `interests[]`, `general`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `collab_opt_in` (yes / no / ask), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
 
 ---
 
@@ -263,5 +281,5 @@ The four pilot Press Stops go through this exact script from Courtney's phone, o
 
 ## 7. Open items for Courtney
 
-- **Collab-post opt-in** (Marketing idea "A collab post on every booking"). It isn't decided yet, so it isn't in the script. If it's approved, add it as an optional S5 question: `PR: Would you post bookings as an IG collab with @pressrun? It helps both of you get seen. YES / NO / ask me each time.`
+- **Booker doesn't review the edit:** placeholder rule is a nudge at 48 hours, then the thread goes to Courtney at 72 hours. Decide whether silence after a deadline should count as approval.
 - Weekly calendar check on Mondays is a placeholder day.

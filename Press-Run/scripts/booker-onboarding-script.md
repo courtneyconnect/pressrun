@@ -101,7 +101,7 @@ PR: Nice. What's your name and email? (Email is only for receipts and your Run S
 ### B1 · Welcome and role
 
 ```
-PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform.
+PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform for 12 months after fees start.
 
 PR: A few quick questions so I send you the right Press Stops. Takes about 2 minutes.
 
@@ -382,7 +382,7 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 | Question | Answer |
 | --- | --- |
-| How much does it cost? | `PR: Free while we're in beta. After that it's 10% on paid bookings and $15 on free Press Stops. As one of the first 1,000 members, you'll pay NO fees on any booking.` |
+| How much does it cost? | `PR: Free while we're in beta. After that it's 10% on paid bookings and $15 on free Press Stops. As one of the first 1,000 members, you'll pay NO fees on any booking for 12 months after fees start.` |
 | Who are you / is this a bot? | `PR: I'm Press Run's booking assistant. A real person (Courtney) checks in on every booking. Text "human" anytime.` |
 | Can I just get their number? | `PR: I keep numbers private until you're booked. It keeps everyone safe from spam. Once you've shot together, swap away.` |
 | Is my info shared? | `PR: Press Stops only see what's on your request: name, niche, handles and dates. Never your number or email.` |
@@ -393,6 +393,6 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 ## 7. Open items for Courtney
 
-- The B1 welcome says the first 1,000 members pay NO fees on any booking. The business plan says Founding Members pay $0 on free Press Stops for 12 months, and 10% on paid bookings. Pick one and update the other (task M3 · "Write the Founding Member offer").
+- Decided 2026-11-01: the first 1,000 members (bookers and Press Stops) pay NO Press Run fees on any booking, paid or free, for 12 months after fees start. The business plan matches.
 - Human hours (10am–7pm ET) are a placeholder. Set the real hours.
 - The reminder times (8pm the night before, and 1 hour before) are placeholders.

@@ -151,7 +151,7 @@ PR: Would you post bookings as an Instagram collab with @pressrun? It helps both
 ```
 
 - **Accept:** `yes`, 👍 or ❤️ → always. `no` → never. `ask`, `depends`, `sometimes` → ask on each booking at the review step. Anything else → `ask`.
-- **How it's used:** at the review step (section 4), Press Run reminds collab-on Press Stops to add @pressrun as a collaborator before posting. It's never required to get booked.
+- **How it's used:** at the review step (section 4), the first reminder is always to add the artist as a collaborator. Only after that do collab-on Press Stops get a light follow-up inviting them to tag @pressrun. It's never required to get booked.
 - → S6
 
 ### S6 · Three sample links
@@ -263,7 +263,7 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 | No video after 3 days | `PR: How's the {talent} edit coming? Send it here when it's ready.` |
 | No video after 7 days | One last nudge. After that the thread is flagged for Courtney. |
 | Creator sends the edit | `PR: Got it ✅ Sending it to {talent}'s team for their OK.` |
-| Booker approves (❤️ 👍 🔥 💯, or "approved") | `PR: Approved ✅ {talent}'s team loves it. Post when you're ready, then drop the live link here.` Collab-on Press Stops also get `PR: Remember to add @pressrun as a collaborator 🙌` (ASK ones get `Post it as a collab with @pressrun? YES or NO`). |
+| Booker approves (❤️ 👍 🔥 💯, or "approved") | `PR: Approved ✅ {talent}'s team loves it. Post when you're ready, then drop the live link here.` Then, always: `PR: Remember to add {talent} ({handle}) as a collaborator so it lands on their page too 🙌` Then, only for collab-on (YES) Press Stops: `PR: And feel free to tag @pressrun too if you'd like.` ASK ones get `PR: Want to add @pressrun as a collaborator too? Totally optional.` NO ones get nothing about Press Run. |
 | Booker asks for changes | Relayed as `💬 {talent}'s team: …`, then `PR: Send the new version here when it's ready.` |
 | Creator drops the link | `PR: Got it ✅ Passing it on. I'll check the views again in 7 days.` Press Run reads the view count from the link where the platform shows it publicly (TikTok, YouTube). For Instagram, where views are private to the account, it asks once: `PR: Instagram keeps views private. Mind sending a screenshot of the insights in 7 days?` |
 

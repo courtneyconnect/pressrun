@@ -8,6 +8,7 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Store } from "../src/db/store";
+import { testStore } from "./helpers";
 import { Engine } from "../src/engine/engine";
 import { LocalFiles } from "../src/media/files";
 import type { Provider } from "../src/providers/provider";
@@ -30,7 +31,7 @@ let ownerId = "";
 let mfm: PressStop, penny: PressStop, movies: PressStop;
 
 beforeEach(async () => {
-  store = await Store.open("sqlite://:memory:");
+  store = await testStore();
   now = new Date("2026-11-01T15:00:00Z");
   engine = new Engine(store, () => now);
   dir = await mkdtemp(join(tmpdir(), "pressrun-relay-"));

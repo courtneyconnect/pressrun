@@ -8,12 +8,23 @@ import type { Provider } from "./providers/provider";
 import type { Inbound } from "./types";
 import { phonePage } from "./dev/phone-page";
 import { LocalFiles, type FileStore } from "./media/files";
+import { landingPage } from "./web/landing";
+import { adminRoutes } from "./web/admin";
 
-export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date }) {
+export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date; adminPassword?: string; pressRunNumber?: string }) {
   const engine = new Engine(store, opts.clock, (a, out) => provider.send(a.phone, out));
   const app = new Hono();
 
   app.get("/health", c => c.json({ data: { ok: true, provider: provider.name } }));
+
+  // The website: one page that explains Press Run and ends in the Text Press Run button.
+  app.get("/", c => c.html(landingPage({ number: opts.pressRunNumber })));
+  for (const name of ["logo-256.png", "apple-touch-icon.png"]) {
+    app.get(`/${name}`, () => new Response(Bun.file(new URL(`../public/${name}`, import.meta.url)), { headers: { "cache-control": "public, max-age=86400" } }));
+  }
+
+  // Courtney's admin page. Off unless ADMIN_PASSWORD is set.
+  if (opts.adminPassword) app.route("/admin", adminRoutes(store, provider, opts.adminPassword, opts.clock));
 
   // Cards and clips when stored locally (production uses R2's public URL instead).
   if (files instanceof LocalFiles) {

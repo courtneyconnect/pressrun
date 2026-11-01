@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, test } from "bun:test";
 import { Store } from "../src/db/store";
+import { testStore } from "./helpers";
 import { Engine } from "../src/engine/engine";
 import type { Inbound } from "../src/types";
 
@@ -10,7 +11,7 @@ let engine: Engine;
 let clock = new Date("2026-11-01T15:00:00Z");
 
 beforeEach(async () => {
-  store = await Store.open("sqlite://:memory:");
+  store = await testStore();
   clock = new Date("2026-11-01T15:00:00Z");
   engine = new Engine(store, () => clock);
 });

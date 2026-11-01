@@ -223,6 +223,12 @@ export class Store {
     return rows.map((r: { data: string }) => JSON.parse(r.data));
   }
 
+  /** The newest conversations first, for the admin page. */
+  async recentConversations(limit = 100): Promise<Conversation[]> {
+    const rows = await this.db`SELECT data FROM conversations ORDER BY created_at DESC LIMIT ${limit}`;
+    return rows.map((r: { data: string }) => JSON.parse(r.data));
+  }
+
   async conversationsForRequest(requestId: string): Promise<Conversation[]> {
     const rows = await this.db`SELECT data FROM conversations WHERE request_id = ${requestId} ORDER BY created_at`;
     return rows.map((r: { data: string }) => JSON.parse(r.data));

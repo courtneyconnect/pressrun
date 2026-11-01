@@ -5,6 +5,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Store } from "../src/db/store";
+import { testStore } from "./helpers";
 import { Engine } from "../src/engine/engine";
 import { makeClip, probe } from "../src/media/clip";
 import { renderEndCard } from "../src/media/card";
@@ -40,7 +41,7 @@ const clock = () => new Date("2026-11-01T15:00:00Z");
 const PHONE = "+15550002222";
 
 beforeEach(async () => {
-  store = await Store.open("sqlite://:memory:");
+  store = await testStore();
   engine = new Engine(store, clock);
   filesDir = await mkdtemp(join(tmpdir(), "pressrun-files-"));
   files = new LocalFiles(filesDir, "http://test");

@@ -61,7 +61,7 @@ export async function runJobs(deps: WorkerDeps): Promise<number> {
 
 async function deliver(deps: WorkerDeps, account: Account, out: Out[]): Promise<void> {
   await logOut(deps.store, account.id, out);
-  await deps.provider.send(account.phone, out);
+  if (!account.optedOut) await deps.provider.send(account.phone, out);
 }
 
 class NoReadableSamples extends Error {

@@ -384,7 +384,15 @@ PR: Reply YES with a day/time/location, NO to pass, or type a question and I'll 
 
 The artist's profile link goes in its **own bubble**, so iMessage shows a preview card (photo, name, follower line) right in the thread. One tap opens the profile in Instagram, and a swipe back returns to the thread to answer. Instagram comes first if the booker gave one. Otherwise it's the first profile link on file (TikTok, YouTube…). With no link on file, the bubble is skipped. This is a deliberate exception to "users never leave the thread": a quick look at who's asking, and nothing to fill in.
 
-Every message between the two sides starts with who it's from, like `💬 Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are hidden until after the shoot. Press Run replaces them with `[number hidden by Press Run]` and sends a short note to the sender explaining why. After the shoot, they can swap numbers freely.
+Every message between the two sides starts with who it's from, like `💬 Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are **hidden by default**. Press Run replaces them with `[number hidden by Press Run]` and tells the sender how to share it anyway:
+
+```
+PR: I hid your number in what I passed on. Reply SHARE if you want Music for a Minute to have it.
+User: SHARE
+PR: Shared ✅ Music for a Minute can see your number now.
+```
+
+The other side then gets `PR: 📞 Nova Reign's team shared their number: 917-555-0142`. Only the person whose number it is can share it. SHARE works anytime, and it only covers what that sender typed. If they don't reply, nothing is revealed and nobody is nudged about it. After the shoot, people swap numbers however they like.
 
 ### R5 · Confirm and Run Sheet
 
@@ -428,7 +436,7 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 | --- | --- |
 | How much does it cost? | `PR: Free while we're in beta. After that, Press Run adds a service fee: 10% on paid bookings and $15 on free Press Stops. Press Stops set their own rates. As one of the first 1,000 members, you pay NO service fees for 12 months after they start.` |
 | Who are you / is this a bot? | `PR: I'm Press Run's booking assistant. A real person (Courtney) checks in on every booking. Text "human" anytime.` |
-| Can I just get their number? | `PR: I keep numbers private until you're booked. It keeps everyone safe from spam. Once you've shot together, swap away.` |
+| Can I just get their number? | `PR: I keep numbers private by default. It keeps everyone safe from spam. If they want you to have it, they can reply SHARE and I'll pass it on.` |
 | Is my info shared? | `PR: Press Stops only see what's on your request: name, niche, handles and dates. Never your number or email.` |
 | What cities? | `PR: New York right now. More soon, and I'll text you when your city opens.` |
 | Android friend? | `PR: They can text this same number. It works over regular SMS too.` |

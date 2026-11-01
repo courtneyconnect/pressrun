@@ -93,6 +93,10 @@ If feedback conflicts with an earlier decision (here, the fees promise in the we
 5. **Build the two-sided part as one thread per person** (slice 4). Each side only ever texts Press Run. Every passed-on message starts with who it's from, and numbers are hidden until the owner replies SHARE. Work out how a reply finds its conversation before writing code: the bubble it replies to, a booking code, a name, the only open one, the one that just wrote, and only then ask "which one?".
 6. **Test with a clock you control.** Reminders, nudges and expiry are jobs with a run time. Tests move the clock forward (12 hours, the night before, 1 hour before) instead of waiting, and every text in a test advances it a minute, like a real thread.
 7. **Make the "shareable" outputs as images early** (cards, master list, Run Sheet). They're what users screenshot, and they double as build-in-public posts.
+8. **Finish the loop after the booking** (slice 5): the edit review (approve with a ❤️), the live link, a view count a week later, a rating, and a recap image. Where something can't be automated yet (Instagram views are private), ask the person and let the founder type it in on an admin page.
+9. **Serve the website from the same server** as the bot: one page, a sign-up form, and a button that opens Messages with a code typed in. The code links the phone number to the sign-up.
+10. **Give the founder an admin page before friends test**: threads that asked for a person, replies the bot couldn't read, and a "take over" switch so the bot goes quiet while the founder texts.
+11. **Get deploy-ready without signing up for anything**: a Dockerfile, the list of settings, and step-by-step deploy notes. Run the tests on the production database type (Postgres) locally first.
 
 ## Rules that kept this session safe
 

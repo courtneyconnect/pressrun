@@ -1,6 +1,32 @@
-// The website (served at /). It only explains Press Run and takes sign-ups.
-// The last screen is the Text Press Run button, which opens Messages with the
-// sign-up code already typed (booker script section 1).
+// The website (served at /). Just the Press Run character running on the red
+// crosswalk tiles, and one button. The button opens the sign-up, which ends in
+// the Text Press Run button: Messages opens with the sign-up code already typed
+// (booker script section 1).
+
+const LIMB = "#48525A";
+const LIMB_BACK = "#363E45";
+
+/** The runner, drawn in parts so the arms and legs can move. Hip is at 0,0; feet land at y≈96. */
+const runner = `
+<svg class="runner" viewBox="-110 -170 220 280" aria-hidden="true">
+  <g class="bob">
+    <g class="limb back">
+      <g transform="translate(6,-66)"><g class="upper arm-b"><line x1="0" y1="0" x2="0" y2="32"/><g transform="translate(0,32)"><g class="fore"><line x1="0" y1="0" x2="0" y2="28"/></g></g></g></g>
+      <g class="thigh leg-b"><line x1="0" y1="0" x2="0" y2="48"/><g transform="translate(0,48)"><g class="shin leg-b"><line x1="0" y1="0" x2="0" y2="44"/><line x1="0" y1="44" x2="12" y2="46"/></g></g></g>
+    </g>
+    <path class="torso" d="M-19,-2 L-15,-70 Q4,-88 25,-72 L19,0 Q0,11 -19,-2 Z"/>
+    <g transform="translate(14,-122) rotate(4)">
+      <rect class="cam" x="-36" y="-22" width="62" height="44" rx="9"/>
+      <path class="cam" d="M24,-9 L33,-9 L46,-19 L46,19 L33,9 L24,9 Z"/>
+      <circle cx="12" cy="-1" r="6.5" fill="#F0413A"/>
+      <circle cx="11.5" cy="-3" r="6" fill="#FDFCFE"/>
+    </g>
+    <g class="limb front">
+      <g class="thigh leg-f"><line x1="0" y1="0" x2="0" y2="48"/><g transform="translate(0,48)"><g class="shin leg-f"><line x1="0" y1="0" x2="0" y2="44"/><line x1="0" y1="44" x2="12" y2="46"/></g></g></g>
+      <g transform="translate(6,-66)"><g class="upper arm-f"><line x1="0" y1="0" x2="0" y2="32"/><g transform="translate(0,32)"><g class="fore"><line x1="0" y1="0" x2="0" y2="28"/></g></g></g></g>
+    </g>
+  </g>
+</svg>`;
 
 export function landingPage(opts: { number?: string }): string {
   const number = opts.number ?? "";
@@ -9,185 +35,129 @@ export function landingPage(opts: { number?: string }): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Press Run · Book press runs by text</title>
-<meta name="description" content="Press Run is a booking agent you text. Plan a press run with street series, podcasts, radio, livestreams and YouTube shows, all from iMessage. New York first.">
-<meta property="og:title" content="Press Run · Book press runs by text">
-<meta property="og:description" content="Plan a press run with street series, podcasts, radio, livestreams and YouTube shows, all from iMessage.">
+<title>Press Run</title>
+<meta name="description" content="Press Run is a booking agent you text. Book press runs with street series, podcasts, radio, livestreams and YouTube shows, all from iMessage. New York first.">
+<meta property="og:title" content="Press Run">
+<meta property="og:description" content="Book your press run by text.">
 <meta property="og:image" content="/logo-256.png">
 <meta name="theme-color" content="#0A0A0B">
 <link rel="icon" href="/logo-256.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Figtree:wght@400;600&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@900&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#0A0A0B; --char:#19191B; --line:#2E2E33; --fg:#F4F4F5; --muted:#9A9AA2; --red:#F0413A; --blue:#0A84FF; }
+  :root { --ink:#0A0A0B; --char:#19191B; --line:#2E2E33; --fg:#F4F4F5; --muted:#9A9AA2; --red:#F0413A; --blue:#0A84FF; --stride:.62s; --tile:clamp(66px, 19vw, 96px); }
   * { box-sizing:border-box; }
-  html { -webkit-text-size-adjust:100%; }
-  body { margin:0; background:var(--ink); color:var(--fg); font:17px/1.5 Figtree, system-ui, -apple-system, sans-serif; }
-  a { color:inherit; }
-  .wrap { max-width:1040px; margin:0 auto; padding:0 20px; }
-  .mono { font-family:"IBM Plex Mono", ui-monospace, monospace; font-weight:600; letter-spacing:.18em; text-transform:uppercase; font-size:13px; color:var(--red); }
-  h1, h2 { font-family:"Big Shoulders Display", Impact, sans-serif; font-weight:900; text-transform:uppercase; line-height:.92; margin:0; letter-spacing:.005em; }
-  h1 { font-size:clamp(56px, 11vw, 120px); }
-  h2 { font-size:clamp(40px, 6vw, 64px); }
-  header { display:flex; align-items:center; justify-content:space-between; padding:18px 0; }
-  .brand { display:flex; align-items:center; gap:10px; text-decoration:none; font-family:"Big Shoulders Display", sans-serif; font-weight:900; font-size:26px; text-transform:uppercase; }
-  .brand img { width:40px; height:40px; border-radius:10px; }
-  .btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; padding:0 26px; border-radius:999px; border:0; background:var(--red); color:#fff; font:600 17px Figtree, sans-serif; text-decoration:none; cursor:pointer; }
-  .btn:focus-visible, input:focus-visible, .choice input:focus-visible + span { outline:3px solid #fff; outline-offset:2px; }
-  .btn.ghost { background:transparent; border:2px solid var(--line); }
+  html, body { height:100%; }
+  body { margin:0; background:var(--ink); color:var(--fg); font:17px/1.45 Figtree, system-ui, -apple-system, sans-serif; overflow:hidden; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  main { width:100%; overflow:hidden; height:100%; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(28px, 6vh, 56px); padding:24px 16px; }
+
+  /* The scene: the runner stays in the middle while the tiles slide past underneath. */
+  .scene { position:relative; width:min(92vw, 560px); height:clamp(240px, 46vh, 400px); }
+  .glow { position:absolute; left:50%; bottom:-6%; width:120%; height:60%; transform:translateX(-50%); background:radial-gradient(closest-side, rgba(240,65,58,.42), rgba(240,65,58,.12) 55%, transparent); filter:blur(8px); pointer-events:none; }
+  .road { position:absolute; left:0; right:0; bottom:3%; height:27%; overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image:linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+  .tiles { position:absolute; inset:0 calc(var(--tile) * -2) 0 0; display:flex; align-items:center; gap:calc(var(--tile) * .34); padding-left:calc(var(--tile) * .2); animation:slide calc(var(--stride) * .9) linear infinite; }
+  .tiles i { flex:0 0 calc(var(--tile) * .66); height:30%; background:var(--red); border-radius:6px; transform:skewX(-32deg); box-shadow:0 0 14px rgba(240,65,58,.95), 0 0 34px rgba(240,65,58,.55); }
+  @keyframes slide { to { transform:translateX(calc(var(--tile) * -1)); } }
+  .runner { position:absolute; left:50%; bottom:15%; height:88%; transform:translateX(-50%); overflow:visible; }
+  .shadow { position:absolute; left:50%; bottom:13.5%; width:22%; height:5%; transform:translateX(-50%); background:radial-gradient(closest-side, rgba(0,0,0,.75), transparent); animation:shadow calc(var(--stride) / 2) ease-in-out infinite; }
+  @keyframes shadow { 50% { transform:translateX(-50%) scaleX(.8); opacity:.7; } }
+
+  .runner line { stroke-linecap:round; fill:none; }
+  .limb.front line { stroke:${LIMB}; }
+  .limb.back line { stroke:${LIMB_BACK}; }
+  .thigh line, .shin line { stroke-width:25; }
+  .upper line, .fore line { stroke-width:19; }
+  .torso, .cam { fill:${LIMB}; }
+  .bob, .thigh, .shin, .upper, .fore { transform-box:view-box; transform-origin:0 0; }
+  .bob { animation:bob calc(var(--stride) / 2) ease-in-out infinite; }
+  .thigh { animation:thigh var(--stride) linear infinite; }
+  .shin { animation:shin var(--stride) linear infinite; }
+  .upper { animation:upper var(--stride) ease-in-out infinite; }
+  .fore { transform:rotate(-80deg); }
+  .leg-b, .arm-f { animation-delay:calc(var(--stride) / -2); }
+  /* Rotations: negative swings forward (to the right), positive swings back. */
+  @keyframes bob { 0%, 100% { transform:translateY(0) rotate(6deg); } 50% { transform:translateY(-9px) rotate(6deg); } }
+  @keyframes thigh { 0% { transform:rotate(-48deg); } 50% { transform:rotate(38deg); } 100% { transform:rotate(-48deg); } }
+  @keyframes shin { 0% { transform:rotate(18deg); } 25% { transform:rotate(12deg); } 50% { transform:rotate(55deg); } 72% { transform:rotate(112deg); } 100% { transform:rotate(18deg); } }
+  @keyframes upper { 0% { transform:rotate(44deg); } 50% { transform:rotate(-52deg); } 100% { transform:rotate(44deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tiles, .bob, .thigh, .shin, .upper, .shadow { animation:none; }
+    .leg-f.thigh { transform:rotate(-24deg); } .leg-b.thigh { transform:rotate(22deg); } .leg-b.shin { transform:rotate(40deg); }
+    .arm-f { transform:rotate(-30deg); } .arm-b { transform:rotate(30deg); }
+  }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:56px; padding:0 34px; border-radius:999px; border:0; background:var(--red); color:#fff; font:600 18px Figtree, sans-serif; text-decoration:none; cursor:pointer; box-shadow:0 0 0 0 rgba(240,65,58,.5); }
+  .btn:focus-visible, input:focus-visible, .choice input:focus-visible + span { outline:3px solid #fff; outline-offset:3px; }
   .btn.imsg { background:var(--blue); }
-  .hero { display:grid; grid-template-columns:1.15fr .85fr; gap:40px; align-items:center; padding:48px 0 72px; }
-  .hero p.lead { font-size:20px; color:#D4D4D8; max-width:34em; margin:22px 0 28px; }
-  .crosswalk { display:flex; gap:12px; margin:0 0 22px; transform:skewX(-28deg); }
-  .crosswalk i { width:34px; height:12px; background:var(--red); border-radius:3px; }
-  .phone { background:var(--char); border:1px solid var(--line); border-radius:34px; padding:18px 14px; display:flex; flex-direction:column; gap:8px; max-width:360px; justify-self:end; width:100%; }
-  .phone .who { text-align:center; font-size:12px; color:var(--muted); margin-bottom:6px; }
-  .b { max-width:82%; padding:9px 13px; border-radius:18px; font-size:15px; line-height:1.3; }
-  .b.me { align-self:flex-end; background:var(--blue); color:#fff; border-bottom-right-radius:5px; }
-  .b.pr { align-self:flex-start; background:#2C2C30; border-bottom-left-radius:5px; }
-  .card-mini { align-self:flex-start; width:62%; aspect-ratio:4/5; border-radius:16px; background:linear-gradient(160deg, #26262B, #0A0A0B 70%); border:1px solid var(--line); padding:12px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; }
-  .card-mini .n { position:absolute; top:10px; left:10px; width:28px; height:28px; border-radius:50%; background:var(--red); display:grid; place-items:center; font:900 17px "Big Shoulders Display", sans-serif; }
-  .card-mini b { font:900 22px/1 "Big Shoulders Display", sans-serif; text-transform:uppercase; }
-  .card-mini small { color:var(--muted); font-size:11px; }
-  .tap { align-self:flex-start; margin:-14px 0 0 8px; background:#3A3A40; border-radius:12px; padding:2px 7px; font-size:13px; }
-  section { padding:72px 0; border-top:1px solid var(--line); }
-  .steps { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-top:32px; }
-  .step { background:var(--char); border:1px solid var(--line); border-radius:20px; padding:24px; }
-  .step .num { font:900 44px/1 "Big Shoulders Display", sans-serif; color:var(--red); }
-  .step h3 { margin:10px 0 6px; font-size:20px; }
-  .step p { margin:0; color:#C8C8CE; }
-  .step code { font:600 14px "IBM Plex Mono", monospace; color:var(--fg); background:var(--ink); padding:2px 6px; border-radius:6px; }
-  .types { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
-  .types span { border:1px solid var(--line); border-radius:999px; padding:8px 16px; color:#D4D4D8; }
-  .split { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; }
-  .split p { color:#C8C8CE; }
-  .founding { background:var(--red); color:#fff; border-radius:28px; padding:36px; }
-  .founding .mono { color:#fff; opacity:.85; }
-  .founding p { font-size:19px; margin:14px 0 0; }
-  form { background:var(--char); border:1px solid var(--line); border-radius:28px; padding:28px; display:flex; flex-direction:column; gap:16px; }
+  @media (prefers-reduced-motion: no-preference) { .btn { transition:transform .15s ease; } .btn:active { transform:scale(.96); } }
+
+  /* The sign-up sheet. */
+  dialog { width:calc(100vw - 24px); max-width:440px; margin:auto; max-height:calc(100dvh - 24px); overflow:auto; border:1px solid var(--line); border-radius:28px; background:var(--char); color:var(--fg); padding:26px; }
+  dialog::backdrop { background:rgba(0,0,0,.7); }
+  .close { position:absolute; top:14px; right:14px; width:36px; height:36px; border-radius:50%; border:0; background:#2C2C30; color:var(--fg); font-size:20px; line-height:1; cursor:pointer; }
+  h2 { font:900 34px/1 "Big Shoulders Display", Impact, sans-serif; text-transform:uppercase; margin:0 0 18px; }
+  form { display:flex; flex-direction:column; gap:14px; }
   label { display:flex; flex-direction:column; gap:6px; font-weight:600; font-size:15px; }
   input[type=text], input[type=email] { min-height:50px; border-radius:14px; border:1px solid var(--line); background:var(--ink); color:var(--fg); font:17px Figtree, sans-serif; padding:0 14px; }
   fieldset { border:0; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
   legend { font-weight:600; font-size:15px; margin-bottom:6px; }
   .choice { position:relative; }
   .choice input { position:absolute; opacity:0; }
-  .choice span { display:block; border:1px solid var(--line); border-radius:14px; padding:12px 14px; cursor:pointer; }
+  .choice span { display:block; border:1px solid var(--line); border-radius:14px; padding:12px 14px; cursor:pointer; font-weight:400; }
   .choice input:checked + span { border-color:var(--red); background:#2A1715; }
   .err { color:#FF8F87; font-size:15px; min-height:1em; margin:0; }
+  .fine { color:var(--muted); font-size:13px; margin:0; }
   .done { display:none; text-align:center; }
   .done.show { display:flex; flex-direction:column; align-items:center; gap:16px; }
-  .done .msg { background:var(--ink); border:1px dashed var(--line); border-radius:14px; padding:12px 16px; font-size:15px; color:#D4D4D8; }
-  .fine { color:var(--muted); font-size:14px; }
-  footer { padding:40px 0 56px; color:var(--muted); font-size:14px; border-top:1px solid var(--line); }
-  @media (max-width: 820px) {
-    .hero, .split { grid-template-columns:1fr; }
-    .phone { justify-self:stretch; max-width:none; }
-    .steps { grid-template-columns:1fr; }
-    section { padding:56px 0; }
-  }
-  @media (prefers-reduced-motion: no-preference) { .btn { transition:transform .15s ease; } .btn:active { transform:scale(.97); } }
+  .done p { margin:0; color:#D4D4D8; }
+  .done .msg { background:var(--ink); border:1px dashed var(--line); border-radius:14px; padding:12px 16px; font-size:15px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <a class="brand" href="/"><img src="/logo-256.png" alt="">Press Run</a>
-    <a class="btn ghost" href="#join">Join</a>
-  </header>
-
-  <div class="hero">
-    <div>
-      <div class="crosswalk" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <h1>Book your press run by text.</h1>
-      <p class="lead">Press Run is a booking agent you text. Send your dates, pick from street series, podcasts, radio, livestreams and YouTube shows, and Press Run handles the back-and-forth until the shoot. All in iMessage. No app.</p>
-      <a class="btn" href="#join">Get started</a>
-    </div>
-    <div class="phone" aria-label="Example Press Run text thread">
-      <div class="who">Press Run</div>
-      <div class="b me">NYC Nov 12–15, 2 artists, $5k budget, give me my options</div>
-      <div class="b pr">On it. Pulling Press Stops now…</div>
-      <div class="card-mini"><span class="n">1</span><b>Music for a Minute</b><small>with Courtney · Street series</small></div>
-      <div class="tap" aria-hidden="true">❤️</div>
-      <div class="b pr">Shortlisted 1, Courtney from Music for a Minute. Want me to ask about dates?</div>
-      <div class="b me">yes</div>
-    </div>
+<main>
+  <h1 class="sr">Press Run: book your press run by text</h1>
+  <div class="scene" role="img" aria-label="The Press Run character running across red crosswalk tiles">
+    <div class="glow"></div>
+    <div class="road"><div class="tiles">${"<i></i>".repeat(14)}</div></div>
+    <div class="shadow"></div>
+    ${runner}
   </div>
-</div>
+  <button class="btn" id="start" type="button">Start here</button>
+</main>
 
-<section>
-  <div class="wrap">
-    <div class="mono">For artists, managers, labels, publicists and brands</div>
-    <h2 style="margin-top:12px">Plan a whole run in one thread.</h2>
-    <div class="steps">
-      <div class="step"><div class="num">1</div><h3>Text your dates</h3><p>Like <code>NYC Nov 12–15, 2 artists, $5k</code>. Press Run only asks for what's missing.</p></div>
-      <div class="step"><div class="num">2</div><h3>Pick by reply or ❤️</h3><p>Each Press Stop comes as a card and an 18-second clip. Reply with numbers or react to the ones you want.</p></div>
-      <div class="step"><div class="num">3</div><h3>Press Run books it</h3><p>It asks each show, passes replies both ways, and sends your Run Sheet with reminders and a calendar file.</p></div>
-    </div>
-    <div class="types" aria-label="Kinds of Press Stops">
-      <span>Street series</span><span>Podcasts</span><span>Radio</span><span>Livestreams</span><span>YouTube shows</span><span>Creator features and collabs</span>
-    </div>
+<dialog id="sheet" aria-labelledby="sheet-title">
+  <button class="close" type="button" aria-label="Close" onclick="this.closest('dialog').close()">×</button>
+  <form id="signup" novalidate>
+    <h2 id="sheet-title">Join Press Run</h2>
+    <label>Your name<input type="text" name="name" autocomplete="name" required></label>
+    <label>Email<input type="email" name="email" autocomplete="email" required></label>
+    <fieldset>
+      <legend>I want to…</legend>
+      <label class="choice"><input type="radio" name="intent" value="booker" checked><span>Book press for myself or my artists</span></label>
+      <label class="choice"><input type="radio" name="intent" value="stop"><span>List my show as a Press Stop</span></label>
+      <label class="choice"><input type="radio" name="intent" value="both"><span>Both</span></label>
+    </fieldset>
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn" type="submit">Continue</button>
+    <p class="fine">Your email is only for receipts and Run Sheets. No spam. Message and data rates may apply. Reply STOP anytime to opt out.</p>
+  </form>
+  <div class="done" id="done" aria-live="polite">
+    <h2>You're in.</h2>
+    <p>Tap below. Messages opens with your code already typed. Just hit send.</p>
+    <a class="btn imsg" id="text" href="#">Text Press Run</a>
+    <div class="msg" id="msg"></div>
   </div>
-</section>
-
-<section>
-  <div class="wrap split">
-    <div>
-      <div class="mono">For shows and creators</div>
-      <h2 style="margin-top:12px">Become a Press Stop.</h2>
-    </div>
-    <div>
-      <p>List your show by text in a few minutes. Press Run makes your card and a short clip from your own episode, and sends you booking requests that fit your dates.</p>
-      <p>You set your rate. Your number stays private until you choose to share it. Reply YES with a day, time and place, and Press Run takes care of the rest.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="founding">
-      <div class="mono">Founding Members · New York first</div>
-      <h2 style="margin-top:12px">Free while we're starting out.</h2>
-      <p>The first 1,000 members pay no service fees on any booking for 12 months after fees start.</p>
-    </div>
-  </div>
-</section>
-
-<section id="join">
-  <div class="wrap split">
-    <div>
-      <div class="mono">Join Press Run</div>
-      <h2 style="margin-top:12px">Sign up, then say hi by text.</h2>
-      <p class="fine" style="margin-top:18px">Your email is only for receipts and Run Sheets. No spam. Message and data rates may apply. Reply STOP anytime to opt out.</p>
-    </div>
-    <div>
-      <form id="signup" novalidate>
-        <label>Your name<input type="text" name="name" autocomplete="name" required></label>
-        <label>Email<input type="email" name="email" autocomplete="email" required></label>
-        <fieldset>
-          <legend>I want to…</legend>
-          <label class="choice"><input type="radio" name="intent" value="booker" checked><span>Book press for myself or my artists</span></label>
-          <label class="choice"><input type="radio" name="intent" value="stop"><span>List my show as a Press Stop</span></label>
-          <label class="choice"><input type="radio" name="intent" value="both"><span>Both</span></label>
-        </fieldset>
-        <p class="err" id="err" role="alert"></p>
-        <button class="btn" type="submit">Continue</button>
-      </form>
-      <div class="done" id="done" aria-live="polite">
-        <h2>You're in.</h2>
-        <p>Tap below. Messages opens with your code already typed. Just hit send.</p>
-        <a class="btn imsg" id="text" href="#">Text Press Run</a>
-        <div class="msg" id="msg"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="wrap"><footer>© 2026 Press Run · New York</footer></div>
+</dialog>
 
 <script>
 const NUMBER = ${JSON.stringify(number)};
+const sheet = document.getElementById("sheet");
+document.getElementById("start").addEventListener("click", () => sheet.showModal());
+sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
 const form = document.getElementById("signup");
 const err = document.getElementById("err");
 form.addEventListener("submit", async e => {
@@ -196,7 +166,7 @@ form.addEventListener("submit", async e => {
   err.textContent = "";
   if (!String(data.name || "").trim()) { err.textContent = "What should we call you?"; return; }
   if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(String(data.email || "").trim())) { err.textContent = "That email doesn't look right. Mind checking it?"; return; }
-  const btn = form.querySelector("button");
+  const btn = form.querySelector("button[type=submit]");
   btn.disabled = true;
   try {
     const r = await fetch("/api/signup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });

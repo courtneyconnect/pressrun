@@ -31,9 +31,9 @@ describe("website", () => {
     const r = await app.request("/");
     expect(r.status).toBe(200);
     const html = await r.text();
-    expect(html).toContain("Book your press run by text.");
+    expect(html).toContain('<button class="btn" id="start" type="button">Start here</button>');
+    expect(html).toContain('class="runner"');
     expect(html).toContain('const NUMBER = "+15550001234"');
-    expect(html).toContain("The first 1,000 members pay no service fees on any booking for 12 months after fees start.");
     expect((await app.request("/logo-256.png")).headers.get("content-type")).toContain("image/png");
   });
 

@@ -10,7 +10,7 @@ import { phonePage } from "./dev/phone-page";
 import { LocalFiles, type FileStore } from "./media/files";
 
 export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date }) {
-  const engine = new Engine(store, opts.clock);
+  const engine = new Engine(store, opts.clock, (a, out) => provider.send(a.phone, out));
   const app = new Hono();
 
   app.get("/health", c => c.json({ data: { ok: true, provider: provider.name } }));

@@ -80,6 +80,7 @@ async function load() {
     if (m.kind === "text" && m.body) { d.className = "b " + (m.direction === "out" ? "in" : "out"); d.textContent = m.body; }
     else if (m.direction === "out" && m.kind === "image" && m.data && m.data.url) { d.className = "b in"; d.style.padding = "0"; d.style.overflow = "hidden"; const img = document.createElement("img"); img.src = m.data.url; img.alt = m.data.alt || ""; img.style.cssText = "display:block;width:240px"; d.appendChild(img); }
     else if (m.direction === "out" && m.kind === "video" && m.data && m.data.url) { d.className = "b in"; d.style.padding = "0"; d.style.overflow = "hidden"; const v = document.createElement("video"); v.src = m.data.url; v.controls = true; v.playsInline = true; v.style.cssText = "display:block;width:180px"; d.appendChild(v); }
+    else if (m.direction === "out" && (m.kind === "file" || m.kind === "link") && m.data && m.data.url) { d.className = "b in"; const a = document.createElement("a"); a.href = m.data.url; a.target = "_blank"; a.style.color = "inherit"; a.textContent = m.kind === "file" ? "📅 " + m.data.name : "🔗 " + m.data.url; d.appendChild(a); }
     else { d.className = "att"; d.textContent = (m.direction === "out" ? "Press Run sent: " : "You sent: ") + m.kind + (m.data ? " " + JSON.stringify(m.data) : ""); if (m.direction === "in") d.style.alignSelf = "flex-end"; }
     t.appendChild(d);
   }

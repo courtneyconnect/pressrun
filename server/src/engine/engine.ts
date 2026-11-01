@@ -12,6 +12,7 @@ import { bookerSteps, BOOKER_FIRST } from "./flows/booker";
 import { stopSteps, STOP_FIRST } from "./flows/stop";
 import { runSteps, RUN_FIRST } from "./flows/run";
 import { handleBooker } from "../run/picking";
+import { handleRelay } from "../run/relay";
 
 export interface Ctx {
   store: Store;
@@ -19,7 +20,12 @@ export interface Ctx {
   input: Inbound;
   text: string;
   now: Date;
+  /** Sends bubbles to someone else (the other side of a conversation). */
+  notify: (accountId: string, out: Out[]) => Promise<void>;
 }
+
+/** Delivers bubbles to another account. The default only records them (tests read the log). */
+export type Notify = (account: Account, out: Out[]) => Promise<void>;
 
 /** What a step decides after reading a reply. `next` may be "flow:step" to switch flows, or "done". */
 export type Result =
@@ -49,7 +55,14 @@ const FLOWS: Record<Flow, { steps: Record<string, Step>; first: string }> = {
 const SIGNUP_CODE = /\bPR-[A-Z2-9]{4}\b/i;
 
 export class Engine {
-  constructor(private store: Store, private clock: () => Date = () => new Date()) {}
+  constructor(private store: Store, private clock: () => Date = () => new Date(), private send: Notify = async () => {}) {}
+
+  private async notify(accountId: string, out: Out[]): Promise<void> {
+    const a = await this.store.accountById(accountId);
+    if (!a || !out.length) return;
+    await logOut(this.store, a.id, out);
+    if (!a.optedOut) await this.send(a, out);
+  }
 
   /** Handles one inbound message and returns the bubbles to send back (already logged). */
   async handle(input: Inbound): Promise<Out[]> {
@@ -65,7 +78,7 @@ export class Engine {
       data: input.reaction || input.media ? { reaction: input.reaction, media: input.media } : null,
     });
 
-    const ctx: Ctx = { store: this.store, account, input, text: input.text.trim(), now };
+    const ctx: Ctx = { store: this.store, account, input, text: input.text.trim(), now, notify: (id, out) => this.notify(id, out) };
     const out = await this.route(ctx, isNew);
     await this.store.saveAccount(ctx.account);
     await logOut(this.store, account.id, out);
@@ -219,6 +232,8 @@ export class Engine {
       ctx.account.state.stopId = undefined;
       return this.goTo(ctx, `stop:${STOP_FIRST}`, []);
     }
+    const relayed = await handleRelay(ctx);
+    if (relayed) return relayed;
     const r = await handleBooker(ctx, (target, say) => this.goTo(ctx, target, say));
     if (r) return r;
     return ctx.input.reaction ? [] : [C.WELCOME_BACK(ctx.account.firstName)];

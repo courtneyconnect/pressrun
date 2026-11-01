@@ -4,9 +4,10 @@
 
 import type { Ctx } from "../engine/engine";
 import * as C from "../engine/copy";
-import { fmtDate, norm, numbersIn, ordinalsIn, parseDates, parseRelativeWindow, weekdaysIn } from "../engine/parse";
+import { fmtDate, isYes, norm, numbersIn, ordinalsIn, parseDates, parseRelativeWindow, weekdaysIn } from "../engine/parse";
 import type { Out, PressStop, RunOption, RunRequest } from "../types";
 import { andList, candidateDates, moneyIn, parseRequest, stopTypeWords, typeOfStop } from "./match";
+import { askShortlisted } from "./relay";
 import { assign, bookerContext, CARDS_AT_ONCE, findMatches, sendSet } from "./options";
 
 type Go = (target: string, say: Out[]) => Promise<Out[]>;
@@ -52,6 +53,11 @@ function dayLabel(r: RunRequest, weekday: number): string {
     if (d.getUTCDay() === weekday) return `${DAY_NAMES[weekday]} ${fmtDate(d.toISOString().slice(0, 10))}`;
   }
   return DAY_NAMES[weekday]!;
+}
+
+/** True when Press Run's last text to this person was a shortlist ("…Want me to ask about dates?"). */
+export async function answersShortlist(ctx: Ctx): Promise<boolean> {
+  return /^Shortlist(ed)?\b/.test((await ctx.store.lastOutText(ctx.account.id)) ?? "");
 }
 
 export function looksLikeRun(ctx: Ctx): boolean {
@@ -110,8 +116,9 @@ async function onCommand(ctx: Ctx, req: RunRequest): Promise<Out[] | null> {
   if (/\b(show (me )?(them )?all|see (them )?all|send (them )?all|all of them)\b/.test(t) && req.mode === "list") return page(ctx, req, 0);
   if (/^(more|next|next 5|more please|show more|send more)$/.test(t) && req.mode === "list") return page(ctx, req, req.cursor ?? 0);
 
+  if (isYes(ctx.text) && (await answersShortlist(ctx))) return askShortlisted(ctx, req);
   if (/\b(ask them|book them|ask (them )?all|ask both|book (it|them|all)|send (the )?requests?|ask about dates)\b/.test(t)) {
-    return [C.R_ASK_NEXT_SLICE];
+    return askShortlisted(ctx, req);
   }
 
   if (/\b(cheaper|less expensive|lower (price|rate)s?|cheapest)\b/.test(t)) {

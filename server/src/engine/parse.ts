@@ -410,7 +410,9 @@ function eachDay(a: Date, b: Date): Date[] {
 
 /** "Nov 12, 13, 15", "Nov 12–15", "Nov 28 – Dec 2" → ISO dates; drops dates already past. */
 export function parseDates(s: string, now: Date): { dates: string[]; past: string[]; flexible: boolean } {
-  let t = norm(s).replace(/(\d)(st|nd|rd|th)\b/g, "$1");
+  let t = norm(s).replace(/(\d)(st|nd|rd|th)\b/g, "$1")
+    // Times aren't days: "Nov 13, 2:30pm" is Nov 13 only.
+    .replace(/\b\d{1,2}(:\d{2})?\s*(am|pm|a\.m\.|p\.m\.)/g, " ").replace(/\b\d{1,2}:\d{2}\b/g, " ");
   const flexible = /\b(flexible|whenever|anytime|any time|open|wide open)\b/.test(t) && !/\d/.test(t);
   const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   const days: Date[] = [];

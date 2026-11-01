@@ -155,7 +155,7 @@ describe("R3: picking", () => {
   test("who's free Thursday, cheaper, ask them", async () => {
     expect(await say("who's free Thursday?")).toBe("Thursday Nov 12: 2 and 3 (Courtney from Music for a Minute and Penny for Your Thoughts).\nNobody else is free Thursday Nov 12.");
     expect(await say("cheaper")).toBe("These are the cheapest I've got for those dates.");
-    expect(await say("ask them")).toBe("Got it. Sending your request to the Press Stops arrives in the next build.");
+    expect(await say("ask them")).toBe("Which ones? Reply with numbers, or ❤️ a card first.");
   });
 });
 

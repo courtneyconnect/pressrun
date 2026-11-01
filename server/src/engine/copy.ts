@@ -4,7 +4,7 @@
 import type { Out } from "../types";
 import { interestList } from "./parse";
 
-export const t = (text: string): Out => ({ type: "text", text });
+export const t = (text: string): Extract<Out, { type: "text" }> => ({ type: "text", text });
 
 export const memberNo = (n: number) => "#" + String(n).padStart(4, "0");
 
@@ -228,4 +228,37 @@ export const R_FREE_ON = (day: string, nums: string, who: string) => t(`${day}: 
 export const R_ALSO_FREE = (day: string) => t(`Also free ${day} 👇`);
 export const R_NOBODY_ELSE = (day: string) => t(`Nobody else is free ${day}.`);
 /** Build-slice note: asking Press Stops (R4) is the next slice. */
-export const R_ASK_NEXT_SLICE = t("Got it. Sending your request to the Press Stops arrives in the next build.");
+
+// ---------- Passing messages and booking (R4–R5) ----------
+
+export const R_ASK_WHICH = t("Which ones? Reply with numbers, or ❤️ a card first.");
+export const R_SENT = (who: string, dates: string) => t(`Sent 🙌 I asked ${who} about ${dates}. I'll pass their replies here, usually within a few hours.`);
+export const REQ_HEAD = (code: string, talentLine: string, series: string, dates: string, budget: string) =>
+  t(`📩 New booking request #${code}\n${talentLine} for ${series}\nDates: ${dates} · ${budget}`);
+export const REQ_REPLY = t("Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on.");
+export const RELAY = (label: string, words: string) => t(`💬 ${label}: ${words}`);
+export const RELAY_LOCK_HINT = t('Reply to answer, or "lock it" to book that time.');
+export const SENT_TO = (label: string) => t(`Sent to ${label} ✅`);
+export const ASK_DETAILS = t('What day, time and place work? e.g. "Thu Nov 13, 2:30pm, Washington Sq Park"');
+export const STOP_PASS_OK = t("No worries, I'll let them know.");
+export const BOOKER_PASSED = (who: string) => t(`${who} can't make those dates. Want me to ask someone else?`);
+export const NO_TIME_YET = (who: string) => t(`${who} hasn't suggested a time yet. I'll pass it on when they do.`);
+export const WHICH_CONV = (a: string, b: string) => t(`Is this for ${a} or ${b}?`);
+export const BOOKED_BOOKER = (who: string, when: string, place: string) => t(`Booked ✅ ${who} · ${when} · ${place}`);
+export const RUNSHEET_SOON = t("I'll send your full Run Sheet once the other Press Stops confirm.");
+export const BOOKED_STOP = (talent: string, when: string, place: string) => t(`Booked ✅ ${talent} · ${when} · ${place}. I'll send reminders.`);
+export const STOP_CAL = t("Tap the calendar file to add it to your calendar.");
+export const HID_NUMBER = (who: string) => t(`I hid your number in what I passed on. Reply SHARE if you want ${who} to have it.`);
+export const SHARED = (who: string) => t(`Shared ✅ ${who} can see your number now.`);
+export const SHARED_OTHER = (label: string, value: string) => t(`📞 ${label} shared their number: ${value}`);
+export const NOTHING_TO_SHARE = t("There's no hidden number to share right now.");
+export const STOP_NUDGE = (label: string, code: string) => t(`${label} is waiting on #${code}. YES with a day/time/location, or NO?`);
+export const BOOKER_EXPIRED = (who: string) => t(`${who} didn't get back in time. Want me to ask someone else?`);
+export const STOP_EXPIRED = (code: string) => t(`#${code} expired. No worries.`);
+export const RUNSHEET_TEXT = (n: number, range: string) => t(`Your run: ${n} Press Stop${n === 1 ? "" : "s"}, ${range}. I'll text call times the night before and 1 hour before each one. Reply "change" if anything moves.`);
+export const RUNSHEET_CAL = t("Tap the calendar file to add every stop to your calendar in one go.");
+export const REMIND_NIGHT_BOOKER = (who: string, time: string, place: string) => t(`Tomorrow: ${who} at ${time}, ${place}. Reply "late" if you're running behind.`);
+export const REMIND_NIGHT_STOP = (talent: string, time: string, place: string) => t(`Tomorrow: ${talent} at ${time}, ${place}.`);
+export const REMIND_HOUR_BOOKER = (who: string, place: string) => t(`${who} in 1 hour 📍 ${place}`);
+export const REMIND_HOUR_STOP = (talent: string, place: string) => t(`${talent} in 1 hour 📍 ${place}`);
+export const LATE_TOLD = (who: string) => t(`Told ${who}. You're good 👍`);

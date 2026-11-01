@@ -6,14 +6,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Job, Store } from "./db/store";
 import * as C from "./engine/copy";
-import { renderCard, renderEndCard, renderList } from "./media/card";
+import { renderCard, renderEndCard, renderList, renderRunSheet } from "./media/card";
 import { fetchSample, grabFrame, makeClip, SampleUnavailable } from "./media/clip";
 import type { FileStore } from "./media/files";
 import { logOut } from "./outbox";
 import type { Provider } from "./providers/provider";
-import type { Account, Out, PressStop, RunRequest } from "./types";
+import type { Account, Conversation, Out, PressStop, RunRequest } from "./types";
 import { andList, describeRequest } from "./run/match";
 import { bookerContext } from "./run/options";
+import { bookerLabel, dateRange, settleRun, stopLabel, talentNames } from "./run/relay";
+import { fmtTime, icsCalendar } from "./run/time";
+import { dayName, fmtDate } from "./engine/parse";
 
 export interface WorkerDeps {
   store: Store;
@@ -34,6 +37,11 @@ export async function runJobs(deps: WorkerDeps): Promise<number> {
       else if (job.kind === "send_options") await sendOptions(deps, job);
       else if (job.kind === "send_list") await sendList(deps, job);
       else if (job.kind === "shortlist_summary") await shortlistSummary(deps, job);
+      else if (job.kind === "conv_nudge") await convNudge(deps, job);
+      else if (job.kind === "conv_expire") await convExpire(deps, job, now);
+      else if (job.kind === "stop_calendar") await stopCalendar(deps, job);
+      else if (job.kind === "reminder") await reminder(deps, job);
+      else if (job.kind === "runsheet") await runSheet(deps, job, now);
       await deps.store.finishJob(job.id, "done");
     } catch (err) {
       await onFailure(deps, job, err, now);
@@ -230,4 +238,104 @@ async function shortlistSummary(deps: WorkerDeps, job: Job): Promise<void> {
   if (!ctx || ctx.req.lastReactionAt !== p.stamp) return; // a newer reaction will send its own summary
   const nums = ctx.req.options.filter(o => o.state === "shortlisted").map(o => String(o.number));
   if (nums.length) await deliver(deps, ctx.account, [C.R_SHORTLIST(andList(nums))]);
+}
+
+// ---------- Conversations and bookings (booker script R4–R5, section 4) ----------
+
+const SHOOT_MINUTES = 60;
+
+async function convAndPeople(deps: WorkerDeps, convId: string) {
+  const c = await deps.store.conversation(convId);
+  if (!c) return null;
+  const booker = await deps.store.accountById(c.bookerId);
+  const contact = await deps.store.accountById(c.contactId);
+  const stop = await deps.store.stop(c.stopId);
+  return booker && contact && stop ? { c, booker, contact, stop } : null;
+}
+
+/** 12 hours with no answer from the Press Stop: one nudge. */
+async function convNudge(deps: WorkerDeps, job: Job): Promise<void> {
+  const x = await convAndPeople(deps, (job.payload as { convId: string }).convId);
+  if (!x || x.c.status !== "asked") return;
+  await deliver(deps, x.contact, [{ ...C.STOP_NUDGE(await bookerLabel(deps.store, x.c), x.c.code), ref: `conv:${x.c.id}` }]);
+}
+
+/** 24 hours with no answer: the request expires and the booker can ask someone else. */
+async function convExpire(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const x = await convAndPeople(deps, (job.payload as { convId: string }).convId);
+  if (!x || x.c.status !== "asked") return;
+  x.c.status = "expired";
+  await deps.store.saveConversation(x.c);
+  await deliver(deps, x.booker, [C.BOOKER_EXPIRED(await stopLabel(deps.store, x.c))]);
+  await deliver(deps, x.contact, [C.STOP_EXPIRED(x.c.code)]);
+  const req = await deps.store.request(x.c.requestId);
+  if (req) await settleRun({ store: deps.store, now }, req);
+}
+
+function shootEvent(c: Conversation, title: string, notes: string) {
+  return { uid: `${c.id}-${c.shootAt}`, start: new Date(c.shootAt!), minutes: SHOOT_MINUTES, title, place: c.proposal?.place ?? "", notes };
+}
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "press-run";
+
+/** The Press Stop's calendar file for one shoot. */
+async function stopCalendar(deps: WorkerDeps, job: Job): Promise<void> {
+  const x = await convAndPeople(deps, (job.payload as { convId: string }).convId);
+  if (!x || x.c.status !== "booked" || !x.c.shootAt) return;
+  const talent = await talentNames(deps.store, x.c);
+  const ics = icsCalendar([shootEvent(x.c, `${talent} × ${x.stop.seriesName ?? "Press Run"}`, `Booked through Press Run (#${x.c.code}). Text Press Run if anything changes.`)]);
+  const name = `${slug(talent)}-${slug(x.stop.seriesName ?? "")}.ics`;
+  const url = await deps.files.put(`convs/${x.c.id}/${Date.parse(x.c.shootAt)}-${name}`, new TextEncoder().encode(ics), "text/calendar");
+  await deliver(deps, x.contact, [{ type: "file", url, name, mime: "text/calendar", ref: `conv:${x.c.id}` }, C.STOP_CAL]);
+}
+
+/** The night before (8pm) and 1 hour before, to both sides. Skipped if the time changed since. */
+async function reminder(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { convId: string; kind: "night" | "hour"; shootAt: string };
+  const x = await convAndPeople(deps, p.convId);
+  if (!x || x.c.status !== "booked" || x.c.shootAt !== p.shootAt) return;
+  const who = await stopLabel(deps.store, x.c);
+  const talent = await talentNames(deps.store, x.c);
+  const place = x.c.proposal?.place ?? "place TBD";
+  const time = fmtTime(x.c.proposal!.time!);
+  if (p.kind === "night") {
+    await deliver(deps, x.booker, [C.REMIND_NIGHT_BOOKER(who, time, place)]);
+    await deliver(deps, x.contact, [C.REMIND_NIGHT_STOP(talent, time, place)]);
+  } else {
+    await deliver(deps, x.booker, [C.REMIND_HOUR_BOOKER(who, place)]);
+    await deliver(deps, x.contact, [C.REMIND_HOUR_STOP(talent, place)]);
+  }
+}
+
+/** Every Press Stop asked has answered or expired: the Run Sheet image, a text version and one calendar file. */
+async function runSheet(deps: WorkerDeps, job: Job, now: Date): Promise<void> {
+  const ctx = await requestAndBooker(deps, (job.payload as { requestId: string }).requestId);
+  if (!ctx) return;
+  const { req, account } = ctx;
+  const booked = (await deps.store.conversationsForRequest(req.id)).filter(c => c.status === "booked" && c.shootAt).sort((a, b) => a.shootAt!.localeCompare(b.shootAt!));
+  if (!booked.length) return;
+  const rows = [];
+  const events = [];
+  for (const c of booked) {
+    const stop = (await deps.store.stop(c.stopId))!;
+    const talent = await talentNames(deps.store, c);
+    rows.push({ day: `${dayName(c.proposal!.date!)} ${fmtDate(c.proposal!.date!)}`, time: fmtTime(c.proposal!.time!), series: stop.seriesName ?? "Press Stop", creator: stop.creatorNames.join(" & ") || "the team", talent, place: c.proposal?.place ?? "Place TBD" });
+    events.push(shootEvent(c, `${talent} × ${stop.seriesName ?? "Press Run"}`, `${await stopLabel(deps.store, c)}. Booked through Press Run (#${c.code}).`));
+  }
+  const firstDate = booked[0]!.proposal!.date!, lastDate = booked[booked.length - 1]!.proposal!.date!;
+  const range = dateRange(firstDate, lastDate);
+  const forWho = andList([...new Set(rows.map(r => r.talent))]);
+  const png = await renderRunSheet(forWho || "Your run", `NYC · ${range} · ${booked.length} Press Stop${booked.length === 1 ? "" : "s"}`, rows);
+  const stamp = now.getTime();
+  const imgUrl = await deps.files.put(`requests/${req.id}/run-sheet-${stamp}.png`, png, "image/png");
+  const name = `${slug(forWho)}-nyc-run.ics`;
+  const icsUrl = await deps.files.put(`requests/${req.id}/${stamp}-${name}`, new TextEncoder().encode(icsCalendar(events)), "text/calendar");
+  req.runSheetSentAt = now.toISOString();
+  await deps.store.saveRequest(req);
+  await deliver(deps, account, [
+    { type: "image", url: imgUrl, alt: `Run Sheet · ${forWho} · NYC ${range}`, ref: `runsheet:${req.id}` },
+    C.RUNSHEET_TEXT(booked.length, range),
+    { type: "file", url: icsUrl, name, mime: "text/calendar", ref: `runsheet:${req.id}` },
+    C.RUNSHEET_CAL,
+  ]);
 }

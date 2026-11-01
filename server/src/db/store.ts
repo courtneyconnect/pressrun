@@ -3,7 +3,7 @@
 // the columns we look things up by, plus a JSON `data` column for the rest.
 
 import { SQL } from "bun";
-import type { Account, BookerProfile, PressStop, RunRequest, SignupCode, Talent } from "../types";
+import type { Account, BookerProfile, Conversation, PressStop, RunRequest, SignupCode, Talent } from "../types";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, phone TEXT UNIQUE NOT NULL, member_no INTEGER NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
@@ -14,6 +14,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, direction TEXT NOT NULL, kind TEXT NOT NULL, body TEXT, provider_id TEXT, data TEXT, created_at TEXT NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS messages_account ON messages (account_id, created_at)`,
   `CREATE TABLE IF NOT EXISTS run_requests (id TEXT PRIMARY KEY, booker_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, code TEXT UNIQUE NOT NULL, request_id TEXT NOT NULL, booker_id TEXT NOT NULL, contact_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL, run_after TEXT NOT NULL, error TEXT, created_at TEXT NOT NULL)`,
 ];
 
@@ -187,12 +188,42 @@ export class Store {
 
   /** The booker's newest request that still has options in play. */
   async openRequest(bookerId: string): Promise<RunRequest | null> {
-    const rows = await this.db`SELECT data FROM run_requests WHERE booker_id = ${bookerId} AND status = ${"open"} ORDER BY created_at DESC LIMIT 1`;
+    const rows = await this.db`SELECT data FROM run_requests WHERE booker_id = ${bookerId} AND (status = ${"open"} OR status = ${"asked"}) ORDER BY created_at DESC LIMIT 1`;
     return rows[0] ? JSON.parse(rows[0].data) : null;
   }
 
   async allStops(): Promise<PressStop[]> {
     const rows = await this.db`SELECT data FROM stops`;
+    return rows.map((r: { data: string }) => JSON.parse(r.data));
+  }
+
+  // ---------- Conversations (booker ↔ Press Stop) ----------
+
+  async createConversation(fields: Omit<Conversation, "id" | "code" | "hidden" | "createdAt" | "status">): Promise<Conversation> {
+    const [{ n }] = await this.db`SELECT COUNT(*) AS n FROM conversations`;
+    const c: Conversation = { ...fields, id: id(), code: `PR-${1042 + Number(n)}`, status: "asked", hidden: { booker: [], stop: [] }, createdAt: ordered() };
+    await this.db`INSERT INTO conversations (id, code, request_id, booker_id, contact_id, status, data, created_at)
+      VALUES (${c.id}, ${c.code}, ${c.requestId}, ${c.bookerId}, ${c.contactId}, ${c.status}, ${JSON.stringify(c)}, ${c.createdAt})`;
+    return c;
+  }
+
+  async conversation(convId: string): Promise<Conversation | null> {
+    const rows = await this.db`SELECT data FROM conversations WHERE id = ${convId} OR code = ${convId.toUpperCase()}`;
+    return rows[0] ? JSON.parse(rows[0].data) : null;
+  }
+
+  async saveConversation(c: Conversation): Promise<void> {
+    await this.db`UPDATE conversations SET status = ${c.status}, data = ${JSON.stringify(c)} WHERE id = ${c.id}`;
+  }
+
+  /** Conversations this person is on, as the booker or as the Press Stop's contact. */
+  async conversationsFor(accountId: string): Promise<Conversation[]> {
+    const rows = await this.db`SELECT data FROM conversations WHERE booker_id = ${accountId} OR contact_id = ${accountId} ORDER BY created_at`;
+    return rows.map((r: { data: string }) => JSON.parse(r.data));
+  }
+
+  async conversationsForRequest(requestId: string): Promise<Conversation[]> {
+    const rows = await this.db`SELECT data FROM conversations WHERE request_id = ${requestId} ORDER BY created_at`;
     return rows.map((r: { data: string }) => JSON.parse(r.data));
   }
 
@@ -203,6 +234,12 @@ export class Store {
     await this.db`INSERT INTO messages (id, account_id, direction, kind, body, provider_id, data, created_at)
       VALUES (${row.id}, ${row.accountId}, ${row.direction}, ${row.kind}, ${row.body}, ${row.providerId}, ${row.data ? JSON.stringify(row.data) : null}, ${row.createdAt})`;
     return row;
+  }
+
+  /** The newest text Press Run sent this person. */
+  async lastOutText(accountId: string): Promise<string | null> {
+    const rows = await this.db`SELECT body FROM messages WHERE account_id = ${accountId} AND direction = ${"out"} AND kind = ${"text"} ORDER BY created_at DESC LIMIT 1`;
+    return rows[0]?.body ?? null;
   }
 
   async messagesFor(accountId: string, limit = 500): Promise<StoredMessage[]> {

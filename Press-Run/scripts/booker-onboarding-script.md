@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 8 · 2026-11-01 · Milestone M1
+Version 9 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -413,6 +413,19 @@ PR: Shared ✅ Courtney from Music for a Minute can see your number now.
 
 The other side then gets `PR: 📞 Nova Reign's team shared their number: 917-555-0142`. Only the person whose number it is can share it. SHARE works anytime, and it only covers what that sender typed. If they don't reply, nothing is revealed and nobody is nudged about it. After the shoot, people swap numbers however they like.
 
+**How replies move between the two threads:**
+
+| Who says what | Press Run does |
+| --- | --- |
+| Booker: `ask them` with nothing shortlisted | `PR: Which ones? Reply with numbers, or ❤️ a card first.` |
+| Press Stop: `YES` with a day, time and place | Stop: `PR: Sent to Nova Reign's team ✅`. Booker: `💬 Courtney from Music for a Minute: {their words}` + `PR: Reply to answer, or "lock it" to book that time.` |
+| Press Stop: `YES` with no day/time/place | `PR: What day, time and place work? e.g. "Thu Nov 13, 2:30pm, Washington Sq Park"` |
+| Press Stop: `NO` / `pass` / `can't` | Stop: `PR: No worries, I'll let them know.` Booker: `PR: Courtney from Music for a Minute can't make those dates. Want me to ask someone else?` |
+| Either side: anything else | Passed on with the sender's label on top. |
+| Booker: `lock it` before a time was suggested | `PR: Courtney from Music for a Minute hasn't suggested a time yet. I'll pass it on when they do.` |
+| A reply that could be for two conversations | `PR: Is this for Courtney from Music for a Minute or Courtney from Motivation for a Minute?` |
+| No answer from the Press Stop in 24 hours | Booker: `PR: Courtney from Music for a Minute didn't get back in time. Want me to ask someone else?` Stop: `PR: #PR-1042 expired. No worries.` |
+
 ### R5 · Confirm and Run Sheet
 
 When both sides say yes to a time:
@@ -421,6 +434,8 @@ When both sides say yes to a time:
 PR: Booked ✅ Courtney from Music for a Minute · Thu Nov 13, 2:30pm · Washington Square Park (arch side)
 PR: I'll send your full Run Sheet once the other Press Stops confirm.
 ```
+
+The Press Stop gets the booker's words, then `PR: Booked ✅ Nova Reign · Thu Nov 13, 2:30pm · Washington Square Park (arch side). I'll send reminders.` and the shoot's calendar file. The Run Sheet goes out once every Press Stop asked has answered or expired.
 
 Run Sheet (sent as an image so it's easy to screenshot, plus a short text version):
 

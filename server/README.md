@@ -2,7 +2,7 @@
 
 The texting engine behind Press Run. It runs the booker and Press Stop onboarding scripts (`Press-Run/scripts/`) word for word, and saves everything people answer.
 
-## What works now (build slices 1–3)
+## What works now (build slices 1–4)
 
 - **Booker onboarding**: B0–B9, including roles, roster, handles or pasted profile links, Press Stop types, interests per artist, budget, hard no's, home base, summary, the "do you also run a show?" switch, and the release-date offer.
 - **Press Stop onboarding**: S0a–S8, including several shows, creator name, platforms with follower counts, interests or General, places and open dates, deliverable and rate, notice and booking contact, collab opt-in, samples with a rights check, and the cover.
@@ -15,19 +15,24 @@ The texting engine behind Press Run. It runs the booker and Press Stop onboardin
 - **Matching**: live Press Stops in the window with enough notice, within budget, skipping hard no's; ranked by the Press Stop types they asked for, interest matches (named in the summary), open dates and audience, with fewer of a format they 👎'd.
 - **Options**: 5 or fewer come as numbered cards with clips plus a summary; more come as one master list image, then cards for the numbers they pick, "show me all" (5 at a time) and "more".
 - **Picking**: numbers, "first and third", or a show's name shortlists (crediting the creator). ❤️ 👍 🔥 💯 shortlist quietly with one summary after 30 quiet seconds; 👎 drops and shows fewer like it; ❓ sends details; "full episode 2" sends the creator's link; "cheaper", "more like 2", "who's free Thursday?" and "only podcasts" / "under $300" / "Thursday only" send fresh options numbered after the last.
+- **Booking requests** (slice 4): "ask them" (or "yes" to "Want me to ask about dates?") sends each shortlisted Press Stop a numbered request (#PR-1042) in its own thread, with the artist's profile link in its own bubble. It goes to the show's booking contact if they named a teammate.
+- **Passing messages**: every message is labelled ("💬 Courtney from Music for a Minute:", "💬 Nova Reign's team:"). Replies find their conversation by the bubble they reply to, a #PR code, a show or artist name, the only open one, or the one that just wrote. If it's still unclear, Press Run asks which. Phone numbers and emails are hidden until the sender replies SHARE.
+- **Booking**: a Press Stop's YES with a day, time and place goes to the booker with "lock it" to book. NO tells the booker. YES with no details asks for them. Booking tells both sides and sends the Press Stop a calendar file. A new time can be locked again; old reminders are skipped.
+- **Run Sheet**: once every Press Stop asked has answered or expired, the booker gets the Run Sheet image, a text version and one calendar file with every stop.
+- **Reminders and timeouts**: 8pm the night before and 1 hour before, to both sides. "late" tells the Press Stop. A Press Stop that hasn't answered is nudged at 12 hours and the request expires at 24.
 
 ## Next slices
 
-1. Passing messages between both sides (SHARE, creator credit), booking, Run Sheet and calendar file.
-2. Edit review, posted links, recap image.
-3. Linq adapter (needs the free trial's API access), landing page, admin page, deploy.
+1. Edit review, posted links, rating, recap image.
+2. Landing page, admin page, deploy setup.
+3. Linq adapter (needs the free trial's API access).
 
 ## Run it
 
 ```bash
 cd server
 bun install
-bun test                         # 38 tests: the mockup conversations, parsers, card/clip, approval and run requests
+bun test                         # 49 tests: the mockup conversations, parsers, card/clip, approval, run requests and booking
 DEV_TOOLS=1 bun run dev          # then open http://localhost:3000/dev/phone
 ```
 
@@ -53,5 +58,5 @@ Needs `ffmpeg` installed. Nothing is downloaded from Instagram, TikTok or YouTub
 - `src/engine/engine.ts`: the rules that apply at every step, and moving between steps.
 - `src/db/store.ts`: storage and the job queue. Same queries on SQLite and Postgres.
 - `src/media/`: card rendering (Satori + resvg), clip cutting (ffmpeg), file storage (local or R2).
-- `src/run/`: reading run requests and matching (`match.ts`), numbering and sending options (`options.ts`), and everything a booker texts about them (`picking.ts`).
-- `src/worker.ts`: background jobs that build cards and clips, send options and the master list, and send shortlist summaries.
+- `src/run/`: reading run requests and matching (`match.ts`), numbering and sending options (`options.ts`), everything a booker texts about them (`picking.ts`), passing messages and booking (`relay.ts`), and New York times and calendar files (`time.ts`).
+- `src/worker.ts`: background jobs that build cards and clips, send options and the master list, shortlist summaries, request nudges and expiry, reminders, calendar files and the Run Sheet.

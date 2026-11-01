@@ -8,7 +8,7 @@ export async function logOut(store: Store, accountId: string, out: Out[]): Promi
   for (const o of out) {
     await store.logMessage({
       accountId, direction: "out", kind: o.type, body: o.type === "text" ? o.text : null,
-      providerId: null, data: o.type === "text" ? null : (o as unknown as Record<string, unknown>),
+      providerId: null, data: o.type === "text" ? (o.ref ? { ref: o.ref } : null) : (o as unknown as Record<string, unknown>),
     });
   }
 }

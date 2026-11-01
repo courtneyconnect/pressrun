@@ -135,3 +135,30 @@ export async function renderEndCard(): Promise<Uint8Array> {
         ...[0, 1, 2, 3].map(() => h("div", { width: 96, height: 70, backgroundColor: COLORS.red, borderRadius: 8 })))),
     W, H);
 }
+
+export interface RunSheetRow { day: string; time: string; series: string; creator: string; talent: string; place: string }
+
+/** The Run Sheet: every booked stop in time order, easy to screenshot. */
+export async function renderRunSheet(title: string, subtitle: string, rows: RunSheetRow[]): Promise<Uint8Array> {
+  const W = 1080, rowH = 150, headH = 260;
+  const H = headH + rows.length * rowH + 110;
+  const paper = "#F4F4F5", inkSoft = "#444", rule = "#DADADF";
+  const row = (r: RunSheetRow) =>
+    h("div", { height: rowH, alignItems: "center", gap: 32, padding: "0 48px", borderTop: `2px solid ${rule}` },
+      h("div", { width: 190, flexDirection: "column", flexShrink: 0, gap: 2 },
+        h("div", { fontFamily: "Mono", fontSize: 24, color: COLORS.red, letterSpacing: 2 }, r.day.toUpperCase()),
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: 52, color: COLORS.ink }, r.time.toUpperCase())),
+      h("div", { flexDirection: "column", flexGrow: 1, gap: 4, minWidth: 0 },
+        h("div", { fontFamily: "Body", fontWeight: 600, fontSize: 36, color: COLORS.ink }, r.series),
+        h("div", { fontFamily: "Body", fontSize: 26, color: inkSoft }, `with ${r.creator} · ${r.talent}`),
+        h("div", { fontFamily: "Mono", fontSize: 22, color: inkSoft, letterSpacing: 1 }, `📍 ${r.place}`.replace(/[^\x20-\x7E]+/g, "").trim().toUpperCase())));
+  return toPng(
+    h("div", { width: W, height: H, flexDirection: "column", backgroundColor: paper },
+      h("div", { height: headH, flexDirection: "column", justifyContent: "center", gap: 10, padding: "0 48px", backgroundColor: COLORS.ink },
+        h("div", { fontFamily: "Mono", fontSize: 26, letterSpacing: 6, color: COLORS.red }, "PRESS RUN · RUN SHEET"),
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: title.length > 22 ? 64 : 92, color: "#fff" }, title.toUpperCase()),
+        h("div", { fontFamily: "Body", fontSize: 30, color: "#BBB" }, subtitle)),
+      h("div", { flexDirection: "column" }, ...rows.map(row)),
+      h("div", { height: 110, alignItems: "center", padding: "0 48px", borderTop: `3px dashed ${rule}`, fontFamily: "Mono", fontSize: 24, color: inkSoft, letterSpacing: 1 }, "REMINDERS COME THE NIGHT BEFORE AND 1 HOUR BEFORE")),
+    W, H);
+}

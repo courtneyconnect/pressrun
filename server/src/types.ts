@@ -2,11 +2,12 @@
 
 /** One bubble Press Run sends. */
 export type Out =
-  | { type: "text"; text: string }
+  | { type: "text"; text: string; ref?: string }
   | { type: "image"; url: string; alt: string; ref?: string }
   | { type: "video"; url: string; alt: string; ref?: string }
   | { type: "contact" }
-  | { type: "link"; url: string };
+  | { type: "link"; url: string }
+  | { type: "file"; url: string; name: string; mime: string; ref?: string };
 
 /** One message (or reaction) a person sends to Press Run. */
 export interface Inbound {
@@ -136,6 +137,29 @@ export interface RunRequest {
   /** Where "show me all" / "more" left off on the master list. */
   cursor?: number;
   lastReactionAt?: string;
+  /** When the Run Sheet went out (it goes again if a time changes). */
+  runSheetSentAt?: string;
+  createdAt: string;
+}
+
+/** One booker ↔ Press Stop pair (#PR-1042). Press Run passes messages between them. */
+export interface Conversation {
+  id: string;
+  code: string;
+  requestId: string;
+  bookerId: string;
+  stopId: string;
+  /** Who answers for the Press Stop: the owner, or a teammate from S5. */
+  contactId: string;
+  talentIds: string[];
+  status: "asked" | "talking" | "booked" | "declined" | "expired";
+  proposal?: { date?: string; time?: string; place?: string };
+  /** Shoot start in UTC, once booked. */
+  shootAt?: string;
+  /** Numbers or emails hidden from a relayed message, waiting for SHARE. */
+  hidden: { booker: string[]; stop: string[] };
+  lastToBookerAt?: string;
+  lastToStopAt?: string;
   createdAt: string;
 }
 

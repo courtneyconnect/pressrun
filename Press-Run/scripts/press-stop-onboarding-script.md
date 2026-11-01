@@ -86,7 +86,9 @@ PR: Which interests does {series} cover? Pick any, or reply "general" if it feat
 14 🧠 Motivation & mindset
 15 ✈️ Travel
 16 🎨 Art & design
-17 🌎 General (anyone)
+17 🚗 Cars
+18 📸 Photography
+19 🌎 General (anyone)
 ```
 
 - **Accept:** numbers, interest names, emojis, `general`, or a mix (`general, mostly music` → General + 🎵 Music).

@@ -212,6 +212,8 @@ PR: What's {artist} into outside of {craft}? Pick as many as you want, or tell m
 14 🧠 Motivation & mindset
 15 ✈️ Travel
 16 🎨 Art & design
+17 🚗 Cars
+18 📸 Photography
 ```
 
 - **Who it's asked about:** self → "What are you into outside of {craft}?". Managers and labels → asked once per artist, one message each (`PR: And Jay Mo?` for the next one). Rosters over 3 artists: ask about the first 3 now, and about the others the first time a run is planned for them. Brands → `PR: What's your audience into? Pick as many as you want.`

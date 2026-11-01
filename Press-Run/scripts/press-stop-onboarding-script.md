@@ -1,12 +1,12 @@
 # Press Run · Press Stop onboarding text script
 
-Version 3 · 2026-11-01 · Milestone M1
+Version 4 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new **Press Stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the Press Stop its **card and clip** to approve. Every message Press Run sends says **Press Stop**. The notes here say "stop" only as shorthand. The step IDs (S1, S2…) match the build plan and the mockup.
 
 The format and the global rules are the same as the booker script. **Section 0 of `booker-onboarding-script.md` applies here too** (STOP, HELP, human, back, skip, start over, mid-flow questions, voice notes, nudges, "ask again once, then save as `needs_review`").
 
-The stop answers **10 things in 6 short rounds**: series name, format, audience and platforms, cities, filming schedule and open dates, what a booker gets, rate, notice needed, who handles bookings, and 3 sample links. Then comes a cover photo and approval.
+The stop answers **11 things in 7 short rounds**: series name, format, audience and platforms, interests it covers, cities, filming schedule and open dates, what a booker gets, rate, notice needed, who handles bookings, and 3 sample links. Then comes a cover photo and approval.
 
 ---
 
@@ -64,6 +64,34 @@ PR: Where does {series} post, and roughly how many followers on each? Type the @
 - **Numbers with no handle or link:** `PR: What's the @handle or profile link for {platform}? I use it to check the numbers.`
 - **Vague answer** (`big`, `growing`): `PR: Ballpark per platform is perfect, e.g. "IG ~10k". Bookers filter by it.`
 - **Accuracy:** numbers are self-reported. They're saved with `audience_verified = false`, and Courtney spot-checks the profile links before the stop goes live. The card shows the **total, rounded** (e.g. "Audience 307K").
+- → S2b
+
+### S2b · Interests
+
+```
+PR: Which interests does {series} cover? Pick any, or reply "general" if it features anyone.
+1 🎵 Music
+2 🎬 Movies & TV
+3 🎮 Gaming
+4 🏀 Sports
+5 🃏 Trading cards (Pokémon, sports cards)
+6 👟 Sneakers & fashion
+7 💄 Beauty
+8 🍜 Food
+9 💪 Fitness
+10 🎌 Anime & comics
+11 💻 Tech
+12 💰 Money & business
+13 😂 Comedy
+14 🧠 Motivation & mindset
+15 ✈️ Travel
+16 🎨 Art & design
+17 🌎 General (anyone)
+```
+
+- **Accept:** numbers, interest names, emojis, `general`, or a mix (`general, mostly music` → General + 🎵 Music).
+- **If unclear:** `PR: Think about who your guests usually are or what your episodes are about. "Movies" or "general" is plenty.`
+- **How it's used:** bookers whose artists share an interest see this Press Stop ranked higher. General Press Stops fit every booker. The top 2 interests show on the card.
 - → S3
 
 ### S3 · Where and when you film
@@ -169,6 +197,7 @@ The card shows these fields, top to bottom:
 | Cover image | S7 | photo |
 | Series name | S1 | Music for a Minute |
 | Format · area | S1, S3 | Street interview · Manhattan |
+| Interests | S2b, top 2 | 🎵 Music · 🌎 General |
 | Audience | S2 total, rounded | 307K followers |
 | Rate | S4 | Free–$500 |
 | Open dates | S3, next 3 | Open Nov 12 · 14 · 15 |
@@ -222,7 +251,7 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 
 ## 5. Data saved per Press Stop
 
-`series_name`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
+`series_name`, `format`, `formats_extra[]`, `platforms[]` (platform, handle, url, followers), `audience_total`, `audience_verified`, `interests[]`, `general`, `cities[]`, `neighborhoods[]`, `remote_ok`, `schedule_text`, `open_dates[]`, `flexible`, `deliverable_text`, `deliverable_tags[]`, `price_low`, `price_high`, `price_tiers[]`, `notice_hours`, `booking_contact` (self or a teammate's phone), `sample_links[]`, `rights_confirmed`, `cover_image`, `card_url`, `clip_url`, `card_version`, `status` (draft → building → pending_approval → live → paused), `member_no`, `owner_account_id`.
 
 ---
 

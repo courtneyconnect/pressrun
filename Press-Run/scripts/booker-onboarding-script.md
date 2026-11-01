@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 4 · 2026-11-01 · Milestone M1
+Version 5 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -174,21 +174,52 @@ PR: What genre or niche? A few words is perfect, e.g. "drill and R&B", "stand-up
 ```
 PR: What kind of Press Stops are you looking for? Pick as many as you want.
 1 Street interviews and street series
-2 Features on content series (YouTube, IG, TikTok shows)
+2 Features and collabs with content creators (YouTube, IG, TikTok)
 3 Podcasts
 4 Radio
 5 Livestreams
-6 Shoots and collabs with content creators
-7 Open to anything
+6 Open to anything
 ```
 
 - **Wording by role:** managers and labels see `PR: What kind of Press Stops do you want for your artists? Pick as many as you want.` Brands see `PR: What kind of Press Stops fit your brand?` with the same list.
-- **Accept:** one or more numbers, or words (`street stuff` → 1; `YouTube shows`, `series` → 2; `pods` → 3; `IG live`, `Twitch` → 5; `collabs`, `shoot` → 6; `all`, `whatever works` → 7). Anything else is saved as written and tagged `needs_review`.
+- **Accept:** one or more numbers, or words (`street stuff` → 1; `YouTube shows`, `series`, `collabs`, `shoot` → 2; `pods` → 3; `IG live`, `Twitch` → 5; `all`, `whatever works` → 6). Anything else is saved as written and tagged `needs_review`.
 - **If unclear:** `PR: Just pick the numbers that sound right, like "1 and 3". You can change it anytime.`
 - **How it's used:** matching puts these Press Stop types first. Other types only fill in when fewer than 3 match. A run request can override it ("podcasts only this time").
 - **Optional:** `skip` saves "open to anything".
 - **Bonus:** if they mention a date (`Nova's single drops Nov 14`), save it as an upcoming release. Press Run offers a run around it at the end (B9).
 - **Later:** concert venues and live show bookings become a Press Stop type in a future version. They're not on this list yet.
+- → B4b
+
+### B4b · Interests
+
+Matching runs on **interests**. Social discovery now happens through interests (gaming, sneakers, movies), so an artist who loves sneakers reaches a new audience on a sneaker show. Each artist lists what they're into, each Press Stop lists the interests it covers (or "General"), and Press Run pairs them.
+
+```
+PR: What's {artist} into outside of {craft}? Pick as many as you want, or tell me others.
+1 🎵 Music
+2 🎬 Movies & TV
+3 🎮 Gaming
+4 🏀 Sports
+5 🃏 Trading cards (Pokémon, sports cards)
+6 👟 Sneakers & fashion
+7 💄 Beauty
+8 🍜 Food
+9 💪 Fitness
+10 🎌 Anime & comics
+11 💻 Tech
+12 💰 Money & business
+13 😂 Comedy
+14 🧠 Motivation & mindset
+15 ✈️ Travel
+16 🎨 Art & design
+```
+
+- **Who it's asked about:** self → "What are you into outside of {craft}?". Managers and labels → asked once per artist, one message each (`PR: And Jay Mo?` for the next one). Rosters over 3 artists: ask about the first 3 now, and about the others the first time a run is planned for them. Brands → `PR: What's your audience into? Pick as many as you want.`
+- **{craft}** comes from B3: music, acting, comedy or content. If B3 was unclear, use "your work".
+- **Accept:** numbers, interest names, the emojis themselves (🎮 🏀), or free text (`he collects Pokémon cards` → 5). Interests not on the list are saved as written and tagged `needs_review`. If enough people name the same one, it becomes a new interest.
+- **If unclear:** `PR: Any hobbies or things they geek out about? Even one helps, e.g. "gaming" or "sneakers".`
+- **Optional:** `skip` or `none` means Press Run matches on niche and General Press Stops only.
+- **How it's used:** an interest match ranks a Press Stop higher. General Press Stops (like a street interview series that features anyone) fit everyone. Press Run always explains a match when it can, e.g. "Movies for a Minute: Nova's into movies".
 - → B5
 
 ### B5 · Usual budget
@@ -233,6 +264,7 @@ PR: You're set, {first_name} ✅
 • Booking for: {role_summary}
 • Niche: {niche}
 • Looking for: {press_stop_types}
+• Into: {interests per artist, as emojis}
 • Budget: {budget}
 • Never: {hard_nos}
 Reply "edit" to change anything.
@@ -272,7 +304,7 @@ If B4 found an upcoming release date:
 PR: You mentioned {release} on {date}. Want me to pull options for that week? Reply YES.
 ```
 
-**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k", "add artist Jay Mo @jaymo" or "add artist Jay Mo tiktok.com/@jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, Press Stop types, budget, hard no's or city?`
+**Edit flow:** after "edit", Press Run sends `PR: What should I change? e.g. "budget 1-3k", "add artist Jay Mo @jaymo" or "add artist Jay Mo tiktok.com/@jaymo".` It parses one change, saves it, then sends `PR: Updated ✅`. If it can't tell what to change: `PR: Which one: role, roster, niche, Press Stop types, interests, budget, hard no's or city?`
 
 ---
 
@@ -381,7 +413,7 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 ## 5. Data saved per booker
 
-`phone`, `first_name`, `email`, `member_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche), `brand_goal`, `niche_tags[]`, `wanted_stop_types[]`, `upcoming_release` (what, date), `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
+`phone`, `first_name`, `email`, `member_no`, `roles[]` (self, manager, label, brand), `company`, `roster[]` (name, handles, niche, interests[]), `brand_goal`, `niche_tags[]`, `wanted_stop_types[]`, `upcoming_release` (what, date), `budget_low`, `budget_high`, `hard_nos[]`, `hard_no_notes`, `city`, `waitlist_city`, `opted_out`, `needs_review[]`, `onboarding_step`, `created_at`.
 
 ---
 

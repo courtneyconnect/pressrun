@@ -103,6 +103,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .info{padding:10px 12px 11px;display:grid;gap:7px}
 .info h3{margin:0;font:800 20px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
 .info .fmt{font-size:12px;color:var(--muted);margin-top:-3px}
+.info .tags{font-size:12px;color:var(--fg);margin-top:-2px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;border-top:1px solid var(--line);padding-top:8px}
 .stats div{display:grid;gap:1px;min-width:0}
 .stats .k{font:600 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -230,19 +231,19 @@ document.querySelectorAll(".avatar").forEach(a => a.style.backgroundImage = `url
 
 /* ---------- Example stops (Courtney's four series; numbers are mockup examples) ---------- */
 const STOPS = {
-  1:{key:"mfm", name:"Music for a Minute", lines:["Music","for a","Minute"], glyph:"♪ 60s", fmt:"Street interview · Manhattan", aud:"169K", price:"Free", open:"Nov 12 · 13 · 15", c1:"#6b1512", c2:"#19191B",
+  1:{key:"mfm", name:"Music for a Minute", lines:["Music","for a","Minute"], glyph:"♪ 60s", fmt:"Street interview · Manhattan", tags:"🎵 Music · 🌎 General", aud:"169K", price:"Free", open:"Nov 12 · 13 · 15", c1:"#6b1512", c2:"#19191B",
      place:"Washington Square Park (arch side)", day:"Thu", date:"Nov 13", time:"2:30 PM", pre:"1:30 PM", talent:"Nova Reign",
      more:"Music for a Minute: 60-sec street interview, posted on IG + TikTok, raw clip shared after.\nIG 48K · TikTok 112K · YouTube 9K\nFilms Thu–Sat afternoons around Washington Sq and SoHo. Needs 48 hours' notice.",
      clip:["Music for a Minute","“What song got you through this year?”","“Okay, this one. Every single morning.” 🎧","60 seconds. One artist. One street."]},
-  2:{key:"pfyt", name:"Penny for Your Thoughts", lines:["Penny","for Your","Thoughts"], glyph:"1¢", fmt:"Street series · Manhattan", aud:"74K", price:"Free", open:"Nov 12 · 14", c1:"#3a3a40", c2:"#0A0A0B",
+  2:{key:"pfyt", name:"Penny for Your Thoughts", lines:["Penny","for Your","Thoughts"], glyph:"1¢", fmt:"Street series · Manhattan", tags:"🌎 General", aud:"74K", price:"Free", open:"Nov 12 · 14", c1:"#3a3a40", c2:"#0A0A0B",
      place:"Union Square (south steps)", day:"Wed", date:"Nov 12", time:"4:00 PM", pre:"3:00 PM", talent:"Jay Mo",
      more:"Penny for Your Thoughts: one question, one penny, one honest answer. Posted on IG + TikTok.\nIG 30K · TikTok 44K\nFilms weekday afternoons around Union Square. Needs 24 hours' notice.",
      clip:["Penny for Your Thoughts","“Penny for your thoughts?”","“Honestly? I think everybody's scared to start.”","One question. One penny."]},
-  3:{key:"motfm", name:"Motivation for a Minute", lines:["Motivation","for a","Minute"], glyph:"⚡ 60s", fmt:"Street series · Brooklyn", aud:"58K", price:"Free", open:"Nov 13 · 14", c1:"#8a2a12", c2:"#141416",
+  3:{key:"motfm", name:"Motivation for a Minute", lines:["Motivation","for a","Minute"], glyph:"⚡ 60s", fmt:"Street series · Brooklyn", tags:"🧠 Motivation · 💪 Fitness", aud:"58K", price:"Free", open:"Nov 13 · 14", c1:"#8a2a12", c2:"#141416",
      place:"Domino Park, Williamsburg", day:"Fri", date:"Nov 14", time:"1:00 PM", pre:"12:00 PM", talent:"Jay Mo",
      more:"Motivation for a Minute: 60 seconds of advice from the guest, cut for Reels and TikTok.\nIG 21K · TikTok 37K\nFilms Thu–Fri around Williamsburg. Needs 48 hours' notice.",
      clip:["Motivation for a Minute","“What would you tell yourself at 17?”","“Stop waiting for permission.”","60 seconds of real talk."]},
-  4:{key:"movfm", name:"Movies for a Minute", lines:["Movies","for a","Minute"], glyph:"🎬 60s", fmt:"Street interview · Midtown", aud:"41K", price:"$150–$300", open:"Nov 15", c1:"#2b2b55", c2:"#0A0A0B",
+  4:{key:"movfm", name:"Movies for a Minute", lines:["Movies","for a","Minute"], glyph:"🎬 60s", fmt:"Street interview · Midtown", tags:"🎬 Movies & TV · 😂 Comedy", aud:"41K", price:"$150–$300", open:"Nov 15", c1:"#2b2b55", c2:"#0A0A0B",
      place:"Bryant Park (fountain side)", day:"Sat", date:"Nov 15", time:"12:00 PM", pre:"11:00 AM", talent:"Nova Reign",
      more:"Movies for a Minute: film and TV talk, best for actors and soundtrack moments.\nIG 18K · TikTok 23K\nFilms Saturdays in Midtown. Needs 1 week's notice.",
      clip:["Movies for a Minute","“Last movie that made you cry?”","“Don't laugh. It was a cartoon.”","Film talk in 60 seconds."]}
@@ -297,7 +298,7 @@ function cardHTML(n, opts = {}){
   const price = opts.preview && n === 1 ? stopPreviewPrice : st.price;
   return `<div tabindex="0" class="card${S.dropped.has(+n) && !opts.preview ? " dropped" : ""}" role="img" aria-label="Card ${opts.preview ? "" : n + " "}${esc(st.name)}, ${esc(st.fmt)}, audience ${st.aud}, rate ${esc(price)}, open ${esc(st.open)}" style="--c1:${st.c1};--c2:${st.c2}">
     <div class="cover"><div class="num">${opts.preview ? "#" : n}</div><div class="glyph">${esc(st.glyph)}</div><div class="title">${st.lines.map(esc).join("<br>")}</div><div class="stripes"><i></i><i></i><i></i><i></i></div></div>
-    <div class="info"><h3>${esc(st.name)}</h3><div class="fmt">${esc(st.fmt)}</div>
+    <div class="info"><h3>${esc(st.name)}</h3><div class="fmt">${esc(st.fmt)}</div><div class="tags">${esc(st.tags)}</div>
       <div class="stats"><div><span class="k">Audience</span><span class="v">${st.aud}</span></div><div><span class="k">Rate</span><span class="v">${esc(price)}</span></div>
       <div class="wide"><span class="k">Open dates</span><span class="v">${esc(st.open)}</span></div></div>
       <div class="cta">${opts.preview ? "Preview · number added when sent" : `Reply ${n} or ❤️ to save`}</div></div></div>`;
@@ -376,9 +377,14 @@ const CHAPTERS = [
     N("Handles can be typed or pasted as profile links. Press Run reads the platform and handle from a link (here: TikTok, @jaymo.nyc) and keeps the link too."),
     {pr:"What genre or niche? A few words is perfect. If it's different per artist, put it next to each name."},
     {me:"Nova is R&B, Jay is drill"},
-    {pr:"What kind of Press Stops do you want for your artists? Pick as many as you want.\n1 Street interviews and street series\n2 Features on content series (YouTube, IG, TikTok shows)\n3 Podcasts\n4 Radio\n5 Livestreams\n6 Shoots and collabs with content creators\n7 Open to anything"},
+    {pr:"What kind of Press Stops do you want for your artists? Pick as many as you want.\n1 Street interviews and street series\n2 Features and collabs with content creators (YouTube, IG, TikTok)\n3 Podcasts\n4 Radio\n5 Livestreams\n6 Open to anything"},
     {me:"1, 2 and 3. Nova's single drops Nov 14"},
     N("Press Run puts these Press Stop types first when matching. The release date is saved too, and Press Run brings it back at the end of onboarding."),
+    {pr:"What's Nova Reign into outside of music? Pick as many as you want, or tell me others.\n1 🎵 Music\n2 🎬 Movies & TV\n3 🎮 Gaming\n4 🏀 Sports\n5 🃏 Trading cards (Pokémon, sports cards)\n6 👟 Sneakers & fashion\n7 💄 Beauty\n8 🍜 Food\n9 💪 Fitness\n10 🎌 Anime & comics\n11 💻 Tech\n12 💰 Money & business\n13 😂 Comedy\n14 🧠 Motivation & mindset\n15 ✈️ Travel\n16 🎨 Art & design"},
+    {me:"2 and 6"},
+    {pr:"And Jay Mo?"},
+    {me:"🎮 🏀 and he collects sports cards"},
+    N("Matching runs on interests. Each artist's interests are paired with the interests each Press Stop covers. General Press Stops fit everyone."),
     {pr:"What do you usually spend on a full run? (Booking through Press Run is free right now. This just helps me match you.)\n1 Free Press Stops only\n2 Under $1k\n3 $1k–$5k\n4 $5k+\n5 Depends on the run"},
     {me:"depends lol"},
     N("Unclear answer. Press Run asks once more with simpler choices. If it's still unclear, it saves the answer as written and moves on."),
@@ -389,7 +395,7 @@ const CHAPTERS = [
     {pr:"Last one: where are you based? We're live in New York first, with more cities soon."},
     {me:"Brooklyn"},
     {pr:"NYC 🗽 perfect."},
-    {pr:"You're set, Courtney ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Looking for: street interviews, content series, podcasts\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
+    {pr:"You're set, Courtney ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Looking for: street interviews, creator features and collabs, podcasts\n• Into: Nova 🎬 👟 · Jay 🎮 🏀 🃏\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
     {vcard:true},
     {pr:"Save me so my texts show up as Press Run."},
     {pr:"Quick one: do you also run a show, series or podcast people could book? Reply YES to list it as a Press Stop too. Same thread, same account."},
@@ -412,6 +418,8 @@ const CHAPTERS = [
     {pr:"Where does Music for a Minute post, and roughly how many followers on each? Type the @handle or paste the profile link, e.g. “IG @musicforaminute 85k” or “tiktok.com/@musicforaminute 210k”"},
     {me:"IG @musicforaminute 48k\ntiktok.com/@musicforaminute 112k\nYouTube @musicforaminute 9k"},
     N("Follower counts are self-reported and saved as unverified. Courtney spot-checks the profiles before a Press Stop goes live. The card shows the rounded total."),
+    {pr:"Which interests does Music for a Minute cover? Pick any, or reply “general” if it features anyone.\n1 🎵 Music\n2 🎬 Movies & TV\n3 🎮 Gaming\n4 🏀 Sports\n5 🃏 Trading cards (Pokémon, sports cards)\n6 👟 Sneakers & fashion\n7 💄 Beauty\n8 🍜 Food\n9 💪 Fitness\n10 🎌 Anime & comics\n11 💻 Tech\n12 💰 Money & business\n13 😂 Comedy\n14 🧠 Motivation & mindset\n15 ✈️ Travel\n16 🎨 Art & design\n17 🌎 General (anyone)"},
+    {me:"general, mostly music"},
     {pr:"Where do you film, and when? e.g. “Manhattan, mostly SoHo, Thu–Sat afternoons”"},
     {pr:"And which dates are open in the next 4 weeks? e.g. “Nov 12, 14, 15” or “any Thu or Sat”"},
     {me:"Washington Sq + SoHo, Thu–Sat afternoons. Open Nov 12, 13, 15"},
@@ -442,9 +450,9 @@ const CHAPTERS = [
     {sys:"<b>Mon, Nov 3</b> 11:20 AM"},
     {me:"NYC Nov 12–15, 2 artists, $5k budget, give me my options"},
     {pr:"On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling Press Stops now…"},
-    N("The request is read into city, dates, artists and budget. Press Run matches live Press Stops with open dates in that window puts the types she asked for first (street interviews, content series, podcasts), and skips her hard no's (no prank shows, nothing before 11)."),
+    N("The request is read into city, dates, artists and budget. Press Run matches live Press Stops with open dates in that window puts the types she asked for first, ranks by interests, and skips her hard no's (no prank shows, nothing before 11). Nova is into movies, so Movies for a Minute makes the list. Music for a Minute and Penny for Your Thoughts are General, so they fit both artists."),
     {card:1},{clip:1},{card:2},{clip:2},{card:3},{clip:3},{card:4},{clip:4},
-    {pr:"That's 4 Press Stops, $0–$800 total. Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
+    {pr:"That's 4 Press Stops, $0–$800 total. 4 is an interest match for Nova (🎬 movies). Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
     {wait:"pick"}
   ]},
   {title:"Messages passed between both sides", sub:"Press Run relays, numbers stay private", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null; S.stopLabel = `${s1.name} booking line · Press Stop`; S.stopToast = `the ${s1.name} booking line`;

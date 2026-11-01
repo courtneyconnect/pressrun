@@ -390,28 +390,101 @@ export const roundAudience = (n: number) =>
 
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-/** "Nov 12, 13, 15" → ISO dates; drops dates already past. */
+const MONTH_RE = "(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?";
+const COUNT_WORD = /^\s*(artists?|people|acts|k\b|grand|stops?|options?|shows?|hours?|hrs?|days?|weeks?|pm|am|followers|secs?|mins?|minutes?|\$|%)/;
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const utcDay = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));
+
+/** Months far behind today roll into next year ("Jan 5" said in November). */
+function resolveYear(month: number, day: number, now: Date): Date {
+  const d = utcDay(now.getFullYear(), month, day);
+  return d.getTime() < Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) && now.getMonth() - month > 6
+    ? utcDay(now.getFullYear() + 1, month, day) : d;
+}
+
+function eachDay(a: Date, b: Date): Date[] {
+  const out: Date[] = [];
+  for (let d = new Date(a); d <= b && out.length < 62; d = new Date(d.getTime() + 864e5)) out.push(d);
+  return out;
+}
+
+/** "Nov 12, 13, 15", "Nov 12–15", "Nov 28 – Dec 2" → ISO dates; drops dates already past. */
 export function parseDates(s: string, now: Date): { dates: string[]; past: string[]; flexible: boolean } {
-  const t = norm(s);
+  let t = norm(s).replace(/(\d)(st|nd|rd|th)\b/g, "$1");
   const flexible = /\b(flexible|whenever|anytime|any time|open|wide open)\b/.test(t) && !/\d/.test(t);
-  const dates: string[] = [];
-  const past: string[] = [];
-  const re = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+((?:\d{1,2}(?:st|nd|rd|th)?(?:\s*(?:,|&|and|-|–)\s*)?)+)/g;
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const days: Date[] = [];
+  // Ranges across months: "nov 28 - dec 2"
+  t = t.replace(new RegExp(`${MONTH_RE}\\s+(\\d{1,2})\\s*(?:-|–|—|to|through|thru)\\s*${MONTH_RE}\\s+(\\d{1,2})`, "g"), (_m, m1, d1, m2, d2) => {
+    days.push(...eachDay(resolveYear(MONTHS.indexOf(m1.slice(0, 3)), Number(d1), now), resolveYear(MONTHS.indexOf(m2.slice(0, 3)), Number(d2), now)));
+    return " ";
+  });
+  // One month, then a list of days and day ranges: "nov 12, 13 & 15", "nov 12–15"
+  const re = new RegExp(`${MONTH_RE}\\s+((?:\\d{1,2}(?:\\s*(?:-|–|—|to)\\s*\\d{1,2})?(?:\\s*(?:,|&|and)\\s*)?)+)`, "g");
   for (const m of t.matchAll(re)) {
     const month = MONTHS.indexOf(m[1]!.slice(0, 3));
-    for (const d of m[2]!.matchAll(/\d{1,2}/g)) {
-      let year = now.getFullYear();
-      const day = Number(d[0]);
-      let date = new Date(Date.UTC(year, month, day));
-      const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-      // Months far behind today roll into next year ("Jan 5" said in November).
-      if (date.getTime() < today && now.getMonth() - month > 6) { year += 1; date = new Date(Date.UTC(year, month, day)); }
-      const iso = date.toISOString().slice(0, 10);
-      if (date.getTime() < today) past.push(iso); else if (!dates.includes(iso)) dates.push(iso);
+    const listStart = m.index! + m[0].length - m[2]!.length;
+    for (const part of m[2]!.matchAll(/(\d{1,2})(?:\s*(?:-|–|—|to)\s*(\d{1,2}))?/g)) {
+      // "Nov 12–15, 2 artists": a later number followed by a count word ends the list of days.
+      if (part.index! > 0 && COUNT_WORD.test(t.slice(listStart + part.index! + part[0].length))) break;
+      const a = resolveYear(month, Number(part[1]), now);
+      days.push(...(part[2] ? eachDay(a, resolveYear(month, Number(part[2]), now)) : [a]));
     }
   }
-  return { dates, past, flexible };
+  const dates: string[] = [];
+  const past: string[] = [];
+  for (const d of days) {
+    const k = iso(d);
+    if (d.getTime() < today) { if (!past.includes(k)) past.push(k); } else if (!dates.includes(k)) dates.push(k);
+  }
+  return { dates: dates.sort(), past, flexible };
 }
+
+const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const WEEKDAY_RE = /\b(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)(day|nesday|rsday|urday|sday)?s?\b/g;
+
+/** Weekdays named in a text ("any Thu or Sat", "who's free Thursday?") as 0–6. */
+export function weekdaysIn(s: string): number[] {
+  const out: number[] = [];
+  for (const m of norm(s).matchAll(WEEKDAY_RE)) {
+    const n = WEEKDAYS.indexOf(m[1]!.slice(0, 3));
+    if (n >= 0 && !out.includes(n)) out.push(n);
+  }
+  return out;
+}
+
+/** "next week", "this weekend", "tomorrow", "Thursday" → a date window. */
+export function parseRelativeWindow(s: string, now: Date): { start: string; end: string } | null {
+  const t = norm(s);
+  const today = utcDay(now.getFullYear(), now.getMonth(), now.getDate());
+  const plus = (n: number) => new Date(today.getTime() + n * 864e5);
+  const dow = today.getUTCDay();
+  if (/\btoday\b/.test(t)) return { start: iso(today), end: iso(today) };
+  if (/\btomorrow\b/.test(t)) return { start: iso(plus(1)), end: iso(plus(1)) };
+  if (/\bthis weekend\b/.test(t)) return { start: iso(plus((6 - dow + 7) % 7 || 0)), end: iso(plus((6 - dow + 7) % 7 + 1)) };
+  if (/\bnext weekend\b/.test(t)) return { start: iso(plus(((6 - dow + 7) % 7) + 7)), end: iso(plus(((6 - dow + 7) % 7) + 8)) };
+  if (/\bthis week\b/.test(t)) return { start: iso(today), end: iso(plus(7 - dow)) };
+  if (/\bnext week\b/.test(t)) { const mon = (8 - dow) % 7 || 7; return { start: iso(plus(mon)), end: iso(plus(mon + 6)) }; }
+  const wd = weekdaysIn(t);
+  if (wd.length) {
+    const offsets = wd.map(w => (w - dow + 7) % 7 || 7);
+    return { start: iso(plus(Math.min(...offsets))), end: iso(plus(Math.max(...offsets))) };
+  }
+  return null;
+}
+
+/** "first and third" → [1, 3] */
+export function ordinalsIn(s: string): number[] {
+  const words: Record<string, number> = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10 };
+  const out: number[] = [];
+  for (const m of norm(s).matchAll(/\b(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|(\d{1,2})(?:st|nd|rd|th))\b/g)) {
+    const n = m[2] ? Number(m[2]) : words[m[1]!]!;
+    if (!out.includes(n)) out.push(n);
+  }
+  return out;
+}
+
+export const dayName = (isoDate: string) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(isoDate + "T12:00:00Z").getUTCDay()]!;
 
 export const fmtDate = (iso: string) => {
   const d = new Date(iso + "T12:00:00Z");

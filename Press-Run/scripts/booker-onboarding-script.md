@@ -367,6 +367,9 @@ PR: Reply with the numbers you want to see ("2, 5, 9"), or "show me all", and I'
 If fewer than 3 Press Stops fit:
 `PR: Only 2 Press Stops fit those dates and budget. Want me to widen the dates or include paid Press Stops up to $X?`
 
+If none fit:
+`PR: No Press Stops fit those dates and budget yet. Want me to widen the dates or include paid Press Stops?`
+
 ### R3 · Picking
 
 | Booker does | Press Run does |
@@ -378,7 +381,7 @@ If fewer than 3 Press Stops fit:
 | `full episode 2`, `show me the full episode of 2`, `watch 2` | `PR: Here's the full episode from Courtney from Music for a Minute 👇` + the episode link in its own bubble, so it shows a preview card. One tap opens it on their channel, and a swipe back returns here to pick. No link on file: `PR: Courtney from Music for a Minute hasn't added a full episode yet. Want me to ask?` |
 | Removes a reaction | Undoes the action without saying anything. |
 | Reacts to a clip instead of the card | Treated the same as reacting to that stop's card. |
-| `cheaper` / `more like 2` / `who's free Thursday?` | Sends a fresh set numbered from 6 onward. Old numbers keep working. |
+| `cheaper` / `more like 2` / `who's free Thursday?` | Sends a fresh set numbered from 6 onward. Old numbers keep working. Opens with `PR: Cheaper options 👇` or `PR: More like 2 👇`. For a day: `PR: Thursday Nov 13: 1 and 3 (Courtney from Music for a Minute and Motivation for a Minute).`, then `PR: Also free Thursday 👇` for new ones. Nothing new: `PR: These are the cheapest I've got for those dates.` / `PR: That's everyone like 2 for those dates.` / `PR: Nobody else is free Thursday Nov 13.` |
 | `book them` or `ask them` | Starts the relay (R4). |
 | Number that doesn't exist (`7`) | `PR: I only sent 1–5. Which ones?` |
 

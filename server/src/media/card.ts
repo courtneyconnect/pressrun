@@ -78,10 +78,12 @@ export async function renderCard(stop: PressStop, number: number | null, coverDa
     h("div", { flexDirection: "column", flexGrow: grow, flexBasis: 0, gap: 6 },
       h("div", { fontFamily: "Mono", fontSize: 26, letterSpacing: 3, color: COLORS.muted }, k.toUpperCase()),
       h("div", { fontFamily: "Display", fontWeight: 800, fontSize: 64, color: COLORS.fg }, v));
+  // The glow is a gradient behind the stripes: blurred shadows take seconds to render.
+  const glow = h("div", { position: "absolute", left: 0, right: 0, bottom: 0, height: 260, backgroundImage: "radial-gradient(ellipse at 50% 100%, rgba(240,65,58,0.55), rgba(240,65,58,0) 70%)" });
   const stripes = h("div", { position: "absolute", left: -80, right: -80, bottom: -24, height: 96, gap: 60, justifyContent: "center", transform: "skewX(-28deg)" },
-    ...[0, 1, 2, 3].map(() => h("div", { width: 130, height: 96, backgroundColor: COLORS.red, borderRadius: 10, boxShadow: `0 0 60px ${COLORS.red}` })));
+    ...[0, 1, 2, 3].map(() => h("div", { width: 130, height: 96, backgroundColor: COLORS.red, borderRadius: 10 })));
   const cover = h("div", { position: "relative", width: W, height: coverH, overflow: "hidden", backgroundImage: `linear-gradient(160deg, #6b1512, ${COLORS.char})` },
-    ...(coverDataUrl ? [{ type: "img", props: { src: coverDataUrl, width: W, height: coverH, style: { position: "absolute", left: 0, top: 0, width: W, height: coverH, objectFit: "cover" } } }, h("div", { position: "absolute", left: 0, top: 0, width: W, height: coverH, backgroundImage: "linear-gradient(180deg, rgba(10,10,11,0.15), rgba(10,10,11,0.75))" })] : [stripes]),
+    ...(coverDataUrl ? [{ type: "img", props: { src: coverDataUrl, width: W, height: coverH, style: { position: "absolute", left: 0, top: 0, width: W, height: coverH, objectFit: "cover" } } }, h("div", { position: "absolute", left: 0, top: 0, width: W, height: coverH, backgroundImage: "linear-gradient(180deg, rgba(10,10,11,0.15), rgba(10,10,11,0.75))" })] : [glow, stripes]),
     h("div", { position: "absolute", left: 48, top: 48, width: 112, height: 112, borderRadius: 56, backgroundColor: COLORS.red, alignItems: "center", justifyContent: "center", fontFamily: "Display", fontWeight: 900, fontSize: 76, color: "#fff" }, number === null ? "#" : String(number)),
     h("div", { position: "absolute", left: 56, right: 56, top: 200, flexDirection: "column", fontFamily: "Display", fontWeight: 900, fontSize: titleSize, lineHeight: 0.86, color: "#fff" }, ...lines.map(l => h("div", {}, l))));
   const info = h("div", { flexDirection: "column", padding: "40px 56px 44px", gap: 22, flexGrow: 1 },
@@ -94,6 +96,32 @@ export async function renderCard(stop: PressStop, number: number | null, coverDa
     h("div", { alignItems: "center", gap: 14, fontFamily: "Mono", fontSize: 28, letterSpacing: 2, color: COLORS.note, marginTop: "auto" },
       number === null ? "PREVIEW · NUMBER ADDED WHEN SENT" : `REPLY ${number} OR`, ...(number === null ? [] : [heart(34, COLORS.note), "TO SAVE"])));
   return toPng(h("div", { width: W, height: H, flexDirection: "column", backgroundColor: COLORS.char }, cover, info), W, H);
+}
+
+/** R2's master list: up to 20 numbered rows in the Run Sheet's look. */
+export async function renderList(title: string, subtitle: string, rows: { number: number; stop: PressStop; why?: string }[]): Promise<Uint8Array> {
+  const W = 1080, rowH = 132, headH = 260;
+  const H = headH + rows.length * rowH + 110;
+  const paper = "#F4F4F5", inkSoft = "#444", rule = "#DADADF";
+  const row = (r: { number: number; stop: PressStop; why?: string }) =>
+    h("div", { height: rowH, alignItems: "center", gap: 28, padding: "0 48px", borderTop: `2px solid ${rule}` },
+      h("div", { width: 76, height: 76, borderRadius: 38, backgroundColor: COLORS.red, color: "#fff", alignItems: "center", justifyContent: "center", fontFamily: "Display", fontWeight: 900, fontSize: 48, flexShrink: 0 }, String(r.number)),
+      h("div", { flexDirection: "column", flexGrow: 1, gap: 4, minWidth: 0 },
+        h("div", { fontFamily: "Body", fontWeight: 600, fontSize: 36, color: COLORS.ink }, r.stop.seriesName ?? "Show"),
+        h("div", { fontFamily: "Body", fontSize: 26, color: inkSoft }, [r.stop.creatorNames.length ? `with ${r.stop.creatorNames.join(" & ")}` : "", `${FORMAT_LABELS[r.stop.format ?? "other"] ?? "Show"} · ${areaOf(r.stop)}`].filter(Boolean).join(" · ")),
+        ...(r.why ? [h("div", { fontFamily: "Mono", fontSize: 22, color: COLORS.red, letterSpacing: 1 }, `INTEREST MATCH: ${r.why.replace(/[^\x20-\x7E]+/g, "").replace(/\(\s+/g, "(").toUpperCase()}`)] : [])),
+      h("div", { flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 },
+        h("div", { fontFamily: "Display", fontWeight: 800, fontSize: 40, color: COLORS.ink }, r.stop.rateText ?? "Ask"),
+        h("div", { fontFamily: "Mono", fontSize: 22, color: inkSoft }, openLine(r.stop))));
+  return toPng(
+    h("div", { width: W, height: H, flexDirection: "column", backgroundColor: paper },
+      h("div", { height: headH, flexDirection: "column", justifyContent: "center", gap: 10, padding: "0 48px", backgroundColor: COLORS.ink },
+        h("div", { fontFamily: "Mono", fontSize: 26, letterSpacing: 6, color: COLORS.red }, "PRESS RUN · OPTIONS"),
+        h("div", { fontFamily: "Display", fontWeight: 900, fontSize: title.length > 22 ? 64 : 92, color: "#fff" }, title.toUpperCase()),
+        h("div", { fontFamily: "Body", fontSize: 30, color: "#BBB" }, subtitle)),
+      h("div", { flexDirection: "column" }, ...rows.map(row)),
+      h("div", { height: 110, alignItems: "center", padding: "0 48px", borderTop: `3px dashed ${rule}`, fontFamily: "Mono", fontSize: 24, color: inkSoft, letterSpacing: 1 }, "REPLY WITH NUMBERS TO SEE CARDS, OR \"SHOW ME ALL\"")),
+    W, H);
 }
 
 /** Last second of every sample clip. */

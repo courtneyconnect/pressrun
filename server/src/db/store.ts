@@ -3,7 +3,7 @@
 // the columns we look things up by, plus a JSON `data` column for the rest.
 
 import { SQL } from "bun";
-import type { Account, BookerProfile, PressStop, SignupCode, Talent } from "../types";
+import type { Account, BookerProfile, PressStop, RunRequest, SignupCode, Talent } from "../types";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, phone TEXT UNIQUE NOT NULL, member_no INTEGER NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
@@ -13,6 +13,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS stops (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, direction TEXT NOT NULL, kind TEXT NOT NULL, body TEXT, provider_id TEXT, data TEXT, created_at TEXT NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS messages_account ON messages (account_id, created_at)`,
+  `CREATE TABLE IF NOT EXISTS run_requests (id TEXT PRIMARY KEY, booker_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL, run_after TEXT NOT NULL, error TEXT, created_at TEXT NOT NULL)`,
 ];
 
@@ -164,6 +165,34 @@ export class Store {
 
   async liveStops(): Promise<PressStop[]> {
     const rows = await this.db`SELECT data FROM stops WHERE status = ${"live"}`;
+    return rows.map((r: { data: string }) => JSON.parse(r.data));
+  }
+
+  // ---------- Run requests ----------
+
+  async createRequest(bookerId: string, rawText: string): Promise<RunRequest> {
+    const r: RunRequest = { id: id(), bookerId, status: "draft", rawText, talentIds: [], only: {}, options: [], nextNumber: 1, createdAt: ordered() };
+    await this.db`INSERT INTO run_requests (id, booker_id, status, data, created_at, updated_at) VALUES (${r.id}, ${bookerId}, ${r.status}, ${JSON.stringify(r)}, ${r.createdAt}, ${now()})`;
+    return r;
+  }
+
+  async request(requestId: string): Promise<RunRequest | null> {
+    const rows = await this.db`SELECT data FROM run_requests WHERE id = ${requestId}`;
+    return rows[0] ? JSON.parse(rows[0].data) : null;
+  }
+
+  async saveRequest(r: RunRequest): Promise<void> {
+    await this.db`UPDATE run_requests SET status = ${r.status}, data = ${JSON.stringify(r)}, updated_at = ${now()} WHERE id = ${r.id}`;
+  }
+
+  /** The booker's newest request that still has options in play. */
+  async openRequest(bookerId: string): Promise<RunRequest | null> {
+    const rows = await this.db`SELECT data FROM run_requests WHERE booker_id = ${bookerId} AND status = ${"open"} ORDER BY created_at DESC LIMIT 1`;
+    return rows[0] ? JSON.parse(rows[0].data) : null;
+  }
+
+  async allStops(): Promise<PressStop[]> {
+    const rows = await this.db`SELECT data FROM stops`;
     return rows.map((r: { data: string }) => JSON.parse(r.data));
   }
 

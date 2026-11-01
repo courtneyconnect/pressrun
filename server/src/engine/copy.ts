@@ -193,3 +193,39 @@ export const S11 = (series: string): Out[] => [
 ];
 export const S11_ANOTHER = t("Want to list your next show? Text “add another show”.");
 export const S12_BOOKING = t("Do you ever book guests on other shows, or go on press runs yourself? Reply YES to turn on booking too.");
+
+// ---------- Asking for a run (R1–R3) ----------
+
+export const R_DATES = t('Which dates? e.g. "Nov 12–15" or "next week".');
+export const R_CITY = t("Which city? Right now I've got New York.");
+export const R_WHO = (names: string) => t(`For who: ${names}, or all?`);
+export const R_USING_BUDGET = (budget: string) => t(`Using your usual ${budget} budget.`);
+export const R_PAST = (date: string) => t(`${date} has already passed. Did you mean next year, or another date?`);
+export const R_CITY_NOT_LIVE = (city: string) => t(`I don't have Press Stops in ${city} yet, but I'll text you when it opens. Want options in NYC instead?`);
+export const R_CITY_LATER = (city: string) => t(`Got it. I'll text you when ${city} opens.`);
+export const R_DATES_LATER = t("No problem. Text me the dates whenever you're ready.");
+export const R_ON_IT = (summary: string) => t(`On it: ${summary}. Pulling Press Stops now…`);
+export const R_SUMMARY = (n: number, total: string, matchLine: string) =>
+  t(`That's ${n} Press Stops, ${total}. ${matchLine}Reply with numbers ("1 and 3"), react to a card, or ask "cheaper", "more like 2", or "who's free Thursday?"`);
+export const R_FEW = (n: number, cap: number) => t(`Only ${n} Press Stop${n === 1 ? "" : "s"} fit${n === 1 ? "s" : ""} those dates and budget. Want me to widen the dates or include paid Press Stops up to $${cap}?`);
+export const R_NONE = t("No Press Stops fit those dates and budget yet. Want me to widen the dates or include paid Press Stops?");
+export const R_LIST_INTRO = (n: number) => t(`${n} Press Stops fit 🔥 Here's the full list 👇`);
+export const R_LIST_HOW = t('Reply with the numbers you want to see ("2, 5, 9"), or "show me all", and I\'ll send their cards and clips. You can also say "only podcasts", "under $300" or "Thursday only".');
+export const R_LIST_MORE = t('Reply "more" for the rest.');
+export const R_LIST_Q = t('Reply with numbers to see cards, or "show me all".');
+export const R_PAGE = (a: number, b: number) => t(`That's ${a}–${b}. Reply "more" for the next 5.`);
+export const R_SHORTLISTED = (nums: string, who: string) => t(`Shortlisted ${nums}, ${who}. Want me to ask about dates?`);
+export const R_SHORTLIST = (nums: string) => t(`Shortlist: ${nums} ✅`);
+export const R_DROPPED = (n: number) => t(`Dropped ${n}. I'll show fewer like it.`);
+export const R_FULL = (who: string) => t(`Here's the full episode from ${who} 👇`);
+export const R_NO_FULL = (who: string) => t(`${who} hasn't added a full episode yet. Want me to ask?`);
+export const R_ONLY_SENT = (a: number, b: number) => t(`I only sent ${a}–${b}. Which ones?`);
+export const R_CHEAPER = t("Cheaper options 👇");
+export const R_CHEAPEST = t("These are the cheapest I've got for those dates.");
+export const R_MORE_LIKE = (n: number) => t(`More like ${n} 👇`);
+export const R_NO_MORE_LIKE = (n: number) => t(`That's everyone like ${n} for those dates.`);
+export const R_FREE_ON = (day: string, nums: string, who: string) => t(`${day}: ${nums} (${who}).`);
+export const R_ALSO_FREE = (day: string) => t(`Also free ${day} 👇`);
+export const R_NOBODY_ELSE = (day: string) => t(`Nobody else is free ${day}.`);
+/** Build-slice note: asking Press Stops (R4) is the next slice. */
+export const R_ASK_NEXT_SLICE = t("Got it. Sending your request to the Press Stops arrives in the next build.");

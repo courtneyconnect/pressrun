@@ -6,12 +6,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Job, Store } from "./db/store";
 import * as C from "./engine/copy";
-import { renderCard, renderEndCard } from "./media/card";
+import { renderCard, renderEndCard, renderList } from "./media/card";
 import { fetchSample, grabFrame, makeClip, SampleUnavailable } from "./media/clip";
 import type { FileStore } from "./media/files";
 import { logOut } from "./outbox";
 import type { Provider } from "./providers/provider";
-import type { Account, Out, PressStop } from "./types";
+import type { Account, Out, PressStop, RunRequest } from "./types";
+import { andList, describeRequest } from "./run/match";
+import { bookerContext } from "./run/options";
 
 export interface WorkerDeps {
   store: Store;
@@ -29,6 +31,9 @@ export async function runJobs(deps: WorkerDeps): Promise<number> {
   for (const job of jobs) {
     try {
       if (job.kind === "build_stop_media") await buildStopMedia(deps, job);
+      else if (job.kind === "send_options") await sendOptions(deps, job);
+      else if (job.kind === "send_list") await sendList(deps, job);
+      else if (job.kind === "shortlist_summary") await shortlistSummary(deps, job);
       await deps.store.finishJob(job.id, "done");
     } catch (err) {
       await onFailure(deps, job, err, now);
@@ -48,7 +53,7 @@ class NoReadableSamples extends Error {
 
 let endCard: Promise<Uint8Array> | null = null;
 
-async function coverDataUrl(deps: WorkerDeps, stop: PressStop): Promise<string | undefined> {
+export async function coverDataUrl(deps: WorkerDeps, stop: PressStop): Promise<string | undefined> {
   try {
     if (stop.cover === "frame" && stop.media?.coverKey) {
       const bytes = await deps.files.get(stop.media.coverKey);
@@ -153,4 +158,76 @@ async function onFailure(deps: WorkerDeps, job: Job, err: unknown, now: Date): P
     await deps.store.saveAccount(account);
     await deliver(deps, account, [C.S8_SNAG]);
   }
+}
+
+// ---------- Run requests (booker script R2–R3) ----------
+
+async function requestAndBooker(deps: WorkerDeps, requestId: string): Promise<{ req: RunRequest; account: Account } | null> {
+  const req = await deps.store.request(requestId);
+  const account = req ? await deps.store.accountById(req.bookerId) : null;
+  return req && account ? { req, account } : null;
+}
+
+/** Card + clip for each number, with the number drawn on the card. */
+async function optionBubbles(deps: WorkerDeps, req: RunRequest, numbers: number[]): Promise<Out[]> {
+  const out: Out[] = [];
+  for (const n of numbers) {
+    const opt = req.options.find(o => o.number === n);
+    const stop = opt && (await deps.store.stop(opt.stopId));
+    if (!stop) continue;
+    const png = await renderCard(stop, n, await coverDataUrl(deps, stop));
+    const url = await deps.files.put(`requests/${req.id}/card-${n}.png`, png, "image/png");
+    const ref = `opt:${req.id}:${n}`;
+    out.push({ type: "image", url, alt: `${n} · ${stop.seriesName}`, ref });
+    if (stop.media?.clipUrl) out.push({ type: "video", url: stop.media.clipUrl, alt: `Sample clip for ${stop.seriesName}`, ref });
+  }
+  return out;
+}
+
+async function sendOptions(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { requestId: string; numbers: number[]; intro?: Out[]; outro?: "summary" | "none"; after?: Out[] };
+  const ctx = await requestAndBooker(deps, p.requestId);
+  if (!ctx) return;
+  const { req, account } = ctx;
+  const out: Out[] = [...(p.intro ?? []), ...(await optionBubbles(deps, req, p.numbers)), ...(p.after ?? [])];
+  if (p.outro === "summary") {
+    const opts = req.options.filter(o => p.numbers.includes(o.number));
+    const stops = (await Promise.all(opts.map(o => deps.store.stop(o.stopId)))).filter((s): s is PressStop => !!s);
+    const low = stops.reduce((sum, s) => sum + (s.rateLow ?? 0), 0);
+    const high = stops.reduce((sum, s) => sum + (s.rateHigh ?? s.rateLow ?? 0), 0);
+    const total = high === 0 ? "all free" : low === high ? `$${high} total if you book all of them` : `$${low}–$${high} total if you book all of them`;
+    const matches = opts.filter(o => o.why).map(o => `${o.number} is an interest match for ${o.why}.`).join(" ");
+    if (!opts.length) out.push(C.R_NONE);
+    else if (opts.length < 3) out.push(C.R_FEW(opts.length, req.budgetMax && req.budgetMax > 0 ? req.budgetMax : 500));
+    else out.push(C.R_SUMMARY(opts.length, total, matches ? matches + " " : ""));
+  }
+  await deliver(deps, account, out);
+}
+
+async function sendList(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { requestId: string; numbers: number[]; intro?: Out[] };
+  const ctx = await requestAndBooker(deps, p.requestId);
+  if (!ctx) return;
+  const { req, account } = ctx;
+  const { talent } = await bookerContext(deps.store, account.id);
+  const rows: { number: number; stop: PressStop; why?: string }[] = [];
+  for (const n of p.numbers.slice(0, 20)) {
+    const o = req.options.find(x => x.number === n);
+    const stop = o && (await deps.store.stop(o.stopId));
+    if (o && stop) rows.push({ number: n, stop, why: o.why });
+  }
+  const title = describeRequest(req, talent).split(", ").slice(0, 2).join(" · ");
+  const png = await renderList(title, `${p.numbers.length} Press Stops · reply with numbers`, rows);
+  const url = await deps.files.put(`requests/${req.id}/list-${job.id}.png`, png, "image/png");
+  const out: Out[] = [...(p.intro ?? []), C.R_LIST_INTRO(p.numbers.length), { type: "image", url, alt: `Master list: ${p.numbers.length} Press Stops`, ref: `list:${req.id}` }, C.R_LIST_HOW];
+  if (p.numbers.length > 20) out.push(C.R_LIST_MORE);
+  await deliver(deps, account, out);
+}
+
+async function shortlistSummary(deps: WorkerDeps, job: Job): Promise<void> {
+  const p = job.payload as { requestId: string; stamp: string };
+  const ctx = await requestAndBooker(deps, p.requestId);
+  if (!ctx || ctx.req.lastReactionAt !== p.stamp) return; // a newer reaction will send its own summary
+  const nums = ctx.req.options.filter(o => o.state === "shortlisted").map(o => String(o.number));
+  if (nums.length) await deliver(deps, ctx.account, [C.R_SHORTLIST(andList(nums))]);
 }

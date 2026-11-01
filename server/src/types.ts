@@ -24,7 +24,7 @@ export interface Handle {
   url?: string;
 }
 
-export type Flow = "booker" | "stop";
+export type Flow = "booker" | "stop" | "run";
 
 export interface FlowState {
   retries: Record<string, number>;
@@ -32,6 +32,7 @@ export interface FlowState {
   /** After the booker flow ends, continue into the Press Stop flow. */
   then?: Flow | null;
   stopId?: string;
+  requestId?: string;
   talentIdx?: number;
   /** The second half of a two-part question (e.g. S3 dates after places). */
   pending?: string | null;
@@ -82,6 +83,8 @@ export interface BookerProfile {
   budgetText?: string;
   hardNos: string[];
   hardNoNotes?: string;
+  /** Press Stop formats the booker 👎'd: "show fewer like it". */
+  fewerFormats?: string[];
   city?: string;
   waitlistCity?: string;
   /** Interests for a self-booker, or a brand's audience. */
@@ -95,6 +98,45 @@ export interface Talent {
   handles: Handle[];
   nicheText?: string;
   interests: string[];
+}
+
+export interface RunOption {
+  number: number;
+  stopId: string;
+  /** listed = on the master list only; sent = card and clip sent. */
+  state: "listed" | "sent" | "shortlisted" | "dropped";
+  score: number;
+  /** e.g. "Nova (🎬 Movies & TV)" when it's an interest match. */
+  why?: string;
+}
+
+/** "NYC Nov 12–15, 2 artists, $5k budget": one booker asking for options. */
+export interface RunRequest {
+  id: string;
+  bookerId: string;
+  status: "draft" | "open" | "asked" | "closed";
+  rawText: string;
+  city?: string;
+  start?: string;
+  end?: string;
+  talentIds: string[];
+  budgetMax?: number;
+  budgetText?: string;
+  /** Narrowing the booker asked for: "podcasts only", "Thursday", "under $300". */
+  only: { types?: string[]; weekdays?: number[]; maxRate?: number };
+  mode?: "cards" | "list";
+  options: RunOption[];
+  nextNumber: number;
+  /** A date they gave that had already passed, to ask about. */
+  pastDate?: string;
+  /** Manager with 2+ artists who didn't say who it's for. */
+  needWho?: boolean;
+  /** True when the budget came from onboarding, so Press Run says so. */
+  usualBudget?: boolean;
+  /** Where "show me all" / "more" left off on the master list. */
+  cursor?: number;
+  lastReactionAt?: string;
+  createdAt: string;
 }
 
 export interface PlatformEntry {

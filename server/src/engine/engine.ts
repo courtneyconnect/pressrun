@@ -10,6 +10,8 @@ import * as C from "./copy";
 import { norm } from "./parse";
 import { bookerSteps, BOOKER_FIRST } from "./flows/booker";
 import { stopSteps, STOP_FIRST } from "./flows/stop";
+import { runSteps, RUN_FIRST } from "./flows/run";
+import { handleBooker } from "../run/picking";
 
 export interface Ctx {
   store: Store;
@@ -41,6 +43,7 @@ export interface Step {
 const FLOWS: Record<Flow, { steps: Record<string, Step>; first: string }> = {
   booker: { steps: bookerSteps, first: BOOKER_FIRST },
   stop: { steps: stopSteps, first: STOP_FIRST },
+  run: { steps: runSteps, first: RUN_FIRST },
 };
 
 const SIGNUP_CODE = /\bPR-[A-Z2-9]{4}\b/i;
@@ -209,14 +212,16 @@ export class Engine {
     return this.goTo(ctx, "booker:B0", []);
   }
 
-  /** Someone who finished onboarding. Run requests land here in the next build slice. */
+  /** Someone who finished onboarding: new shows, run requests and picking options. */
   private async afterOnboarding(ctx: Ctx): Promise<Out[]> {
     const t = norm(ctx.text);
     if (/\b(list my show|add another show|add (a )?show|list (a|my) series)\b/.test(t)) {
       ctx.account.state.stopId = undefined;
       return this.goTo(ctx, `stop:${STOP_FIRST}`, []);
     }
-    return [C.WELCOME_BACK(ctx.account.firstName)];
+    const r = await handleBooker(ctx, (target, say) => this.goTo(ctx, target, say));
+    if (r) return r;
+    return ctx.input.reaction ? [] : [C.WELCOME_BACK(ctx.account.firstName)];
   }
 
   /** Sends the 24-hour and 72-hour nudges to people who went quiet mid-onboarding. Run hourly. */

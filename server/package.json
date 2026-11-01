@@ -1,0 +1,19 @@
+{
+  "name": "pressrun-server",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "4.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.2.21",
+    "typescript": "5.8.3"
+  }
+}

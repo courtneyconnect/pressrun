@@ -84,6 +84,13 @@ Feedback in this round:
 
 If feedback conflicts with an earlier decision (here, the fees promise in the welcome vs. the business plan's pricing), make the requested change and flag the conflict. Don't quietly rewrite the plan.
 
+## Step 7 · Price it, then start the build (2026-11-01)
+
+1. **Price every paid piece before building**, with a sub-agent and the vendors' own pages. Note which numbers came from search results because a site was blocked. Look for traps: Vercel's free plan doesn't allow commercial use, so the landing page moved onto the server and saved $20/mo.
+2. **Build in slices the founder can check.** Slice 1 is the texting engine with both onboarding scripts word for word, a pretend-phone page (`/dev/phone`) and tests that replay the mockup's conversations. No accounts are needed yet.
+3. **Keep every message in one copy file**, so wording changes from feedback never touch the logic.
+4. **Run the tests many times.** A test that passes once can still be flaky; running them 10 times found a real ordering bug.
+
 ## Rules that kept this session safe
 
 - **Draft only.** Nothing signed up for, paid for or sent. Questions for vendors are written as drafts for the founder to send.

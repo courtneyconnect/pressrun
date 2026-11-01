@@ -198,11 +198,11 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
       <div><i style="background:var(--out)"></i>The person holding the phone</div>
       <div><i style="background:transparent;border:1px dashed var(--note)"></i>Behind-the-scenes notes (not sent)</div>
     </div>
-    <p style="font-size:12px">Names of bookers, follower counts, prices and clips are examples for the mockup.</p>
+    <p style="font-size:12px">Artist names, follower counts, rates and clips are examples for the mockup.</p>
   </aside>
 
   <main class="phone" id="phone">
-    <div class="owner"><span class="pill" id="ownerPill" data-who="booker"><i></i><span id="ownerText">Dre's phone · Booker</span></span></div>
+    <div class="owner"><span class="pill" id="ownerPill" data-who="booker"><i></i><span id="ownerText">Courtney's phone · Booker</span></span></div>
     <header class="head">
       <button class="back" id="menuBtn" type="button" aria-label="Open chapters"><svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Chapters</button>
       <div class="who"><div class="avatar" id="headAvatar"></div><b>Press Run</b></div>
@@ -250,20 +250,20 @@ const STOPS = {
 let stopPreviewPrice = "Free";
 
 /* ---------- State ---------- */
-const S = {chap:0, run:0, active:"booker", picks:[], shortlist:new Set(), reactions:{}, dropped:new Set(), mode:null, waitResolve:null, skip:null, chain:Promise.resolve()};
+const S = {stopLabel:"Courtney's phone · Press Stop", stopToast:"the Press Stop", chap:0, run:0, active:"booker", picks:[], shortlist:new Set(), reactions:{}, dropped:new Set(), mode:null, waitResolve:null, skip:null, chain:Promise.resolve()};
 
 function threadEl(who){ return $("t-" + who); }
 function scrollDown(who){ const t = threadEl(who || S.active); requestAnimationFrame(() => { t.scrollTop = t.scrollHeight; }); }
 function setOwner(who){
   $("ownerPill").dataset.who = who;
-  $("ownerText").textContent = who === "booker" ? "Dre's phone · Booker" : "Courtney's phone · Press Stop";
+  $("ownerText").textContent = who === "booker" ? "Courtney's phone · Booker" : S.stopLabel;
 }
 function showThread(who, animate){
   const other = who === "booker" ? "stop" : "booker";
   threadEl(who).dataset.pos = "center";
   threadEl(other).dataset.pos = who === "booker" ? "right" : "left";
   S.active = who; setOwner(who);
-  if (animate) toast(who === "booker" ? "Over to Dre's phone" : "Over to Courtney's phone");
+  if (animate) toast(who === "booker" ? "Over to Courtney's phone" : "Over to " + S.stopToast);
   scrollDown(who);
 }
 let toastT;
@@ -295,10 +295,10 @@ function textBubble(s){ return `<div class="b">${linkify(s)}</div>`; }
 function cardHTML(n, opts = {}){
   const st = STOPS[n];
   const price = opts.preview && n === 1 ? stopPreviewPrice : st.price;
-  return `<div tabindex="0" class="card${S.dropped.has(+n) && !opts.preview ? " dropped" : ""}" role="img" aria-label="Card ${opts.preview ? "" : n + " "}${esc(st.name)}, ${esc(st.fmt)}, audience ${st.aud}, price ${esc(price)}, open ${esc(st.open)}" style="--c1:${st.c1};--c2:${st.c2}">
+  return `<div tabindex="0" class="card${S.dropped.has(+n) && !opts.preview ? " dropped" : ""}" role="img" aria-label="Card ${opts.preview ? "" : n + " "}${esc(st.name)}, ${esc(st.fmt)}, audience ${st.aud}, rate ${esc(price)}, open ${esc(st.open)}" style="--c1:${st.c1};--c2:${st.c2}">
     <div class="cover"><div class="num">${opts.preview ? "#" : n}</div><div class="glyph">${esc(st.glyph)}</div><div class="title">${st.lines.map(esc).join("<br>")}</div><div class="stripes"><i></i><i></i><i></i><i></i></div></div>
     <div class="info"><h3>${esc(st.name)}</h3><div class="fmt">${esc(st.fmt)}</div>
-      <div class="stats"><div><span class="k">Audience</span><span class="v">${st.aud}</span></div><div><span class="k">Price</span><span class="v">${esc(price)}</span></div>
+      <div class="stats"><div><span class="k">Audience</span><span class="v">${st.aud}</span></div><div><span class="k">Rate</span><span class="v">${esc(price)}</span></div>
       <div class="wide"><span class="k">Open dates</span><span class="v">${esc(st.open)}</span></div></div>
       <div class="cta">${opts.preview ? "Preview · number added when sent" : `Reply ${n} or ❤️ to save`}</div></div></div>`;
 }
@@ -310,7 +310,7 @@ const vcardHTML = () => `<div class="vcard"><div class="avatar" style="backgroun
 function sheetHTML(){
   const p = S.picks.length ? S.picks : [1,3];
   const rows = p.map(n => { const s = STOPS[n];
-    return `<li><div class="day">${s.day}<small>${s.date}<br>${s.time}</small></div><div><b>${esc(s.name)}</b><span>${esc(s.talent)} · ${esc(s.place)}</span><span>On site: Courtney · arrive 15 min early</span></div></li>`; }).join("");
+    return `<li><div class="day">${s.day}<small>${s.date}<br>${s.time}</small></div><div><b>${esc(s.name)}</b><span>${esc(s.talent)} · ${esc(s.place)}</span><span>On site: the ${esc(s.name)} host · arrive 15 min early</span></div></li>`; }).join("");
   const dates = p.map(n => STOPS[n].date).sort();
   return `<div class="sheet" role="img" aria-label="Run Sheet"><div class="top"><span class="k">PRESS RUN · RUN SHEET</span><h3>Nova Reign<br>&amp; Jay Mo</h3><span>New York · ${p.length} Press Stop${p.length>1?"s":""} · Nov 12–15</span></div><ol>${rows}</ol><div class="foot">Reminders: night before 8 PM · 1 hour before<br>Reply “change” or “late” anytime</div></div>`;
 }
@@ -363,11 +363,11 @@ $("stage").addEventListener("click", e => { if (S.skip && !e.target.closest(".ca
 /* ---------- Chapters ---------- */
 const N = (s) => ({note:s});
 const CHAPTERS = [
-  {title:"Booker signs up", sub:"Dre, a manager, onboards by text", who:"booker", build:() => [
+  {title:"Booker signs up", sub:"Courtney, as a manager, onboards by text", who:"booker", build:() => [
     {sys:"<b>Today</b> 7:02 PM"},
-    N("Dre tapped “Text Press Run” on the website. Messages opened with this already typed, sign-up code included, so Dre texts first."),
+    N("Courtney tapped “Text Press Run” on the website. Messages opened with this already typed, sign-up code included, so she texts first."),
     {me:"Hey Press Run 👋 Sign me up. Code PR-7Q4K"},
-    {pr:"Welcome to Press Run, Dre. You're Member #0042 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform for 12 months after fees start."},
+    {pr:"Welcome to Press Run, Courtney. You're Member #0001 🎟️ Since you're one of the first 1,000 members, you pay NO Press Run service fees for 12 months after they start. Press Stops set their own rates."},
     {pr:"A few quick questions so I send you the right Press Stops. Takes about 2 minutes."},
     {pr:"First: who are you booking for?\n1 Yourself (artist, actor, creator)\n2 Artists or talent you manage\n3 A label, agency or PR firm\n4 A brand"},
     {me:"2"},
@@ -389,21 +389,22 @@ const CHAPTERS = [
     {pr:"Last one: where are you based? We're live in New York first, with more cities soon."},
     {me:"Brooklyn"},
     {pr:"NYC 🗽 perfect."},
-    {pr:"You're set, Dre ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Runs are usually for: new releases\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
+    {pr:"You're set, Courtney ✅\n• Booking for: Nova Reign (R&B), Jay Mo (drill)\n• Runs are usually for: new releases\n• Budget: $1k–$5k\n• Never: prank shows, before 11am\nReply “edit” to change anything."},
     {vcard:true},
     {pr:"Save me so my texts show up as Press Run."},
     {pr:"Quick one: do you also run a show, series or podcast people could book? Reply YES to list it as a Press Stop too. Same thread, same account."},
-    {me:"not yet"},
+    {me:"yes but later, I'll list my shows next"},
+    {pr:"No rush. Text “list my show” anytime and we'll set it up in this same thread."},
     {pr:"Here's how it works. Text me a run anytime, like:\n“NYC Nov 12–15, 2 artists, $5k budget, give me my options”"},
     {pr:"I'll send numbered Press Stops, each with a card and a short clip. Pick by replying (“1 and 3”) or by reacting:\n❤️ 👍 🔥 💯 save it\n👎 drop it and show fewer like it\n❓ tell me more"},
     {pr:"You mentioned Nova's single on Nov 14. Want me to pull options for that week? Reply YES."},
     {end:true}
   ]},
-  {title:"Press Stop signs up", sub:"Courtney lists Music for a Minute", who:"stop", build:() => { stopPreviewPrice = "Free"; return [
-    {sys:"<b>Today</b> 9:15 AM"},
-    N("Courtney lists her own series from her own phone. One account can be a Press Stop and a booker."),
-    {me:"Hey Press Run 👋 List my show. Code PR-2M8D"},
-    {pr:"Welcome to Press Run, Courtney. You're Member #0001 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform for 12 months after fees start."},
+  {title:"Press Stop signs up", sub:"Courtney lists Music for a Minute", who:"stop", build:() => { stopPreviewPrice = "Free"; S.stopLabel = "Courtney's phone · Press Stop"; S.stopToast = "the Press Stop"; return [
+    {sys:"<b>Next day</b> 9:15 AM"},
+    N("Same account, same thread. Courtney turns on the Press Stop side to list her own series. A brand-new Press Stop signs up with a website code and gets a welcome like chapter 1, ending “You always set your own rate.”"),
+    {me:"list my show"},
+    {pr:"Love it. You're already Member #0001, so I'll skip the basics."},
     {pr:"I'll ask a few questions, then I'll make your Press Stop card and a short sample clip. That's what bookers see. Takes about 5 minutes."},
     {pr:"What's your show called, and what's the format?\n1 Street interview / street series\n2 Podcast\n3 Radio\n4 Livestream\n5 YouTube show\n6 Photo or video shoot\n7 Something else"},
     {me:"I have 4 series lol. Music for a Minute is the main one, street interviews"},
@@ -415,11 +416,12 @@ const CHAPTERS = [
     {pr:"And which dates are open in the next 4 weeks? e.g. “Nov 12, 14, 15” or “any Thu or Sat”"},
     {me:"Washington Sq + SoHo, Thu–Sat afternoons. Open Nov 12, 13, 15"},
     {pr:"What does a booker get from one appearance? e.g. “60-sec street interview, posted on IG + TikTok, raw clip shared after”"},
-    {pr:"And what do you charge? Reply “free”, a price, or a range like “$300–500”."},
+    {pr:"And what's your rate for one appearance? Reply “free”, an amount, or a range like “$300–500”. It's yours to set."},
     {me:"60 sec street interview on IG + TikTok, raw clip after. Free for now"},
     {pr:"How much notice do you need before a shoot? e.g. “48 hours” or “1 week”"},
     {pr:"When a booking request comes in, should I text you here, or someone on your team? (Bookers never see your number either way.)"},
-    {me:"48 hours. Text me here"},
+    {me:"48 hours. Send requests to my booking line, 917-555-0199"},
+    {pr:"Got it. I'll text that number once to confirm. Bookers never see it."},
     {pr:"Last step: send 3 links to episodes you're proud of (IG, TikTok, YouTube, anywhere). I'll cut a 15–20 sec sample clip from them."},
     {pr:"Or attach the videos right here if that's easier."},
     {me:"instagram.com/reel/mfm-ep41\ntiktok.com/@musicforaminute/video/ep38\nyoutube.com/shorts/mfm-ep35"},
@@ -433,19 +435,19 @@ const CHAPTERS = [
     {pr:"Here's how bookers will see Music for a Minute 👇"},
     {card:1, preview:true},
     {clip:1},
-    {pr:"Reply “looks good” (or ❤️ either one) to go live. Or tell me what to change, e.g. “price 300–500”, “use the 2nd episode”, “new cover”."},
+    {pr:"Reply “looks good” (or ❤️ either one) to go live. Or tell me what to change, e.g. “rate 300–500”, “use the 2nd episode”, “new cover”."},
     {wait:"approve"}
   ];}},
   {title:"Ask for a run and pick", sub:"Numbered cards, clips, reply or react", who:"booker", build:() => [
     {sys:"<b>Mon, Nov 3</b> 11:20 AM"},
     {me:"NYC Nov 12–15, 2 artists, $5k budget, give me my options"},
     {pr:"On it: NYC, Wed Nov 12 – Sat Nov 15, for Nova Reign and Jay Mo, up to $5k. Pulling Press Stops now…"},
-    N("The request is read into city, dates, artists and budget. Press Run matches live Press Stops with open dates in that window and skips Dre's hard no's (no prank shows, nothing before 11)."),
+    N("The request is read into city, dates, artists and budget. Press Run matches live Press Stops with open dates in that window and skips Courtney's hard no's (no prank shows, nothing before 11)."),
     {card:1},{clip:1},{card:2},{clip:2},{card:3},{clip:3},{card:4},{clip:4},
     {pr:"That's 4 Press Stops, $0–$800 total. Reply with numbers (“1 and 3”), react to a card, or ask “cheaper”, “more like 2”, or “who's free Thursday?”"},
     {wait:"pick"}
   ]},
-  {title:"Messages passed between both sides", sub:"Press Run relays, numbers stay private", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null;
+  {title:"Messages passed between both sides", sub:"Press Run relays, numbers stay private", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null; S.stopLabel = `${s1.name} booking line · Press Stop`; S.stopToast = `the ${s1.name} booking line`;
     const names = p.map(n => STOPS[n].name); const list = names.length > 1 ? names.slice(0,-1).join(", ") + " and " + names[names.length-1] : names[0];
     return [
     {sys:"<b>Mon, Nov 3</b> 11:26 AM"},
@@ -453,6 +455,7 @@ const CHAPTERS = [
     {pr:`Sent 🙌 I asked ${list} about Nov 12–15. I'll pass their replies here, usually within a few hours.`},
     {to:"stop"},
     {sys:"<b>Mon, Nov 3</b> 11:27 AM"},
+    N(`Courtney is booking her own series in this demo, so the request goes to ${s1.name}'s booking line, the number set during onboarding.`),
     {pr:`📩 New booking request #PR-1042\n${s1.talent} (${s1.talent === "Nova Reign" ? "R&B, @novareign" : "drill, @jaymo.nyc"}) for ${s1.name}\nDates: Nov 12–15, NYC · Budget: within your range\nReply YES with a day and time, NO to pass, or type a question and I'll pass it on.`},
     {me:`YES ${s1.day} ${s1.date}, ${s1.time.toLowerCase()}, ${s1.place.split(" (")[0]}. Can ${s1.talent.split(" ")[0]} do a quick a cappella bit?`},
     {pr:`Sent to ${s1.talent}'s team ✅`},
@@ -469,18 +472,18 @@ const CHAPTERS = [
     ...(s2 ? [N(`The same back-and-forth runs for ${s2.name}: ${s2.talent}, ${s2.day} ${s2.date} at ${s2.time}.`)] : []),
     {end:true}
   ];}},
-  {title:"Run Sheet and reminders", sub:"Itinerary, day-of texts, rating, recap", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null; return [
+  {title:"Run Sheet and reminders", sub:"Itinerary, day-of texts, rating, recap", who:"booker", build:() => { const p = S.picks.length ? S.picks : [1,3]; const s1 = STOPS[p[0]], s2 = p[1] ? STOPS[p[1]] : null; S.stopLabel = `${s1.name} booking line · Press Stop`; S.stopToast = `the ${s1.name} booking line`; return [
     {sys:"<b>Mon, Nov 3</b> 4:05 PM"},
     ...(s2 ? [{pr:`${s2.name} confirmed too ✅ ${s2.day} ${s2.date}, ${s2.time}.`}] : []),
     {pr:"Here's your Run Sheet 👇"},
     {sheet:true},
     {pr:`Your run: ${p.length} Press Stop${p.length>1?"s":""}. I'll text call times the night before and 1 hour before each one. Reply “change” if anything moves.`},
     {sys:`<b>Night before</b> 8:00 PM`},
-    {pr:`Tomorrow: ${s1.name} at ${s1.time}, ${s1.place}. Contact on site: Courtney. Reply “late” if you're running behind.`},
+    {pr:`Tomorrow: ${s1.name} at ${s1.time}, ${s1.place}. Contact on site: the ${s1.name} host. Reply “late” if you're running behind.`},
     {sys:`<b>${s1.day}, ${s1.date}</b> ${s1.pre}`},
     {pr:`${s1.name} in 1 hour 📍 ${s1.place}`},
     {me:"running 15 late 😅"},
-    {pr:"Told Courtney. You're good 👍"},
+    {pr:`Told ${s1.name}. You're good 👍`},
     {to:"stop"},
     {pr:`💬 ${s1.talent}'s team: running about 15 min late.`},
     {to:"booker"},
@@ -523,11 +526,12 @@ function go(i){
   setChips(null); closeOverlay();
   ["booker","stop"].forEach(w => threadEl(w).innerHTML = "");
   const ch = CHAPTERS[i];
+  const steps = ch.build();
   showThread(ch.who, false);
   $("chapNo").textContent = `${i + 1} / ${CHAPTERS.length}`;
   renderChapterLists();
   try { location.hash = "ch" + (i + 1); } catch (e) {}
-  play(ch.build(), S.run);
+  play(steps, S.run);
 }
 
 /* ---------- Approval (stop) ---------- */
@@ -546,9 +550,9 @@ function approveMode(run){
       res();
     };
     const chips = () => setChips([
-      ...(changed ? [] : [{label:"Price free–$500", act: async () => {
+      ...(changed ? [] : [{label:"Rate free–$500", act: async () => {
         changed = true; setChips(null);
-        sendMine("Make the price free–$500. Paid is for labels");
+        sendMine("Make my rate free–$500. Paid is for labels");
         await sleep(300);
         stopPreviewPrice = "Free–$500";
         await prSay(S.active, {pr:"Got it. I'll show “Free–$500” and send you each request to decide."}, run);

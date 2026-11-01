@@ -79,6 +79,9 @@ Feedback in this round:
 - **Always say "Press Stop(s)" in user-facing copy** (branding). Internal notes and table names can keep the short "stop".
 - **Accept typed @handles or pasted profile links** wherever a handle is asked for. One shared rule in the script covers every question that asks for a handle.
 
+- **Name the money words early.** "Service fee" means what the platform takes. "Rate" means what a seller (here, a Press Stop) charges. A vague "fees" or "booking fee" in a welcome text can sound like sellers can't charge their own price.
+- **Put the founder in the mockup.** Use the founder's name as the main user so it reads like their own product. If they'd end up on both sides of a conversation, label the second phone by role, e.g. "Music for a Minute booking line".
+
 If feedback conflicts with an earlier decision (here, the fees promise in the welcome vs. the business plan's pricing), make the requested change and flag the conflict. Don't quietly rewrite the plan.
 
 ## Rules that kept this session safe

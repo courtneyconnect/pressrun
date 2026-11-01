@@ -1,6 +1,6 @@
 # Press Run · Booker onboarding text script
 
-Version 2 · 2026-11-01 · Milestone M1
+Version 3 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new booker in iMessage, in order. That covers artists, actors, creators, managers, labels, agencies, publicists and brands. Each step has an ID (B1, B2…) so the build plan and the mockup can refer to it.
 
@@ -12,6 +12,7 @@ This is every message Press Run sends a new booker in iMessage, in order. That c
 - `{name}` and similar are filled in from earlier answers.
 - Keep every bubble under about 300 characters. Each step asks at most 2–3 questions.
 - **Naming:** every message Press Run sends says **Press Stop** / **Press Stops**, never just "stop". The notes in this file say "stop" only as shorthand.
+- **Money words:** **service fee** is what Press Run charges. **Rate** is what a Press Stop charges for an appearance, and Press Stops always set their own. Never call a Press Stop's rate a "fee", and never call Press Run's cut a "booking fee".
 
 ---
 
@@ -101,7 +102,7 @@ PR: Nice. What's your name and email? (Email is only for receipts and your Run S
 ### B1 · Welcome and role
 
 ```
-PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform for 12 months after fees start.
+PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, you pay NO Press Run service fees for 12 months after they start. Press Stops set their own rates.
 
 PR: A few quick questions so I send you the right Press Stops. Takes about 2 minutes.
 
@@ -336,7 +337,7 @@ What the stop sees in **its own** Press Run thread:
 ```
 PR: 📩 New booking request #PR-1042
 Nova Reign (R&B, @novareign) for Music for a Minute
-Dates: Nov 12–15, NYC · Budget: within your $300–$500 range
+Dates: Nov 12–15, NYC · Budget: within your $300–$500 rate
 Reply YES with a day and time, NO to pass, or type a question and I'll pass it on.
 ```
 
@@ -382,7 +383,7 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 | Question | Answer |
 | --- | --- |
-| How much does it cost? | `PR: Free while we're in beta. After that it's 10% on paid bookings and $15 on free Press Stops. As one of the first 1,000 members, you'll pay NO fees on any booking for 12 months after fees start.` |
+| How much does it cost? | `PR: Free while we're in beta. After that, Press Run adds a service fee: 10% on paid bookings and $15 on free Press Stops. Press Stops set their own rates. As one of the first 1,000 members, you pay NO service fees for 12 months after they start.` |
 | Who are you / is this a bot? | `PR: I'm Press Run's booking assistant. A real person (Courtney) checks in on every booking. Text "human" anytime.` |
 | Can I just get their number? | `PR: I keep numbers private until you're booked. It keeps everyone safe from spam. Once you've shot together, swap away.` |
 | Is my info shared? | `PR: Press Stops only see what's on your request: name, niche, handles and dates. Never your number or email.` |
@@ -393,6 +394,6 @@ PR: Your run: 3 Press Stops, Nov 12–14. I'll text call times the night before 
 
 ## 7. Open items for Courtney
 
-- Decided 2026-11-01: the first 1,000 members (bookers and Press Stops) pay NO Press Run fees on any booking, paid or free, for 12 months after fees start. The business plan matches.
+- Decided 2026-11-01: the first 1,000 members (bookers and Press Stops) pay NO Press Run service fees on any booking, paid or free, for 12 months after service fees start. Press Stops always set their own rates. The business plan matches.
 - Human hours (10am–7pm ET) are a placeholder. Set the real hours.
 - The reminder times (8pm the night before, and 1 hour before) are placeholders.

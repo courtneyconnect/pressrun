@@ -1,12 +1,12 @@
 # Press Run · Press Stop onboarding text script
 
-Version 2 · 2026-11-01 · Milestone M1
+Version 3 · 2026-11-01 · Milestone M1
 
 This is every message Press Run sends a new **Press Stop** (street series, podcast, radio show, livestream, YouTube show, photographer) in iMessage. It ends with Press Run sending the Press Stop its **card and clip** to approve. Every message Press Run sends says **Press Stop**. The notes here say "stop" only as shorthand. The step IDs (S1, S2…) match the build plan and the mockup.
 
 The format and the global rules are the same as the booker script. **Section 0 of `booker-onboarding-script.md` applies here too** (STOP, HELP, human, back, skip, start over, mid-flow questions, voice notes, nudges, "ask again once, then save as `needs_review`").
 
-The stop answers **10 things in 6 short rounds**: series name, format, audience and platforms, cities, filming schedule and open dates, what a booker gets, price, notice needed, who handles bookings, and 3 sample links. Then comes a cover photo and approval.
+The stop answers **10 things in 6 short rounds**: series name, format, audience and platforms, cities, filming schedule and open dates, what a booker gets, rate, notice needed, who handles bookings, and 3 sample links. Then comes a cover photo and approval.
 
 ---
 
@@ -33,7 +33,7 @@ Same rules as booker B0a. → S1
 ### S1 · Welcome, series name and format
 
 ```
-PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run will take NO fees from any bookings on the platform for 12 months after fees start.
+PR: Welcome to Press Run, {first_name}. You're Member #{member_no} 🎟️ Since you're one of the first 1,000 members, Press Run takes NO service fees from your bookings for 12 months after they start. You always set your own rate.
 
 PR: I'll ask a few questions, then I'll make your Press Stop card and a short sample clip. That's what bookers see. Takes about 5 minutes.
 
@@ -83,20 +83,20 @@ PR: And which dates are open in the next 4 weeks? e.g. "Nov 12, 14, 15" or "any 
 - Every Monday, Press Run asks: `PR: Quick calendar check for {series}: still open {dates}? Reply "yes" or send new dates.`
 - → S4
 
-### S4 · What a booker gets and price
+### S4 · What a booker gets and rate
 
 ```
 PR: What does a booker get from one appearance? e.g. "60-sec street interview, posted on IG + TikTok, raw clip shared after"
 
-PR: And what do you charge? Reply "free", a price, or a range like "$300–500".
+PR: And what's your rate for one appearance? Reply "free", an amount, or a range like "$300–500". It's yours to set.
 ```
 
 - **Accept:**
   - **Deliverable:** any text, tagged with length, platforms and extras (raw footage, collab post, sound).
   - **Price:** `free`, a number, a range, or `depends`.
-- **`depends`:** `PR: Give me a starting price so bookers can filter, e.g. "from $250". You can always quote higher per request.`
+- **`depends`:** `PR: Give me a starting rate so bookers can filter, e.g. "from $250". You can always quote higher per request.`
 - **Free plus paid** (`free for new artists, $500 for labels`): saved as two tiers, with the lower one on the card. `PR: Got it. I'll show "Free–$500" and send you each request to decide.`
-- **Fee check:** `PR: Heads up: Press Run is free right now. Once payments go live, it keeps 10% of paid bookings, so I'll always tell you the amount after the fee.`
+- **Fee check:** `PR: Heads up: Press Run is free right now. Once payments go live, it takes a 10% service fee from paid bookings (none for you for the first 12 months), and I'll always show what you take home.`
 - → S5
 
 ### S5 · Notice needed and who handles bookings
@@ -158,7 +158,7 @@ PR: [card image]
 
 PR: [sample clip, 0:18]
 
-PR: Reply "looks good" (or ❤️ either one) to go live. Or tell me what to change, e.g. "price 300–500", "use the 2nd episode", "new cover", "open dates Nov 20, 22".
+PR: Reply "looks good" (or ❤️ either one) to go live. Or tell me what to change, e.g. "rate 300–500", "use the 2nd episode", "new cover", "open dates Nov 20, 22".
 ```
 
 The card shows these fields, top to bottom:
@@ -170,7 +170,7 @@ The card shows these fields, top to bottom:
 | Series name | S1 | Music for a Minute |
 | Format · area | S1, S3 | Street interview · Manhattan |
 | Audience | S2 total, rounded | 307K followers |
-| Price range | S4 | Free–$500 |
+| Rate | S4 | Free–$500 |
 | Open dates | S3, next 3 | Open Nov 12 · 14 · 15 |
 | Reply line | fixed | Reply 1 or ❤️ to save |
 
@@ -179,7 +179,7 @@ The card shows these fields, top to bottom:
 | Stop says | Press Run does |
 | --- | --- |
 | `looks good`, `perfect`, `approve`, `yes`, ❤️ 👍 🔥 💯 on the card or clip | → S11 |
-| A field change (`price 300-500`, `audience IG 90k`) | Updates the field, re-renders the card only, and sends it again with `PR: Updated 👇`. |
+| A field change (`rate 300-500`, `audience IG 90k`) | Updates the field, re-renders the card only, and sends it again with `PR: Updated 👇`. |
 | `use the 2nd episode`, `different part`, `start at 0:40` | Re-cuts the clip and sends it again. |
 | `new cover` + image | Re-renders the card. |
 | 👎 on the card or clip | `PR: What should I change about the {card/clip}?` |

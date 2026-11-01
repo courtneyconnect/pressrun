@@ -222,7 +222,7 @@ The card shows these fields, top to bottom:
 ```
 PR: You're live as a Press Stop ✅ Bookers in NYC can now find {series}.
 
-PR: When a request comes in, I'll text you here with who, when and the budget. Just reply YES with a time, NO to pass, or ask a question and I'll pass it on.
+PR: When a request comes in, I'll text you here with who, when and the budget. Just reply YES with a day/time/location, NO to pass, or ask a question and I'll pass it on.
 
 PR: [contact card: Press Run]
 PR: Save me so booking texts show up as Press Run.
@@ -242,8 +242,8 @@ PR: Do you ever book guests on other shows, or go on press runs yourself? Reply 
 
 | When | Message |
 | --- | --- |
-| New request | `PR: 📩 New booking request #{id}` + booker name, niche, handles, dates, budget. `Reply YES with a day and time, NO to pass, or type a question and I'll pass it on.` |
-| No reply in 12 hours | `PR: Nova Reign's team is waiting on #{id}. YES with a time, or NO?` |
+| New request | `PR: 📩 New booking request #{id}` + artist name, niche, handle, dates, budget. Then the artist's profile link in its own bubble (Instagram first) so it shows a preview card. Then `Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on.` |
+| No reply in 12 hours | `PR: Nova Reign's team is waiting on #{id}. YES with a day/time/location, or NO?` |
 | No reply in 24 hours | The request is marked expired. The booker is told and offered a different Press Stop. |
 | Booking confirmed | `PR: Booked ✅ {booker} · {date} {time} · {place}. I'll send reminders.` |
 | Night before / 1 hour before | Same as for bookers, with the talent's name. |

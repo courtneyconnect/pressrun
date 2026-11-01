@@ -120,6 +120,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .clip .dur{position:absolute;left:10px;bottom:10px;font:600 11px/1 var(--mono);color:#fff;background:rgba(0,0,0,.45);padding:3px 6px;border-radius:6px}
 .clip .rec{position:absolute;right:10px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red)}
 
+/* Link preview (iMessage rich link) */
+.lp{width:236px;border-radius:18px;overflow:hidden;background:var(--in);display:block;cursor:pointer;text-align:left}
+.lp .ph{height:118px;display:grid;place-items:center;background:linear-gradient(135deg,#3b1513,#19191B 55%,#2b2b55)}
+.lp .ph span{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:900 26px/1 var(--display);color:#fff;background:linear-gradient(45deg,#f9a03f,#e1306c,#833ab4);border:3px solid #000}
+.lp .meta{padding:8px 12px 10px;display:grid;gap:2px}
+.lp .meta b{font-size:13.5px;font-weight:600}
+.lp .meta span{font-size:12px;color:var(--muted)}
+
 /* Contact card and run sheet */
 .vcard{width:236px;border-radius:18px;background:var(--in);padding:12px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
 .vcard .avatar{width:44px;height:44px}
@@ -307,6 +315,7 @@ function clipHTML(n){
   const st = STOPS[n];
   return `<div tabindex="0" role="button" class="clip" style="--c1:${st.c1}" aria-label="Sample clip for ${esc(st.name)}, 18 seconds. Tap to play."><div class="rec"></div><div class="cap">${st.lines.map(esc).join(" ")}</div><div class="playbtn"><span><svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg></span></div><div class="dur">0:18</div></div>`;
 }
+function linkHTML(l){ return `<div class="lp" role="link" tabindex="0" aria-label="${esc(l.title)}, ${esc(l.site)}. Opens the profile."><div class="ph"><span>${esc(l.initials)}</span></div><div class="meta"><b>${esc(l.title)}</b><span>${esc(l.site)}</span></div></div>`; }
 const vcardHTML = () => `<div class="vcard"><div class="avatar" style="background-image:url(${LOGO})"></div><div><b>Press Run</b><span>Contact card</span></div><em>Save</em></div>`;
 function sheetHTML(){
   const p = S.picks.length ? S.picks : [1,3];
@@ -336,6 +345,7 @@ async function prSay(who, step, run){
   else if (step.clip) addRow(who, "in", clipHTML(step.clip), {stop: step.clip, kind:"clip"});
   else if (step.vcard) addRow(who, "in", vcardHTML());
   else if (step.sheet) addRow(who, "in", sheetHTML(), {kind:"sheet"});
+  else if (step.link) addRow(who, "in", linkHTML(step.link), {kind:"link"});
   else addRow(who, "in", textBubble(step.pr));
 }
 function say(text, extra = {}){ const run = S.run, who = S.active; S.chain = S.chain.then(() => run === S.run ? prSay(who, Object.assign({pr:text}, extra), run) : null); return S.chain; }
@@ -464,7 +474,10 @@ const CHAPTERS = [
     {to:"stop"},
     {sys:"<b>Mon, Nov 3</b> 11:27 AM"},
     N(`Courtney is booking her own series in this demo, so the request goes to ${s1.name}'s booking line, the number set during onboarding.`),
-    {pr:`📩 New booking request #PR-1042\n${s1.talent} (${s1.talent === "Nova Reign" ? "R&B, @novareign" : "drill, @jaymo.nyc"}) for ${s1.name}\nDates: Nov 12–15, NYC · Budget: within your range\nReply YES with a day and time, NO to pass, or type a question and I'll pass it on.`},
+    {pr:`📩 New booking request #PR-1042\n${s1.talent} (${s1.talent === "Nova Reign" ? "R&B, @novareign" : "drill, @jaymo.nyc"}) for ${s1.name}\nDates: Nov 12–15, NYC · Budget: within your range`},
+    {link: s1.talent === "Nova Reign" ? {title:"Nova Reign (@novareign) • Instagram photos and videos", site:"instagram.com", initials:"NR"} : {title:"Jay Mo (@jaymo.nyc) | TikTok", site:"tiktok.com", initials:"JM"}},
+    {pr:"Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on."},
+    N(`The artist's profile link gets its own bubble, so iMessage shows a preview right in the thread. One tap opens ${s1.talent === "Nova Reign" ? "Instagram" : "TikTok"}, and a swipe back returns here to answer. Instagram comes first when the booker gave one; Jay only gave TikTok.`),
     {me:`YES ${s1.day} ${s1.date}, ${s1.time.toLowerCase()}, ${s1.place.split(" (")[0]}. Can ${s1.talent.split(" ")[0]} do a quick a cappella bit?`},
     {pr:`Sent to ${s1.talent}'s team ✅`},
     {to:"booker"},
@@ -552,7 +565,7 @@ function approveMode(run){
       S.mode = null; setChips(null);
       if (!viaReact) { sendMine("Looks good"); await sleep(300); }
       await prSay(S.active, {pr:"You're live as a Press Stop ✅ Bookers in NYC can now find Music for a Minute."}, run);
-      await prSay(S.active, {pr:"When a request comes in, I'll text you here with who, when and the budget. Reply YES with a time, NO to pass, or ask a question and I'll pass it on."}, run);
+      await prSay(S.active, {pr:"When a request comes in, I'll text you here with who, when and the budget. Reply YES with a day/time/location, NO to pass, or ask a question and I'll pass it on."}, run);
       await prSay(S.active, {pr:"Want to list Motivation for a Minute next? Text “add another show”."}, run);
       if (run === S.run) endCap();
       res();
@@ -678,6 +691,7 @@ $("stage").addEventListener("contextmenu", e => { if (e.target.closest(".clip,.c
 $("stage").addEventListener("click", e => {
   const card = e.target.closest(".card"), clip = e.target.closest(".clip");
   if (clip) { if (lpFired) { lpFired = false; return; } playClip(+clip.closest(".row").dataset.stop); return; }
+  const lp = e.target.closest(".lp"); if (lp) { toast("Opens the profile, then swipe back"); return; }
   if (card) { const row = card.closest(".row"); if (S.mode && row.dataset.kind === "card") openPicker(row); else toast(S.mode ? "Tap a card to react" : "Reactions open when picking"); }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeOverlay();

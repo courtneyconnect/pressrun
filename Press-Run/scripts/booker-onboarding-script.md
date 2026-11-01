@@ -378,8 +378,11 @@ What the stop sees in **its own** Press Run thread:
 PR: 📩 New booking request #PR-1042
 Nova Reign (R&B, @novareign) for Music for a Minute
 Dates: Nov 12–15, NYC · Budget: within your $300–$500 rate
-Reply YES with a day and time, NO to pass, or type a question and I'll pass it on.
+PR: instagram.com/novareign
+PR: Reply YES with a day/time/location, NO to pass, or type a question and I'll pass it on.
 ```
+
+The artist's profile link goes in its **own bubble**, so iMessage shows a preview card (photo, name, follower line) right in the thread. One tap opens the profile in Instagram, and a swipe back returns to the thread to answer. Instagram comes first if the booker gave one. Otherwise it's the first profile link on file (TikTok, YouTube…). With no link on file, the bubble is skipped. This is a deliberate exception to "users never leave the thread": a quick look at who's asking, and nothing to fill in.
 
 Every message between the two sides starts with who it's from, like `💬 Music for a Minute:` or `💬 Nova Reign's team:`, so each thread stays clear. Phone numbers, emails and handles typed into relayed messages are hidden until after the shoot. Press Run replaces them with `[number hidden by Press Run]` and sends a short note to the sender explaining why. After the shoot, they can swap numbers freely.
 

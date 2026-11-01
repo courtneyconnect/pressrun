@@ -10,6 +10,17 @@ import {
   parseDates, parseFormats, parseHandles, parseInterests, parseNoticeHours, parsePlatforms, parseRate,
 } from "../parse";
 
+/** S11: the Press Stop goes live. */
+async function approve(ctx: Ctx, s: PressStop): Promise<Result> {
+  s.status = "live";
+  await ctx.store.saveStop(s);
+  ctx.account.state.pending = null;
+  const say: Out[] = [...C.S11(series(s))];
+  if (s.moreShows) say.push(C.S11_ANOTHER);
+  if (!ctx.account.roles.includes("booker") && !s.moreShows) return { next: "S12", say };
+  return { next: "done", say };
+}
+
 export const STOP_FIRST = "S1";
 
 async function current(ctx: Ctx): Promise<PressStop> {
@@ -59,6 +70,7 @@ export const stopSteps: Record<string, Step> = {
       const s = await edit(ctx, s => {
         if (name && !(several && !s.seriesName && name.split(" ").length < 2)) s.seriesName = s.seriesName ?? name;
         if (formats.length && !s.format) { s.format = formats[0]; s.formatsExtra = formats.slice(1); }
+        if (several) s.moreShows = true;
       });
       const say: Out[] = [];
       if (several && !ctx.account.state.asked?.includes("several")) {
@@ -248,9 +260,96 @@ export const stopSteps: Record<string, Step> = {
   S8: {
     async ask() { return [C.S8]; },
     async auto(ctx) {
-      await edit(ctx, s => { s.status = "building"; });
-      return { next: "done" };
+      const s = await edit(ctx, x => { x.status = "building"; });
+      await ctx.store.enqueue("build_stop_media", { accountId: ctx.account.id, stopId: s.id, part: "both", first: true }, ctx.now);
+      return { next: "S9wait" };
     },
-    async answer(): Promise<Result> { return { next: "done" }; },
+    async answer(): Promise<Result> { return { next: "S9wait" }; },
+  },
+
+  // The card and clip are being made. The worker moves the thread to S10 when they're sent.
+  S9wait: {
+    async ask() { return []; },
+    async answer() { return { stay: [C.S8_STILL] }; },
+  },
+
+  S10: {
+    takesMedia: true,
+    takesReactions: true,
+    async ask() { return [C.S9_REPLY]; },
+    async answer(ctx) {
+      const st = ctx.account.state;
+      const s = await current(ctx);
+      const r = ctx.input.reaction;
+      if (r) {
+        const target = await ctx.store.messageById(r.targetProviderId);
+        const ref = String(target?.data?.ref ?? "");
+        const what = ref === `card:${s.id}` ? "card" : ref === `clip:${s.id}` ? "clip" : null;
+        if (!what || r.removed) return { stay: [] };
+        if (["❤️", "❤", "👍", "🔥", "💯"].includes(r.emoji)) return approve(ctx, s);
+        if (r.emoji === "👎") return { stay: [C.S10_WHAT(what)] };
+        if (r.emoji === "❓") return { stay: [C.S10_EXPLAIN] };
+        return { stay: [] };
+      }
+      const t = norm(ctx.text);
+      const image = ctx.input.media?.find(m => m.kind === "image");
+      if (/^(looks good|look good|looks great|perfect|approve[d]?|yes|yep|yeah|love it|good to go|ship it|go live|lgtm|👍|❤️)\b/.test(t) && !image) return approve(ctx, s);
+
+      let card = false, clip = false;
+      if (image && (st.pending === "cover" || /\b(cover|photo|logo|pic|picture)\b/.test(t) || !t)) {
+        s.cover = image.url; s.media = { ...(s.media ?? { version: 0 }), coverKey: undefined }; card = true; st.pending = null;
+      } else if (/\b(new cover|change (the )?cover|different cover|cover)\b/.test(t)) {
+        st.pending = "cover";
+        return { stay: [C.S10_SEND_COVER] };
+      }
+      if (/\b(rate|price|charge)\b/.test(t)) {
+        const rate = parseRate(t.replace(/\b(rate|price|charge|make (it|my)|change (it|my)? ?(to)?|to)\b/g, " "));
+        if (rate && !rate.depends) { s.rateLow = rate.low; s.rateHigh = rate.high; s.rateText = rate.text; card = true; }
+      }
+      if (/\b(audience|followers|ig|instagram|tiktok|youtube|yt)\b/.test(t) && /\d/.test(t)) {
+        for (const e of parsePlatforms(ctx.text.replace(/\baudience\b/i, " "))) {
+          const existing = s.platforms.find(p => p.platform === e.platform);
+          if (existing) existing.followers = e.followers ?? existing.followers; else s.platforms.push(e);
+        }
+        s.audienceTotal = s.platforms.reduce((sum, p) => sum + (p.followers ?? 0), 0) || undefined;
+        card = true;
+      }
+      if (/\b(open|dates?|available)\b/.test(t)) {
+        const d = parseDates(ctx.text, ctx.now);
+        if (d.dates.length || d.flexible) { s.openDates = d.dates; s.flexible = d.flexible; card = true; }
+      }
+      const media = s.media ?? { version: 0 };
+      const ep = t.match(/\b(?:use|try)\s+(?:the\s+)?(1st|first|2nd|second|3rd|third|4th|fourth|5th|fifth|last|\d)\b/);
+      if (ep) {
+        const words: Record<string, number> = { "1st": 0, first: 0, "2nd": 1, second: 1, "3rd": 2, third: 2, "4th": 3, fourth: 3, "5th": 4, fifth: 4 };
+        const idx = ep[1] === "last" ? s.samples.length - 1 : words[ep[1]!] ?? Number(ep[1]) - 1;
+        if (idx >= 0 && idx < s.samples.length) { media.episode = idx; media.clipStart = undefined; clip = true; }
+      }
+      const at = t.match(/\bstart(?:s|ing)?\s+at\s+(?:(\d+):(\d{2})|(\d+)\s*(?:s|sec|seconds)?)\b/);
+      if (at) { media.clipStart = at[1] !== undefined ? Number(at[1]) * 60 + Number(at[2]) : Number(at[3]); clip = true; }
+      if (/\b(different|another|other) (part|moment|section|bit)\b/.test(t)) { media.clipStart = (media.clipStart ?? 0) + 18; clip = true; }
+      s.media = media;
+
+      if (!card && !clip) {
+        return {
+          unclear: [C.S10_UNCLEAR],
+          giveUp: async () => { ctx.account.needsHuman = true; return { next: "S10", say: [C.S10_HUMAN] }; },
+        };
+      }
+      s.approvalRounds = (s.approvalRounds ?? 0) + 1;
+      await ctx.store.saveStop(s);
+      if (s.approvalRounds > 3) { ctx.account.needsHuman = true; return { stay: [C.S10_HUMAN] }; }
+      // A new clip can mean a new cover frame, so remake the card too.
+      const part = clip ? (s.cover === "frame" ? "both" : "clip") : "card";
+      await ctx.store.enqueue("build_stop_media", { accountId: ctx.account.id, stopId: s.id, part, first: false }, ctx.now);
+      return { stay: [] };
+    },
+  },
+
+  S12: {
+    async ask() { return [C.S12_BOOKING]; },
+    async answer(ctx) {
+      return isYes(ctx.text) ? { next: "booker:B1" } : { next: "done" };
+    },
   },
 };

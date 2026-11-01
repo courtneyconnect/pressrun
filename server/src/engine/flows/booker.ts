@@ -120,7 +120,11 @@ export const bookerSteps: Record<string, Step> = {
   B0a: nameAndEmail(C.NAME_EMAIL_BOOKER, "B1"),
 
   B1: {
-    async ask(ctx) { return [C.B1_WELCOME(first(ctx), ctx.account.memberNo), C.B1_INTRO, C.B1_ROLE]; },
+    async ask(ctx) {
+      // A Press Stop turning on booking (S12) is already a member: skip the welcome.
+      if (ctx.account.roles.includes("stop")) return [C.B1_INTRO, C.B1_ROLE];
+      return [C.B1_WELCOME(first(ctx), ctx.account.memberNo), C.B1_INTRO, C.B1_ROLE];
+    },
     async answer(ctx) {
       const role = parseRole(ctx.text);
       if (!ctx.account.roles.includes("booker")) ctx.account.roles.push("booker");

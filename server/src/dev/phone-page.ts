@@ -15,6 +15,7 @@ export const phonePage = /* html */ `<!doctype html>
   .top input { flex:1; min-width:0; background:#16161a; border:1px solid var(--line); color:var(--fg); border-radius:10px; padding:8px 10px; }
   .top button, .tools button { background:#1c1c20; border:1px solid var(--line); color:var(--fg); border-radius:10px; padding:8px 10px; cursor:pointer; }
   .thread { flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:4px; }
+  .thread > * { flex-shrink:0; }
   .b { max-width:80%; padding:8px 12px; border-radius:18px; white-space:pre-wrap; overflow-wrap:anywhere; }
   .in { align-self:flex-start; background:var(--in); }
   .out { align-self:flex-end; background:var(--out); color:#fff; }
@@ -41,7 +42,7 @@ export const phonePage = /* html */ `<!doctype html>
       <button type="button" data-media="image">📷 Photo</button>
       <button type="button" data-media="video">🎬 Video</button>
       <button type="button" data-media="audio">🎤 Voice note</button>
-      <button type="button" data-react="👍">👍 last msg</button>
+      <button type="button" data-react="❤️">❤️ last card/clip</button>
     </div>
     <form class="compose" id="compose">
       <label for="msg" hidden>Message</label>
@@ -64,18 +65,26 @@ export const phonePage = /* html */ `<!doctype html>
 <script>
 const $ = id => document.getElementById(id);
 const phone = () => $("phone").value.trim();
+let shown = "";
 async function load() {
   const r = await fetch("/dev/thread?phone=" + encodeURIComponent(phone())).then(r => r.json());
+  const { messages: msgs, ...info } = r.data;
+  $("state").textContent = JSON.stringify(info, null, 2);
+  // Redraw only when something new arrived, so images and videos aren't reloaded every poll.
+  const key = phone() + ":" + msgs.length;
+  if (key === shown) return;
+  shown = key;
   const t = $("thread"); t.innerHTML = "";
-  for (const m of r.data.messages) {
+  for (const m of msgs) {
     const d = document.createElement("div");
     if (m.kind === "text" && m.body) { d.className = "b " + (m.direction === "out" ? "in" : "out"); d.textContent = m.body; }
+    else if (m.direction === "out" && m.kind === "image" && m.data && m.data.url) { d.className = "b in"; d.style.padding = "0"; d.style.overflow = "hidden"; const img = document.createElement("img"); img.src = m.data.url; img.alt = m.data.alt || ""; img.style.cssText = "display:block;width:240px"; d.appendChild(img); }
+    else if (m.direction === "out" && m.kind === "video" && m.data && m.data.url) { d.className = "b in"; d.style.padding = "0"; d.style.overflow = "hidden"; const v = document.createElement("video"); v.src = m.data.url; v.controls = true; v.playsInline = true; v.style.cssText = "display:block;width:180px"; d.appendChild(v); }
     else { d.className = "att"; d.textContent = (m.direction === "out" ? "Press Run sent: " : "You sent: ") + m.kind + (m.data ? " " + JSON.stringify(m.data) : ""); if (m.direction === "in") d.style.alignSelf = "flex-end"; }
     t.appendChild(d);
   }
   t.scrollTop = t.scrollHeight;
-  const { messages, ...rest } = r.data;
-  $("state").textContent = JSON.stringify(rest, null, 2);
+  t.querySelectorAll("img, video").forEach(m => m.addEventListener(m.tagName === "IMG" ? "load" : "loadedmetadata", () => { t.scrollTop = t.scrollHeight; }));
 }
 async function send(body) {
   await fetch("/dev/inbound", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ phone: phone(), text: "", ...body }) });
@@ -84,7 +93,7 @@ async function send(body) {
 $("compose").addEventListener("submit", e => { e.preventDefault(); const v = $("msg").value; if (!v.trim()) return; $("msg").value = ""; send({ text: v }); });
 $("msg").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("compose").requestSubmit(); } });
 document.querySelectorAll("[data-media]").forEach(b => b.onclick = () => send({ media: [{ kind: b.dataset.media, url: "https://example.com/test." + (b.dataset.media === "image" ? "jpg" : b.dataset.media === "video" ? "mp4" : "m4a") }] }));
-document.querySelector("[data-react]").onclick = () => send({ reaction: { emoji: "👍", targetProviderId: "last", removed: false } });
+document.querySelector("[data-react]").onclick = () => send({ reaction: { emoji: "❤️", targetProviderId: "last", removed: false } });
 $("reset").onclick = () => { $("phone").value = "+1555" + String(Math.floor(Math.random() * 1e7)).padStart(7, "0"); load(); };
 $("phone").addEventListener("change", load);
 $("signup").addEventListener("submit", async e => {
@@ -93,4 +102,5 @@ $("signup").addEventListener("submit", async e => {
   if (r.data) $("msg").value = r.data.message;
 });
 load();
+setInterval(load, 3000);
 </script></body></html>`;

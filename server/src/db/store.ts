@@ -13,7 +13,15 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS stops (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, direction TEXT NOT NULL, kind TEXT NOT NULL, body TEXT, provider_id TEXT, data TEXT, created_at TEXT NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS messages_account ON messages (account_id, created_at)`,
+  `CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL, run_after TEXT NOT NULL, error TEXT, created_at TEXT NOT NULL)`,
 ];
+
+export interface Job {
+  id: string;
+  kind: string;
+  payload: Record<string, unknown>;
+  attempts: number;
+}
 
 export interface StoredMessage {
   id: string;
@@ -174,6 +182,45 @@ export class Store {
       id: r.id!, accountId: r.account_id!, direction: r.direction as "in" | "out", kind: r.kind!, body: r.body ?? null,
       providerId: r.provider_id ?? null, data: r.data ? JSON.parse(r.data) : null, createdAt: r.created_at!,
     }));
+  }
+
+  async messageById(messageId: string): Promise<StoredMessage | null> {
+    const rows = await this.db`SELECT * FROM messages WHERE id = ${messageId} OR provider_id = ${messageId}`;
+    const r = rows[0];
+    return r ? { id: r.id, accountId: r.account_id, direction: r.direction, kind: r.kind, body: r.body ?? null, providerId: r.provider_id ?? null, data: r.data ? JSON.parse(r.data) : null, createdAt: r.created_at } : null;
+  }
+
+  // ---------- Background jobs ----------
+
+  async enqueue(kind: string, payload: Record<string, unknown>, runAfter = new Date()): Promise<string> {
+    const jobId = id();
+    await this.db`INSERT INTO jobs (id, kind, payload, status, attempts, run_after, created_at)
+      VALUES (${jobId}, ${kind}, ${JSON.stringify(payload)}, ${"queued"}, ${0}, ${runAfter.toISOString()}, ${ordered()})`;
+    return jobId;
+  }
+
+  /** Takes up to `limit` due jobs and marks them running. */
+  async claimJobs(now: Date, limit = 5): Promise<Job[]> {
+    const rows = await this.db`SELECT id, kind, payload, attempts FROM jobs WHERE status = ${"queued"} AND run_after <= ${now.toISOString()} ORDER BY created_at LIMIT ${limit}`;
+    const jobs: Job[] = [];
+    for (const r of rows) {
+      const claimed = await this.db`UPDATE jobs SET status = ${"running"}, attempts = attempts + 1 WHERE id = ${r.id} AND status = ${"queued"} RETURNING id`;
+      if (claimed.length) jobs.push({ id: r.id, kind: r.kind, payload: JSON.parse(r.payload), attempts: Number(r.attempts) + 1 });
+    }
+    return jobs;
+  }
+
+  async finishJob(jobId: string, status: "done" | "failed", error?: string): Promise<void> {
+    await this.db`UPDATE jobs SET status = ${status}, error = ${error ?? null} WHERE id = ${jobId}`;
+  }
+
+  async retryJob(jobId: string, runAfter: Date, error: string): Promise<void> {
+    await this.db`UPDATE jobs SET status = ${"queued"}, run_after = ${runAfter.toISOString()}, error = ${error} WHERE id = ${jobId}`;
+  }
+
+  async pendingJobs(): Promise<number> {
+    const [r] = await this.db`SELECT COUNT(*) AS n FROM jobs WHERE status IN (${"queued"}, ${"running"})`;
+    return Number(r.n);
   }
 
   async close(): Promise<void> {

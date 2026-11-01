@@ -5,6 +5,7 @@
 
 import type { Store } from "../db/store";
 import type { Account, Flow, Inbound, Out } from "../types";
+import { logOut } from "../outbox";
 import * as C from "./copy";
 import { norm } from "./parse";
 import { bookerSteps, BOOKER_FIRST } from "./flows/booker";
@@ -33,6 +34,8 @@ export interface Step {
   auto?: (ctx: Ctx) => Promise<{ next: string; say?: Out[] } | null>;
   /** Accepts photos/videos as an answer (otherwise media gets "Got it 👍"). */
   takesMedia?: boolean;
+  /** Reads tapbacks itself (otherwise 👍/❤️ on a question counts as "yes"). */
+  takesReactions?: boolean;
 }
 
 const FLOWS: Record<Flow, { steps: Record<string, Step>; first: string }> = {
@@ -62,12 +65,7 @@ export class Engine {
     const ctx: Ctx = { store: this.store, account, input, text: input.text.trim(), now };
     const out = await this.route(ctx, isNew);
     await this.store.saveAccount(ctx.account);
-    for (const o of out) {
-      await this.store.logMessage({
-        accountId: account.id, direction: "out", kind: o.type, body: o.type === "text" ? o.text : null,
-        providerId: null, data: o.type === "text" ? null : (o as Record<string, unknown>),
-      });
-    }
+    await logOut(this.store, account.id, out);
     return out;
   }
 
@@ -112,7 +110,7 @@ export class Engine {
     }
     if (ctx.input.media?.some(m => m.kind === "audio")) return [C.VOICE_NOTE];
     if (!ctx.text && ctx.input.media?.length && !step.takesMedia) return [C.GOT_IT, ...(await step.ask(ctx))];
-    if (ctx.input.reaction) {
+    if (ctx.input.reaction && !step.takesReactions) {
       // A tapback on a question: counts as "yes" only where the step reads yes/no.
       const emo = ctx.input.reaction.emoji;
       if (ctx.input.reaction.removed || !["👍", "❤️", "❤"].includes(emo)) return [];
@@ -233,7 +231,7 @@ export class Engine {
       if (!msg) continue;
       a.state.nudges = n + 1;
       await this.store.saveAccount(a);
-      await this.store.logMessage({ accountId: a.id, direction: "out", kind: "text", body: msg.type === "text" ? msg.text : null, providerId: null, data: null });
+      await logOut(this.store, a.id, [msg]);
       sent.push({ phone: a.phone, out: [msg] });
     }
     return sent;

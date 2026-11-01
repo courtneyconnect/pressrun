@@ -3,8 +3,8 @@
 /** One bubble Press Run sends. */
 export type Out =
   | { type: "text"; text: string }
-  | { type: "image"; url: string; alt: string }
-  | { type: "video"; url: string; alt: string }
+  | { type: "image"; url: string; alt: string; ref?: string }
+  | { type: "video"; url: string; alt: string; ref?: string }
   | { type: "contact" }
   | { type: "link"; url: string };
 
@@ -135,4 +135,9 @@ export interface PressStop {
   samples: { url?: string; mediaUrl?: string }[];
   rightsConfirmed: boolean;
   cover?: "frame" | string;
+  /** The two files Press Run makes, and how the clip was cut. */
+  media?: { cardUrl?: string; clipUrl?: string; coverKey?: string; clipStart?: number; episode?: number; version: number };
+  approvalRounds?: number;
+  /** They said they run several shows (S1), so offer "add another show" when this one goes live. */
+  moreShows?: boolean;
 }

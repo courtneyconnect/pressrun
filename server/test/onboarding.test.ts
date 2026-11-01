@@ -221,7 +221,7 @@ describe("Press Stop onboarding (mockup chapter 2)", () => {
     expect(r).toContain("Making your card and sample clip now 🎬");
 
     const a = (await store.accountByPhone(PHONE))!;
-    expect(a.flow).toBeNull();
+    expect(a.step).toBe("S9wait"); // waiting for the card and clip (slice 2)
     const [s] = await store.stopsByOwner(a.id);
     expect(s).toMatchObject({
       status: "building", seriesName: "Music for a Minute", creatorNames: ["Courtney"], format: "street",

@@ -7,12 +7,21 @@ import { Engine } from "./engine/engine";
 import type { Provider } from "./providers/provider";
 import type { Inbound } from "./types";
 import { phonePage } from "./dev/phone-page";
+import { LocalFiles, type FileStore } from "./media/files";
 
-export function buildApp(store: Store, provider: Provider, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date }) {
+export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date }) {
   const engine = new Engine(store, opts.clock);
   const app = new Hono();
 
   app.get("/health", c => c.json({ data: { ok: true, provider: provider.name } }));
+
+  // Cards and clips when stored locally (production uses R2's public URL instead).
+  if (files instanceof LocalFiles) {
+    app.get("/files/*", async c => {
+      const f = files.file(c.req.path.slice("/files/".length));
+      return f && (await f.exists()) ? new Response(f) : c.notFound();
+    });
+  }
 
   // Website sign-up: returns the code the Text Press Run button types for them.
   app.post("/api/signup", async c => {
@@ -43,6 +52,12 @@ export function buildApp(store: Store, provider: Provider, opts: { devTools: boo
     app.get("/dev/phone", c => c.html(phonePage));
     app.post("/dev/inbound", async c => {
       const msg = await c.req.json<Inbound>();
+      // The test phone's "react to last" button: point at the newest card or clip.
+      if (msg.reaction?.targetProviderId === "last") {
+        const account = await store.accountByPhone(msg.phone);
+        const last = account ? (await store.messagesFor(account.id)).filter(m => m.direction === "out" && (m.kind === "image" || m.kind === "video")).pop() : undefined;
+        msg.reaction.targetProviderId = last?.id ?? "none";
+      }
       const out = await engine.handle(msg);
       await provider.send(msg.phone, out);
       return c.json({ data: out });

@@ -169,3 +169,26 @@ export const S6_RIGHTS_NO = t("No problem. Send ones you own, or attach your own
 
 export const S7 = t('For your card\'s cover, send a photo or logo. Or reply "use a frame" and I\'ll grab one from your episodes.');
 export const S8 = t("Perfect. Making your card and sample clip now 🎬 This takes a few minutes. I'll text you when they're ready.");
+export const S8_STILL = t("Still working on your clip. Almost there.");
+export const S8_SNAG = t("I hit a snag making your clip. Courtney will finish it by hand and text you today.");
+export const S6_CANT_OPEN = (link: string) => t(`I couldn't open that one (${link}). Is it private? You can also attach the video here.`);
+
+// ---------- Approval (S9–S11) ----------
+
+export const S9_HERE = (series: string) => t(`Here's how bookers will see ${series} 👇`);
+export const S9_REPLY = t('Reply "looks good" (or ❤️ either one) to go live. Or tell me what to change, e.g. "rate 300–500", "use the 2nd episode", "new cover", "open dates Nov 20, 22".');
+export const S10_UPDATED = t("Updated 👇");
+export const S10_WHAT = (what: "card" | "clip") => t(`What should I change about the ${what}?`);
+export const S10_EXPLAIN = t("The card is what bookers see in a list. The clip plays right under it. Want to change anything?");
+export const S10_HUMAN = t("Let me get Courtney to make this perfect. She'll text you today.");
+export const S10_UNCLEAR = t('Reply "looks good" to go live, or tell me what to change, e.g. "rate 300–500", "use the 2nd episode", "new cover".');
+export const S10_SEND_COVER = t("Send the new cover photo or logo here.");
+
+export const S11 = (series: string): Out[] => [
+  t(`You're live as a Press Stop ✅ Bookers in NYC can now find ${series}.`),
+  t("When a request comes in, I'll text you here with who, when and the budget. Just reply YES with a day/time/location, NO to pass, or ask a question and I'll pass it on."),
+  { type: "contact" },
+  t("Save me so booking texts show up as Press Run."),
+];
+export const S11_ANOTHER = t("Want to list your next show? Text “add another show”.");
+export const S12_BOOKING = t("Do you ever book guests on other shows, or go on press runs yourself? Reply YES to turn on booking too.");

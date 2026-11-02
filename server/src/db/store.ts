@@ -47,7 +47,14 @@ const ordered = () => `${now()}#${String(seq++).padStart(10, "0")}`;
 export class Store {
   constructor(private db: SQL) {}
 
-  static async open(url = process.env.DATABASE_URL ?? "sqlite://pressrun.db"): Promise<Store> {
+  /**
+   * Neon gives two connection strings: DATABASE_URL (pooled, through PgBouncer)
+   * and DATABASE_URL_UNPOOLED (direct). This is one long-running server with
+   * its own small connection pool that creates its tables at startup, so the
+   * direct string is the better fit when it's set (Neon's guidance: direct for
+   * schema changes and session work, pooled for per-request serverless code).
+   */
+  static async open(url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "sqlite://pressrun.db"): Promise<Store> {
     const store = new Store(new SQL(url));
     for (const stmt of SCHEMA) await store.db.unsafe(stmt);
     return store;

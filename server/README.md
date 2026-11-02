@@ -49,6 +49,7 @@ Settings (environment variables):
 | Name | What it does |
 | --- | --- |
 | `DATABASE_URL` | `sqlite://pressrun.db` locally (default). In production, the Postgres URL from Neon. |
+| `DATABASE_URL_UNPOOLED` | Neon's direct (non-pooled) string. Used first when set: one long-running server with its own small pool. `neon env pull` writes both. |
 | `IMESSAGE_PROVIDER` | `simulator` (default), `sendblue`, or `linq` once that adapter is built. |
 | `SENDBLUE_API_KEY_ID`, `SENDBLUE_API_SECRET` | Sendblue keys from its dashboard. Server settings only, never in chat or code. |
 | `SENDBLUE_FROM_NUMBER` | The Sendblue line, e.g. `+14055687605`. |
@@ -63,6 +64,10 @@ Settings (environment variables):
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` | When `R2_BUCKET` is set, cards and clips go to Cloudflare R2 instead. |
 
 Needs `ffmpeg` installed. Nothing is downloaded from Instagram, TikTok or YouTube links: previews come from attached videos, and links are only passed on.
+
+## Neon
+
+`neon.ts` declares the Neon services (Postgres only). The project link lives in `.neon` (not committed). With network access to Neon: `neon login`, then `neon deploy` (or `neon env pull`) writes `DATABASE_URL` and `DATABASE_URL_UNPOOLED` to `.env.local`, which Bun loads automatically. `npm run build` type-checks.
 
 ## Deploy (not done yet: needs Courtney's accounts)
 

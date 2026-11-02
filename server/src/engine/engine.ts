@@ -6,6 +6,7 @@
 import type { Store } from "../db/store";
 import type { Account, Flow, Inbound, Out } from "../types";
 import { logOut } from "../outbox";
+import { resolveTextTapback } from "./tapback";
 import * as C from "./copy";
 import { norm } from "./parse";
 import { bookerSteps, BOOKER_FIRST } from "./flows/booker";
@@ -68,6 +69,7 @@ export class Engine {
   async handle(input: Inbound): Promise<Out[]> {
     const now = this.clock();
     let account = await this.store.accountByPhone(input.phone);
+    if (account) input = await resolveTextTapback(this.store, account.id, input);
     const isNew = !account;
     if (!account) account = await this.store.createAccount(input.phone);
     account.lastInboundAt = now.toISOString();

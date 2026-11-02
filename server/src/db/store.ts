@@ -15,6 +15,7 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS messages_account ON messages (account_id, created_at)`,
   `CREATE TABLE IF NOT EXISTS run_requests (id TEXT PRIMARY KEY, booker_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, code TEXT UNIQUE NOT NULL, request_id TEXT NOT NULL, booker_id TEXT NOT NULL, contact_id TEXT NOT NULL, status TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS raw_webhooks (id TEXT PRIMARY KEY, provider TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL, run_after TEXT NOT NULL, error TEXT, created_at TEXT NOT NULL)`,
 ];
 
@@ -241,6 +242,32 @@ export class Store {
     await this.db`INSERT INTO messages (id, account_id, direction, kind, body, provider_id, data, created_at)
       VALUES (${row.id}, ${row.accountId}, ${row.direction}, ${row.kind}, ${row.body}, ${row.providerId}, ${row.data ? JSON.stringify(row.data) : null}, ${row.createdAt})`;
     return row;
+  }
+
+  /** Records the provider's id for a message we sent, so replies and reactions to it can be matched. */
+  async setProviderId(messageId: string, providerId: string): Promise<void> {
+    await this.db`UPDATE messages SET provider_id = ${providerId} WHERE id = ${messageId}`;
+  }
+
+  /** Every webhook body as received, so new event shapes (like reactions) can be checked. Keeps the last 200. */
+  async saveRawWebhook(provider: string, body: string): Promise<void> {
+    await this.db`INSERT INTO raw_webhooks (id, provider, body, created_at) VALUES (${id()}, ${provider}, ${body}, ${ordered()})`;
+    const old = await this.db`SELECT id FROM raw_webhooks ORDER BY created_at DESC LIMIT 1000 OFFSET 200`;
+    for (const r of old) await this.db`DELETE FROM raw_webhooks WHERE id = ${r.id}`;
+  }
+
+  async recentRawWebhooks(limit = 30): Promise<{ provider: string; body: string; createdAt: string }[]> {
+    const rows = await this.db`SELECT provider, body, created_at FROM raw_webhooks ORDER BY created_at DESC LIMIT ${limit}`;
+    return rows.map((r: Record<string, string>) => ({ provider: r.provider!, body: r.body!, createdAt: r.created_at! }));
+  }
+
+  /** What Press Run sent this person, newest first. */
+  async recentOut(accountId: string, limit = 200): Promise<StoredMessage[]> {
+    const rows = await this.db`SELECT * FROM messages WHERE account_id = ${accountId} AND direction = ${"out"} ORDER BY created_at DESC LIMIT ${limit}`;
+    return rows.map((r: Record<string, string | null>) => ({
+      id: r.id!, accountId: r.account_id!, direction: "out" as const, kind: r.kind!, body: r.body ?? null,
+      providerId: r.provider_id ?? null, data: r.data ? JSON.parse(r.data) : null, createdAt: r.created_at!,
+    }));
   }
 
   /** The newest text Press Run sent this person. */

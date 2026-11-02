@@ -6,7 +6,7 @@
 import { Hono } from "hono";
 import { basicAuth } from "hono/basic-auth";
 import type { Store } from "../db/store";
-import { logOut } from "../outbox";
+import { logOut, transmit } from "../outbox";
 import type { Provider } from "../providers/provider";
 import { maybeRecap } from "../run/followup";
 import { bookerLabel, stopLabel } from "../run/relay";
@@ -57,9 +57,12 @@ export function adminRoutes(store: Store, provider: Provider, password: string, 
     if (a.optedOut) return c.json({ error: { message: "This person replied STOP", code: "opted_out" } }, 409);
     const out = [{ type: "text" as const, text: text.trim() }];
     await logOut(store, a.id, out);
-    await provider.send(a.phone, out);
+    await transmit(store, provider, a.phone, out);
     return c.json({ data: { sent: true } });
   });
+
+  // The last webhooks exactly as received (to check new event shapes, like reactions).
+  app.get("/api/webhooks", async c => c.json({ data: await store.recentRawWebhooks(30) }));
 
   app.post("/api/review/clear", async c => {
     const { accountId, index } = await c.req.json<{ accountId: string; index: number }>();

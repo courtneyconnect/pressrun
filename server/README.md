@@ -29,9 +29,10 @@ The texting engine behind Press Run. It runs the booker and Press Stop onboardin
 
 ## Next slices
 
-1. Linq adapter (needs the free trial's API access and docs).
-2. Reading views from TikTok/YouTube links, and the 30-day view refresh on the recap.
-3. Privacy policy and terms pages (tracker M0).
+1. Sendblue (built, for testing now): check the first live ❤️ against the saved webhook bodies (`/admin/api/webhooks`) and adjust `readReaction` in `src/providers/sendblue.ts` if reactions arrive in their own field. Tapbacks sent as text ("Loved “…”") already work.
+2. Linq adapter (on the waitlist).
+3. Reading views from TikTok/YouTube links, and the 30-day view refresh on the recap.
+4. Privacy policy and terms pages (tracker M0).
 
 ## Run it
 
@@ -48,7 +49,11 @@ Settings (environment variables):
 | Name | What it does |
 | --- | --- |
 | `DATABASE_URL` | `sqlite://pressrun.db` locally (default). In production, the Postgres URL from Neon. |
-| `IMESSAGE_PROVIDER` | `simulator` (default) or `linq` once that adapter is built. |
+| `IMESSAGE_PROVIDER` | `simulator` (default), `sendblue`, or `linq` once that adapter is built. |
+| `SENDBLUE_API_KEY_ID`, `SENDBLUE_API_SECRET` | Sendblue keys from its dashboard. Server settings only, never in chat or code. |
+| `SENDBLUE_FROM_NUMBER` | The Sendblue line, e.g. `+14055687605`. |
+| `SENDBLUE_API_BASE` | Optional. Defaults to `https://api.sendblue.co`; use the base URL from the dashboard's examples if it differs. |
+| `WEBHOOK_TOKEN` | A long random word. The webhook URL given to Sendblue is `https://<server>/webhooks/imessage?token=<WEBHOOK_TOKEN>`. |
 | `DEV_TOOLS` | `1` turns on `/dev/phone` and `/dev/*`. Keep it off in production. |
 | `JOB_SECRET` | Protects `POST /jobs/nudges`. Optional: the server also sends the nudges itself every hour. |
 | `PORT` | Defaults to 3000. |

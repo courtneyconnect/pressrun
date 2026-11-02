@@ -10,7 +10,7 @@ import { renderCard, renderEndCard, renderList, renderRecap, renderRunSheet } fr
 import { platformOf } from "./run/followup";
 import { fetchSample, grabFrame, makeClip, SampleUnavailable } from "./media/clip";
 import type { FileStore } from "./media/files";
-import { logOut } from "./outbox";
+import { logOut, transmit } from "./outbox";
 import type { Provider } from "./providers/provider";
 import type { Account, Conversation, Out, PressStop, RunRequest } from "./types";
 import { andList, describeRequest } from "./run/match";
@@ -61,7 +61,7 @@ export async function runJobs(deps: WorkerDeps): Promise<number> {
 
 async function deliver(deps: WorkerDeps, account: Account, out: Out[]): Promise<void> {
   await logOut(deps.store, account.id, out);
-  if (!account.optedOut) await deps.provider.send(account.phone, out);
+  if (!account.optedOut) await transmit(deps.store, deps.provider, account.phone, out);
 }
 
 class NoReadableSamples extends Error {

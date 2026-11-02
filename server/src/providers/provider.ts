@@ -7,7 +7,8 @@ export interface Provider {
   name: string;
   /** Reads a webhook request. Returns null if it isn't a message we handle. */
   parseWebhook(req: Request): Promise<Inbound[] | null>;
-  send(phone: string, out: Out[]): Promise<void>;
+  /** Sends the bubbles in order. May return the provider's id for each bubble (for matching replies and tapbacks). */
+  send(phone: string, out: Out[]): Promise<(string | undefined)[] | void>;
 }
 
 /** Local testing: replies are stored in the database and shown on /dev/phone. */

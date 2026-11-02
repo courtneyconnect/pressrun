@@ -7,12 +7,13 @@ import { Engine } from "./engine/engine";
 import type { Provider } from "./providers/provider";
 import type { Inbound } from "./types";
 import { phonePage } from "./dev/phone-page";
+import { transmit } from "./outbox";
 import { LocalFiles, type FileStore } from "./media/files";
 import { landingPage } from "./web/landing";
 import { adminRoutes } from "./web/admin";
 
-export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date; adminPassword?: string; pressRunNumber?: string }) {
-  const engine = new Engine(store, opts.clock, (a, out) => provider.send(a.phone, out));
+export function buildApp(store: Store, provider: Provider, files: FileStore, opts: { devTools: boolean; jobSecret?: string; clock?: () => Date; adminPassword?: string; pressRunNumber?: string; webhookToken?: string }) {
+  const engine = new Engine(store, opts.clock, (a, out) => transmit(store, provider, a.phone, out));
   const app = new Hono();
 
   app.get("/health", c => c.json({ data: { ok: true, provider: provider.name } }));
@@ -46,16 +47,19 @@ export function buildApp(store: Store, provider: Provider, files: FileStore, opt
 
   // The iMessage provider's webhook.
   app.post("/webhooks/imessage", async c => {
-    const inbound = await provider.parseWebhook(c.req.raw);
-    for (const msg of inbound ?? []) await provider.send(msg.phone, await engine.handle(msg));
-    return c.body(null, 204);
+    if (opts.webhookToken && c.req.query("token") !== opts.webhookToken) return c.json({ error: { message: "Forbidden", code: "forbidden" } }, 403);
+    const raw = await c.req.text();
+    await store.saveRawWebhook(provider.name, raw);
+    const inbound = await provider.parseWebhook(new Request(c.req.url, { method: "POST", headers: c.req.raw.headers, body: raw }));
+    for (const msg of inbound ?? []) await transmit(store, provider, msg.phone, await engine.handle(msg));
+    return c.json({ data: { ok: true } });
   });
 
   // Hourly job: 24h and 72h nudges.
   app.post("/jobs/nudges", async c => {
     if (!opts.jobSecret || c.req.header("x-job-secret") !== opts.jobSecret) return c.json({ error: { message: "Forbidden", code: "forbidden" } }, 403);
     const sent = await engine.nudges();
-    for (const s of sent) await provider.send(s.phone, s.out);
+    for (const s of sent) await transmit(store, provider, s.phone, s.out);
     return c.json({ data: { sent: sent.length } });
   });
 
@@ -70,7 +74,7 @@ export function buildApp(store: Store, provider: Provider, files: FileStore, opt
         msg.reaction.targetProviderId = last?.id ?? "none";
       }
       const out = await engine.handle(msg);
-      await provider.send(msg.phone, out);
+      await transmit(store, provider, msg.phone, out);
       return c.json({ data: out });
     });
     app.get("/dev/thread", async c => {
